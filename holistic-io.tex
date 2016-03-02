@@ -277,6 +277,27 @@ Also Phil's fourth bullet point:
 into the ecosystem
 \end{itemize}
 
+Initial figures showing correlation of LMT write traffic with Darshan's observed
+write activity for the 2K and 16K runs directly to Lustre (no burst buffer) are
+given in Figure~\ref{fig:2k-write} and Figure~\ref{fig:16k-write}, respectively.
+I'm not sure these graphs currently meet the pretty requirement given above...
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{figs/2k-lustre-wr-bw.pdf}
+\caption{Correlating Darshan observed write interval and B/W with LMT's aggregate
+write B/W for 2K VPIC run.}
+\label{fig:2k-write}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{figs/16k-lustre-wr-bw.pdf}
+\caption{Correlating Darshan observed write interval and B/W with LMT's aggregate
+write B/W for 16K VPIC run.}
+\label{fig:16k-write}
+\end{figure}
+
 \subsection{Challenges in integrating data}
 
 This will be more a methods section that calls out Phil's first two bullet points:
