@@ -83,10 +83,39 @@
 \maketitle
 
 \begin{abstract}
-\textcolor{red}{TODO.}
+
+PHC: at the risk of speculating too much about results before we have them:
+
+A variety of instrumentation and analysis tools have been utilized to
+great effect to help understand and optimize components such as disk
+arrays, file servers, libraries, and applications.  However, these
+tools operate in isolation with a limited view of the system as a whole.
+An integrated, holistic approach to I/O characterization is needed on
+today's increasingly complex systems in order to fully understand
+the interactions between components.  These complex interactions are what 
+ultimately dictate overall scientific productivity in practice.
+
+In this work we explore a case study in holistic I/O characterization
+using an exemplar scientific computing application [description(s?)] on
+Cori [description].  Our case study brings together characterization from
+X,Y,Z to illustrate how [application performance?  system performance?]
+could be improved via integrated holistic I/O characterization.
+We make THING A go B \% faster for a meaningful workload.  We evaluate
+our instrumentation methods and find that this approach is not only
+highly valuable for case studies, but is also entirely feasible for
+ongoing 24/7 production deployment without perturbing applications [some
+empirical backup].  Finally, we propose a set of recommendations for
+how this methodology can be automated in the future.
+
 \end{abstract}
 
 \section{Introduction}
+
+I/O is hard and burst buffers are hard.
+
+\section{NOTES}
+
+An attempt at transcribing notes from our ongoing email discussions:
 
 \section{Background}
 
@@ -96,7 +125,64 @@ LMT.
 
 Datawarp.
 
+\section{Methods}
+
+We ran an example benchmark on Cori with and without burst buffer.
+
+\subsection{I/O application benchmark (Suren)}
+
+We ran Suren's application I/O benchmark, VPIC-IO.
+
+\subsection{System description (Glenn)}
+
+We used Cori, NERSC's Cray XC40 featuring 144 burst buffer nodes sprayed
+across the dragonfly network.
+
+\subsection{Data sources (Glenn)}
+
+We collected data for the job time intervals from any sources we could think
+of, including:
+
+\begin{itemize}
+\item Darshan
+\item LMT
+\item SLURM job log
+\item hopefully some DVS metrics
+\item ???
+\end{itemize}
+
+\section{Results}
+
+We discovered many wonderful things.
+
+\subsection{Application performance improvement on burst buffer}
+
+This is where we put some pretty charts showing the performance comparison.
+Also Phil's fourth bullet point:
+
+\begin{itemize}
+\item learn something interesting about the burst buffer and how it integrates
+into the ecosystem
+\end{itemize}
+
+\subsection{Challenges in integrating data}
+
+This will be more a methods section that calls out Phil's first two bullet points:
+
+\begin{itemize}
+\item identify gaps or things that need to be changed in one or more of the tools
+to help make sense of the data
+\item start getting ideas for how we would integrate the data in an automated
+sense
+
+We can also discuss the practicalities of extracting the leading factors
+reflective of I/O performance (Jialin's idea).
+\end{itemize}
+
+
 \section{Conclusions}
+
+We know a little more about I/O.
 
 \bibliographystyle{IEEEtran}
 \bibliography{REFERENCES}
