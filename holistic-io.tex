@@ -115,6 +115,16 @@ how this methodology can be automated in the future.
 
 I/O is hard and burst buffers are hard.
 
+\emph{From Rob}: I think a component of the story is that when we approach these problems, there are a few challenges:
+\begin{enumerate}
+\item increasing number of interoperating components (in this case, additional
+BB and DVS and so forth)
+\item different components have different "views" on I/O, different levels of
+monitoring, some of which aren't practical in production
+\item no current framework for integration, lots of expert knowledge to
+construct the story of what happened and how to fix.
+\end{enumerate}
+
 \section{NOTES}
 
 This section is an attempt at transcribing notes from our ongoing email
