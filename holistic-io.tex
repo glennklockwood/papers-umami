@@ -122,8 +122,104 @@ monitoring, some of which aren't practical in production
 \item no current framework for integration, lots of expert knowledge to
 construct the story of what happened and how to fix.
 \end{enumerate}
+Cite something to get bibtex working for now~\cite{carns200924}.
 
-\section{VISUALIZTION EXAMPLES}
+\section{Background}
+
+\subsection{Platform}
+
+We used Cori, NERSC's Cray XC40 featuring 144 burst buffer nodes sprayed
+across the dragonfly network.
+
+\subsection{Instrumentation sources}
+
+\section{Case studies}
+
+\subsection{VPIC}
+
+Description: VPIC-IO kernel; uses HDF and collective I/O (and thus collective
+buffering) for bursts of write activity.  Right now we have 2K and 16K core
+examples, with and without burst buffer.  When burst buffer is used it is 20
+nodes on 2K runs and 87 nodes on 16K runs.
+
+Questions:
+\begin{itemize}
+\item Are the collective buffering settings appropriate for BB?
+    \begin{itemize}
+    \item Is collective buffering even appropriate?
+    \item Are we using the right number of aggregators in the right place?
+    \end{itemize}
+\item Why does performance change radically with only a slight change in the
+number of BB nodes?
+    \begin{itemize}
+    \item Related to collective buffering (see above) or some other problem?
+    \end{itemize}
+\end{itemize}
+
+\subsection{BLAST}
+
+Description: benchmark representing BLAST application.  Many small read
+operations, no coordination across processes.
+
+Questions:
+\begin{itemize}
+\item Does this workload show more or less benefit than VPIC from using BB?
+\item Does it make more sense to stage-in private copies of DB at every
+node, or to stage-in a single shared DB?
+    \begin{itemize}
+    \item Both from app and system perspective.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Staging}
+
+Description: staging data in and out of burst buffers for use by arbitrary
+applications.
+
+\begin{itemize}
+\item How long does it take to stage in or stage out data?
+    \begin{itemize}
+    \item How does this compare to explicit copying?
+    \end{itemize}
+\item On stage out, is it using appropriate Lustre striping?
+\item On stage in or stage out, is it using appropriate access sizes?
+    \begin{itemize}
+    \item In particular, does it make workload for Lustre look better than if
+    application had issued small writes (for example) directly?
+    \end{itemize}
+\item Can applications use Datawarp API to asynchronously push out previous
+checkpoints while computing next interval?
+    \begin{itemize}
+    \item Previous experiments indicate that this isn't as asynchronous as
+    hoped for
+    \end{itemize}
+\end{itemize}
+
+\section{Characterization techniques}
+
+Description: What did we learn about our characterization methodology?  Is it
+viable to leave this continuously and provide data processing tools to
+automate what we showed in this paper?
+
+What enhancements do we recomment (some of which we may have already done)
+\begin{itemize}
+\item Darshan: be able to understand aggregator behavior even when shared
+file records are reduced to one record
+\item Darshan: collect Lustre layout information to enhance correlation
+\item DVS: automatic prolog/epilog to collect counters
+\item DVS: time series sampling, as in procmon?
+\item DVS: vendor could help us out by counting bytes transferred
+\item DVS: collect list of BB nodes that were used
+\end{itemize}
+
+\section{SCRATCH: visualization example}
+
+It would be nice if we had a default figure to show the holistic view at a
+high level.  Something that we could just generate from a script given a set
+of logs.  It won't attempt to capture everything, but just show high level
+relationship between our instrumentation points.  Something that we can
+quickly show for each application use case example.  We then use detailed
+one-off graphs to dig into particular relevant aspects of the case study.
 
 \begin{figure}
 \centering
@@ -135,48 +231,32 @@ runs before digging into custom analysis.}
 \label{fig:holio-fig-sketch}
 \end{figure}
 
-Figure~\ref{fig:holio-fig-sketch} shows something.  TODO: write this up.
+Figure~\ref{fig:holio-fig-sketch} is a sketch of an example.  We 3 things
+that can be shown in a stack with a shared x axis for time.  The top one is
+the intervals of I/O activity for each rank according to Darshan (we probably
+need to run Darshan in the mode that disables reduction to make something
+interesting here on a consistent basis).  The middle one is just the
+aggregate bandwidth (read and write) reported by LMT over the same time
+period.  The bottom one shows each job that was running on the system during
+that time interval.  Each job is a rectangle, with height indicating number
+of nodes the job used, length indicating duration of job.  So we can see if
+bigger jobs were overlapping, for example.
 
+The DVS data is not time series at present, so we just show it on the right
+side as a set of histograms (not sure which ones) showing how much activity
+happened on the burst buffer in the job.
 
+Comments?  Is this something we can write a script to generate right now?
 
-\section{NOTES}
+We could also put an annotation somewhere on there that indicates what
+percentage of the LMT traffic is accounted for by Darshan (the DVS counters
+are zero, at least).  For a rough idea of contention: ``45\% of Lustre read
+traffic and 82\% of Lustre write traffic during this job run came from this
+job.''
 
-This section is an attempt at transcribing notes from our ongoing email
-discussions:
-
-Our general approach is to run VPIC-IO on Cori, with and without using
-burst buffers. We will collect data from the following sources:
+\section{SCRATCH: temporary notes}
 
 \begin{itemize}
-\item Darshan logs
-\item LMT
-\item SLURM job logs
-\item DVS/Datawarp counters
-\end{itemize}
-
-We then gather the resulting logs into a centralized location and manually
-look at how they fit together, determine gaps in the info each tool provides,
-and determine which pieces of data have the most influence on I/O performance.
-
-Open issues and notes:
-
-\begin{itemize}
-\item Retrieving both client-side and server-side Datawarp counters
-    \begin{itemize}
-    \item Glenn investigating quick/dirty way to grab raw counters out of Datawarp servers
-    \item Glenn also investigating how to grab client side Datawarp counters
-        \begin{itemize}
-        \item Ideally, use a tool like procmon from NERSC to grab client-side data, but limited docs
-        \item Currently just using a script that runs in parallel with VPIC-IO that gathers:
-              number of writes, max write size, min write size for each compute node
-        \end{itemize}
-    \end{itemize}
-\item Initial VPIC-IO job configurations:
-    \begin{itemize}
-    \item 2K and 16K core runs, each trying Lustre scratch FS vs burst buffer
-    \item BB runs using 20 nodes for 2K runs, 87 nodes for 16K runs
-    \item What are the striping parameters used for the scratch Lustre runs? Cori default?
-    \end{itemize}
 \item Breakdown of raw LMT data:
     \begin{itemize}
     \item For every 5s interval:
@@ -184,25 +264,10 @@ Open issues and notes:
         \item For each OST: bytes read, bytes written, CPU \%
         \item For each MDS: frequency counts of a bunch of ops (opens, close, getattr, ...)
         \end{itemize}
-    \item Contrast with Darshan data:
+    \item Contrast with Darshan data related to time stamps:
         \begin{itemize}
         \item Darshan only stores absolute time of job start and end times
         \item Darshan stores a few relative timestamps of first and last open/read/write/close ops
-        \end{itemize}
-    \item Phil: these things might be interesting to investigate further:
-        \begin{itemize}
-        \item correlate Darshan's observed I/O times with LMT data (currently aggregate LMT data,
-              but could look at specific OSTs once we have access to that info)
-        \item correlate amount of data moved according to LMT vs observed data movement in Darshan
-              (again, initially looking at aggregate LMT, hopefully with ability to focus on OSTs later)
-        \item correlate Darshan's discrete counts of file I/O ops (e.g., opens) to LMT data
-        \end{itemize}
-    \item Phil: Will we see flurry of LMT data at end of BB runs as data is staged out?
-        \begin{itemize}
-        \item Glenn: No, stage out happens after job and MPI processes are terminated -- will need to
-              instrument BB nodes themselves to observe this activity, which Glenn is investigating
-        \item Glenn: Further, stage out only happens when explicitly requested by the job script --
-              does VPIC-IO explicitly flush the BB nodes?
         \end{itemize}
     \item Shane has some scripts for post-processing LMT data into a format that is more easily
           graphable, and made the following observations:
@@ -262,46 +327,6 @@ Open issues and notes:
     \end{itemize}
 \end{itemize}
 
-\section{Methods}
-
-We ran an example benchmark on Cori with and without burst buffer.
-
-\subsection{I/O application benchmark (Suren)}
-
-We ran Suren's application I/O benchmark, VPIC-IO.
-
-\subsection{System description (Glenn)}
-
-We used Cori, NERSC's Cray XC40 featuring 144 burst buffer nodes sprayed
-across the dragonfly network.
-
-\subsection{Data sources (Glenn)}
-
-We collected data for the job time intervals from any sources we could think
-of, including:
-
-\begin{itemize}
-\item Darshan~\cite{carns200924}
-\item LMT
-\item SLURM job log
-\item hopefully some DVS metrics
-\item ???
-\end{itemize}
-
-\section{Results}
-
-We discovered many wonderful things.
-
-\subsection{Application performance improvement on burst buffer}
-
-This is where we put some pretty charts showing the performance comparison.
-Also Phil's fourth bullet point:
-
-\begin{itemize}
-\item learn something interesting about the burst buffer and how it integrates
-into the ecosystem
-\end{itemize}
-
 Initial figures showing correlation of LMT write traffic with Darshan's observed
 write activity for the 2K and 16K runs directly to Lustre (no burst buffer) are
 given in Figure~\ref{fig:2k-write} and Figure~\ref{fig:16k-write}, respectively.
@@ -322,21 +347,6 @@ write B/W for 2K VPIC run.}
 write B/W for 16K VPIC run.}
 \label{fig:16k-write}
 \end{figure}
-
-\subsection{Challenges in integrating data}
-
-This will be more a methods section that calls out Phil's first two bullet points:
-
-\begin{itemize}
-\item identify gaps or things that need to be changed in one or more of the tools
-to help make sense of the data
-\item start getting ideas for how we would integrate the data in an automated
-sense
-
-We can also discuss the practicalities of extracting the leading factors
-reflective of I/O performance (Jialin's idea).
-\end{itemize}
-
 
 \section{Conclusions}
 
