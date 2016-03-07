@@ -113,8 +113,6 @@ how this methodology can be automated in the future.
 
 \section{Introduction}
 
-I/O is hard and burst buffers are hard.
-
 \emph{From Rob}: I think a component of the story is that when we approach these problems, there are a few challenges:
 \begin{enumerate}
 \item increasing number of interoperating components (in this case, additional
@@ -124,6 +122,22 @@ monitoring, some of which aren't practical in production
 \item no current framework for integration, lots of expert knowledge to
 construct the story of what happened and how to fix.
 \end{enumerate}
+
+\section{VISUALIZTION EXAMPLES}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{figs/holio-fig-sketch.pdf}
+\caption{Proposal for a default ``high-level'' view of a job, encompassing
+multiple data sources.  We would want a perl/python script that can produce
+this quickly from a set of logs.  Would be used for overview or comparison of
+runs before digging into custom analysis.}
+\label{fig:holio-fig-sketch}
+\end{figure}
+
+Figure~\ref{fig:holio-fig-sketch} shows something.  TODO: write this up.
+
+
 
 \section{NOTES}
 
