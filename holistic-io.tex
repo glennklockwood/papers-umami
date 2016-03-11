@@ -266,7 +266,8 @@ starting point.  Maybe VPIC example? \assign{Suren/Glenn}
 \begin{itemize}
 \item Darshan log with DARSHAN\_DISABLE\_SHARED\_REDUCTIONS=1 env set
 \item LMT logs, extending until a little after job run to capture stage out
-(if present)
+(if present) \todo{Glenn: the stage out is completely decoupled from the job
+(it could conceivably happen much later, so probably hard to catch}.
 \item DVS counters
 \item list of jobs from SLURM (we just need num nodes, start time, and
 duration) for all jobs that overlapped with target job
