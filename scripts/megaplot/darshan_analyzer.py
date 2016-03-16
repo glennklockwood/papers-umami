@@ -25,17 +25,17 @@ class DarshanRankData:
             self.write_end = write_end
 
 '''
-darshan_analyze_log()
+darshan_analyze()
 
 Function that takes an input Darshan logfile path and
 generates a corresponding gnuplot data file to use for
 plotting Darshan I/O intervals
 '''
-def darshan_analyze_log(logfile_name, out_stream):
+def darshan_analyze(logfile_name, out_stream):
     parser_output = subprocess.check_output(['darshan-parser', logfile_name])
 
     rank_data = {}
-    __darshan_build_rank_data(parser_output, rank_data)
+    job_start_tm, job_id = _darshan_build_rank_data(parser_output, rank_data)
 
     out_field_names = ['RANK', 'READ_START', 'WRITE_START', 'READ_END', 'WRITE_END']
     writer = csv.DictWriter(out_stream, out_field_names, delimiter=',')
@@ -50,24 +50,29 @@ def darshan_analyze_log(logfile_name, out_stream):
             'READ_END': rank_data[rank].read_end,
             'WRITE_END': rank_data[rank].write_end})
 
+    return (job_start_tm, job_id)
+
+
 '''
 helper function for building dictionary of DarshanRankData
 structures for each active rank in the application
 '''
-def __darshan_build_rank_data(parser_output, rank_data):
+def _darshan_build_rank_data(parser_output, rank_data):
     prev_rec_id = 0
     read_start = 0
     write_start = 0
     read_end = 0
     write_end = 0
-    abs_app_start_tm = 0
+    job_start_tm = 0
 
     for line in parser_output.split('\n'):
         if not line.strip():
             continue
         elif line.startswith('#'):
             if "start_time:" in line:
-                abs_app_start_tm = int(line.split(' ')[2])
+                job_start_tm = int(line.split(' ')[2])
+            elif "jobid" in line:
+                job_id = line.split(' ')[2]
         else:
             fields = line.split('\t')
             module = fields[0]
@@ -95,13 +100,13 @@ def __darshan_build_rank_data(parser_output, rank_data):
             # grab relevant counter data, rounding to nearest integer
             # since we have no need for greater precision than seconds
             if counter == "POSIX_F_READ_START_TIMESTAMP" and value > 0.0:
-                read_start = int(round(value)) + abs_app_start_tm
+                read_start = int(round(value)) + job_start_tm
             elif counter == "POSIX_F_WRITE_START_TIMESTAMP" and value > 0.0:
-                write_start = int(round(value)) + abs_app_start_tm
+                write_start = int(round(value)) + job_start_tm
             elif counter == "POSIX_F_READ_END_TIMESTAMP" and value > 0.0:
-                read_end = int(round(value)) + abs_app_start_tm
+                read_end = int(round(value)) + job_start_tm
             elif counter == "POSIX_F_WRITE_END_TIMESTAMP" and value > 0.0:
-                write_end = int(round(value)) + abs_app_start_tm
+                write_end = int(round(value)) + job_start_tm
 
     if prev_rec_id != 0:
         if read_start > 0 or write_start > 0 or read_end > 0 or write_end > 0:
@@ -110,10 +115,4 @@ def __darshan_build_rank_data(parser_output, rank_data):
                 rank_data[rank] = DarshanRankData()
             rank_data[rank].update(read_start, write_start, read_end, write_end);
 
-#from analyzer import Analyzer
-
-#class DarshanAnalyzer(Analyzer):
-#
-#    def analyze_data(self, darshan_logfile):
-#        parser_output = subprocess.check_output(['darshan-parser', darshan_logfile])
-#        print parser_output
+    return (job_start_tm, job_id)
