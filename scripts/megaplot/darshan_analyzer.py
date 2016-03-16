@@ -35,7 +35,7 @@ def darshan_analyze(logfile_name, out_stream):
     parser_output = subprocess.check_output(['darshan-parser', logfile_name])
 
     rank_data = {}
-    job_start_tm, job_id = _darshan_build_rank_data(parser_output, rank_data)
+    job_id, job_start_tm, job_run_tm = _darshan_build_rank_data(parser_output, rank_data)
 
     out_field_names = ['RANK', 'READ_START', 'WRITE_START', 'READ_END', 'WRITE_END']
     writer = csv.DictWriter(out_stream, out_field_names, delimiter=',')
@@ -50,7 +50,7 @@ def darshan_analyze(logfile_name, out_stream):
             'READ_END': rank_data[rank].read_end,
             'WRITE_END': rank_data[rank].write_end})
 
-    return (job_start_tm, job_id)
+    return (job_id, job_start_tm, job_run_tm)
 
 
 '''
@@ -63,7 +63,6 @@ def _darshan_build_rank_data(parser_output, rank_data):
     write_start = 0
     read_end = 0
     write_end = 0
-    job_start_tm = 0
 
     for line in parser_output.split('\n'):
         if not line.strip():
@@ -73,6 +72,8 @@ def _darshan_build_rank_data(parser_output, rank_data):
                 job_start_tm = int(line.split(' ')[2])
             elif "jobid" in line:
                 job_id = line.split(' ')[2]
+            elif "run time" in line:
+                job_run_tm = int(line.split(' ')[3])
         else:
             fields = line.split('\t')
             module = fields[0]
@@ -115,4 +116,4 @@ def _darshan_build_rank_data(parser_output, rank_data):
                 rank_data[rank] = DarshanRankData()
             rank_data[rank].update(read_start, write_start, read_end, write_end);
 
-    return (job_start_tm, job_id)
+    return (job_id, job_start_tm, job_run_tm)
