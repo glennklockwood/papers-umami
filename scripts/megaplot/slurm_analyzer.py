@@ -65,4 +65,3 @@ target_job_end_tm, job_data):
         if target_job_start_tm <= job_end_tm and target_job_end_tm >= job_start_tm:
             assert (job_id not in job_data), "Duplicate Slurm job ids"
             job_data[job_id] = SlurmJobData(job_start_tm, job_end_tm, job_nnodes)
-            print line
