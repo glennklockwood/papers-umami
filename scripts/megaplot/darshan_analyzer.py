@@ -66,7 +66,7 @@ def _darshan_build_rank_data(parser_output, rank_data):
 
     for line in parser_output.split('\n'):
         if not line.strip():
-            continue
+            continue # skip empty line
         elif line.startswith('#'):
             if "start_time:" in line:
                 job_start_tm = int(line.split(' ')[2])
