@@ -77,6 +77,8 @@
 % (Unless specifically asked to do so by the journal or conference you plan
 % to submit to, of course. )
 
+\usepackage{draftwatermark}
+
 \newcommand{\assign}[1]{\textcolor{red}{(#1)}}
 \newcommand{\todo}[1]{\textcolor{Orange}{TODO: #1}}
 
@@ -112,7 +114,7 @@ platforms. Based on our \todo{some time period} study we observe
 
 \end{abstract}
 
-\section{Introduction \assign{All}}
+\section{Introduction \assign{Phil}}
 
 \emph{From Rob}: I think a component of the story is that when we approach these problems, there are a few challenges:
 \begin{enumerate}
@@ -164,10 +166,102 @@ because of anticipated challenges in AMR codes}
 
 \todo{Describe how we are scheduling these jobs to run.} \assign{Glenn}
 
-\section{Case studies}
+\section{Evaluation}
+
+\todo{Fill this section in based on what we observe}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\columnwidth]{figs/example.png}
+%\vspace{-.07in}
+\caption{Example figure showing server-side read bandwidth with an artifact
+caused by a Lustre server problem.}
+\label{fig:example}
+\vspace{-.1in}
+\end{figure}
+
+\begin{itemize}
+\item Sometimes metadata operations are slow (e.g., file-per-process I/O)
+    \begin{itemize}
+    \item Show Darshan logs showing high metadata time
+    \item Show LMT MDT logs showing high background metadata or CPU rate
+    \item Show GPFS NSD metadata loads?  Can we do this?
+    \end{itemize}
+\item Sometimes hardware goes bad
+    \begin{itemize}
+    \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
+    application's fault)
+    \item Show Lustre OSTs that stall out, e.g, Figure~\ref{fig:example}
+    \item Show slow Lustre OSTs due to failover/oversubscription (a la Darshan 3 paper)
+    \item Show poorly performing GPFS NSDs
+    \end{itemize}
+\item Sometimes there is interference from other applications
+    \begin{itemize}
+    \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
+    application's fault)
+    \item Show jobs with and without background LMT load
+    \item Show jobs with and without background mmpmon load
+    \end{itemize}
+\end{itemize}
+
+\subsection{Discussion}
+
+\begin{itemize}
+\item Make statements about how often bad I/O performance can be attributed to each
+of the different causes we categorized--that is, break down what the most
+common sources of performance degradation are
+\item Make statements about how susceptible different file systems are to these bad
+I/O performance root causes to stir up controversy (GPFS is better/worse than
+Lustre when facing problem X)
+\item Propose that holistic I/O monitoring can provide a feedback loop for
+coscheduling (to hit some buzzwords)
+\end{itemize}
+
+\section{Related work}
+
+\todo{include SIOX, Xiaosong Ma's work}
 
 \section{Conclusions}
 
+\section{TEMPORARY: TECHNICAL TASKS}
+
+Assumption: assignments here and in preceding text are tentative, and really
+just guess at someone who can keep tabs on that activity.  Can re-assign,
+delegate, pull in more people, etc.
+
+Assumption: although the paper as outlined will focus on Cori and Mira, we
+should actually try to do these things across Theta and Edison as well.  Four
+total platforms, and we'll see which ones are most viable for study in paper.
+
+To do:
+\begin{itemize}
+\item create git repository to store benchmarks, config files, job scripts,
+and cron configs for our set of benchmarks \assign{Shane}
+\item get new version of HACC-IO benchmark and parameters \assign{Suren}
+\item get Boxlib benchmark and parameters \assign{Glenn}
+\item gather standard VPIC parameters \assign{William}
+\item gather standard IOR parameters \assign{Glenn}
+\item make sure that mmpmon monitoring gets deployed on Mira \assign{Phil and
+Kevin}
+\item coordinate LMT monitoring methods on Theta \assign{Glenn and Kevin}
+\item enable cron jobs to run periodic jobs on ALCF machines \assign{Shane}
+\item enable cron jobs to run periodic jobs on NERSC machines \assign{Glenn}
+\item create and enable cron jobs to check Lustre failover status
+\assign{Glenn}
+\item create and enable cron jobs to check Lustre server capacity
+\assign{Glenn}
+\item create and enable cron jobs to check GPFS failover status
+\assign{Shane}
+\item create and enable cron jobs to check GPFS server capacity
+\assign{Shane}
+
+\end{itemize}
+
+Timeline:
+\begin{itemize}
+\item Start running periodic (daily) jobs by mid-January
+\item writing up text based on results by mid-February
+\end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{REFERENCES}
