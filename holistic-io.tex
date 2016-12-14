@@ -81,36 +81,34 @@
 \newcommand{\todo}[1]{\textcolor{Orange}{TODO: #1}}
 
 \begin{document}
-\title{Optimizing Application Performance on a Burst Buffer using
-Holistic I/O Characterization}
+\title{HPC I/O Ecosystem Instrumentation: Insights from correlating data}
 
 \maketitle
 
 \begin{abstract}
 
-\todo{this abstract is already out of sync, likely to have
-more emphasis on burst buffer at least.}
+I/O efficiency is essential to productivity in scientific computing,
+especially as most scientific domains become more data-intensive and
+new large-scale computing platforms incorporate more complex storage
+hierarchies.  A variety of instrumentation and analysis tools have been
+utilized to great effect to help understand and optimize specific aspects of
+HPC I/O, such as application access patterns, storage device traffic, and
+distributed file system configurations.  Analyzing individual aspects of
+the I/O ecosystem in isolation provides limited insight into the system as a
+whole, however: how do the I/O components interact, what \emph{combinations}
+of optimizations across the stack are most effective, and what are the
+underlying causes and effects of I/O performance problems.
 
-A variety of instrumentation and analysis tools have been utilized to
-great effect to help understand and optimize components such as disk
-arrays, file servers, libraries, and applications.  However, these
-tools operate in isolation with a limited view of the system as a whole.
-An integrated, holistic approach to I/O characterization is needed on
-today's increasingly complex systems in order to fully understand
-the interactions between components.  These complex interactions are what 
-ultimately dictate overall scientific productivity in practice.
-
-In this work we explore a case study in holistic I/O characterization
-using an exemplar scientific computing application [description(s?)] on
-Cori [description].  Our case study brings together characterization from
-X,Y,Z to illustrate how [application performance?  system performance?]
-could be improved via integrated holistic I/O characterization.
-We make THING A go B \% faster for a meaningful workload.  We evaluate
-our instrumentation methods and find that this approach is not only
-highly valuable for case studies, but is also entirely feasible for
-ongoing 24/7 production deployment without perturbing applications [some
-empirical backup].  Finally, we propose a set of recommendations for
-how this methodology can be automated in the future.
+In this work we explore the potential for holistic I/O characterization
+by combining I/O instrumentation data from multiple sources to obtain
+insights that were previously unobtainable. We describe a methodology that
+incorporates file system instrumenatation, application instrumentation,
+fault monitoring, and formalized periodic regression benchmarking as
+the foundation of portable I/O instrumentation, and then demonstrate
+its applicability, portability, and inobtrusiveness by deploying that
+methodology in production on two distinct leadership-class computing
+platforms. Based on our \todo{some time period} study we observe
+\todo{some outcome}.
 
 \end{abstract}
 
@@ -127,249 +125,49 @@ construct the story of what happened and how to fix.
 \end{enumerate}
 Cite something to get bibtex working for now~\cite{carns200924}.
 
-\section{Background \assign{All}}
+\section{Instrumentation methods}
 
-\subsection{Platform \assign{Glenn}}
+Brief description of tools that we are using.
+\todo{overview diagram here?}
 
-We used Cori, NERSC's Cray XC40 featuring 144 burst buffer nodes sprayed
-across the dragonfly network.
+\subsection{Darshan \assign{Shane}}
 
-\subsection{Instrumentation sources \assign{All}}
+\subsection{LMT \assign{Glenn}}
+
+\subsection{mmpmon \assign{Phil}}
+
+\subsection{fault monitoring \assign{Glenn}}
+
+\todo{Cron job to standardize data about what servers are up/down/failedover over
+time.}
+\todo{Can we put capacity monitoring in here too?  Very similar.}
+
+\section{Platforms and workloads}
+
+We employ our methodology on two platforms:
+
+\begin{itemize}
+\item \textbf{Cori} \assign{Glenn}
+\item \textbf{Mira} \assign{Phil}
+\end{itemize}
+
+We selected 4 represenative application workloads for periodic regression
+benchmarking:
+
+\begin{itemize}
+\item \textbf{HACC} \assign{Suren}
+\item \textbf{VPIC} \assign{Suren}
+\item \textbf{Boxlib} \assign{Glenn} \todo{emphasize why this is interesting
+because of anticipated challenges in AMR codes}
+\item \textbf{IOR} \assign{Shane}
+\end{itemize}
+
+\todo{Describe how we are scheduling these jobs to run.} \assign{Glenn}
 
 \section{Case studies}
 
-\subsection{VPIC \assign{Suren}}
-
-Description: VPIC-IO kernel; uses HDF and collective I/O (and thus collective
-buffering) for bursts of write activity.  Right now we have 2K and 16K core
-examples, with and without burst buffer.  When burst buffer is used it is 20
-nodes on 2K runs and 87 nodes on 16K runs.
-
-Questions:
-\begin{itemize}
-\item Are the collective buffering settings appropriate for BB?
-    \begin{itemize}
-    \item Is collective buffering even appropriate?
-    \item Are we using the right number of aggregators in the right place?
-    \end{itemize}
-\item Why does performance change radically with only a slight change in the
-number of BB nodes?
-    \begin{itemize}
-    \item Related to collective buffering (see above) or some other problem?
-    \end{itemize}
-\end{itemize}
-
-\subsection{BLAST \assign{Glenn}}
-
-Description: benchmark representing BLAST application.  Many small read
-operations, no coordination across processes.
-
-Questions:
-\begin{itemize}
-\item Does this workload show more or less benefit than VPIC from using BB?
-\item Does it make more sense to stage-in private copies of DB at every
-node, or to stage-in a single shared DB?
-    \begin{itemize}
-    \item Both from app and system perspective.
-    \end{itemize}
-\end{itemize}
-
-\subsection{Staging \assign{Glenn}}
-
-Description: staging data in and out of burst buffers for use by arbitrary
-applications.
-
-\begin{itemize}
-\item How long does it take to stage in or stage out data?
-    \begin{itemize}
-    \item How does this compare to explicit copying?
-    \end{itemize}
-\item On stage out, is it using appropriate Lustre striping?
-\item On stage in or stage out, is it using appropriate access sizes?
-    \begin{itemize}
-    \item In particular, does it make workload for Lustre look better than if
-    application had issued small writes (for example) directly?
-    \end{itemize}
-\item Can applications use Datawarp API to asynchronously push out previous
-checkpoints while computing next interval?
-    \begin{itemize}
-    \item Previous experiments indicate that this isn't as asynchronous as
-    hoped for
-    \end{itemize}
-\end{itemize}
-
-\section{Characterization techniques}
-
-Description: What did we learn about our characterization methodology?  Is it
-viable to leave this continuously and provide data processing tools to
-automate what we showed in this paper?
-
-What enhancements do we recomment (some of which we may have already done)
-\begin{itemize}
-\item Darshan: be able to understand aggregator behavior even when shared
-file records are reduced to one record \assign{Shane/Phil}
-\item Darshan: collect Lustre layout information to enhance correlation
-\assign{Shane/Glenn}
-\item DVS: automatic prolog/epilog to collect counters \assign{Glenn}
-    \begin{itemize}
-    \item can we coordinate this with the Darshan 3.1 epilog scripts?
-    \assign{Glenn/Shane}
-    \end{itemize}
-\item DVS: time series sampling, as in procmon? \assign{Glenn}
-\item DVS: vendor could help us out by counting bytes transferred
-\assign{Glenn}
-\item DVS: collect list of BB nodes that were used \assign{Glenn}
-\end{itemize}
-
-\section{SCRATCH: visualization example}
-
-It would be nice to have a ``default'' figure that we can show as a starting
-point for any case study.  It would be generated by a script and would show
-off a holistic view, combining data from several sources.  Would not capture
-everything, we would still dig into one-off graphs for detailed aspects.
-
-\begin{figure}
-\centering
-\includegraphics[width=0.5\textwidth]{figs/holio-fig-sketch.pdf}
-\caption{Proposal for a default ``high-level'' view of a job, encompassing
-multiple data sources.}
-\label{fig:holio-fig-sketch}
-\end{figure}
-
-Figure~\ref{fig:holio-fig-sketch} is a sketch of an example.  3 things
-are shown in a stack with a shared x axis for time.  The top one is
-the intervals of I/O activity for each rank according to Darshan (we probably
-need to run Darshan in the mode that disables reduction to make something
-interesting here on a consistent basis).  The middle one is just the
-aggregate bandwidth (read and write) reported by LMT over the same time
-period.  The bottom one shows each job that was running on the system during
-that time interval.  Each job is a rectangle, with height indicating number
-of nodes the job used, length indicating duration of job.  So we can see if
-bigger jobs were overlapping, for example.
-
-The DVS data is not time series at present, so we just show it on the right
-side as a set of histograms (not sure which ones) showing how much activity
-happened on the burst buffer in the job.
-\todo{Rob: instead of having DVS data on the side, could it be embedded into the
-job view (for example, color intensity for the job)?}
-
-We could also put an annotation somewhere on there that indicates what
-percentage of the LMT traffic is accounted for by Darshan (the DVS counters
-are zero, at least).  For a rough idea of contention: ``45\% of Lustre read
-traffic and 82\% of Lustre write traffic during this job run came from this
-job.''
-
-We need to write a script to generate this. \assign{Shane}
-
-We also need to collect a complete set of logs for one job to use as a
-starting point.  Maybe VPIC example? \assign{Suren/Glenn}
-\begin{itemize}
-\item Darshan log with DARSHAN\_DISABLE\_SHARED\_REDUCTIONS=1 env set
-\item LMT logs, extending until a little after job run to capture stage out
-(if present) \todo{Glenn: the stage out is completely decoupled from the job
-(it could conceivably happen much later, so probably hard to catch}.
-\item DVS counters
-\item list of jobs from SLURM (we just need num nodes, start time, and
-duration) for all jobs that overlapped with target job
-\end{itemize}
-
-\section{SCRATCH: temporary notes}
-
-\begin{itemize}
-\item Breakdown of raw LMT data:
-    \begin{itemize}
-    \item For every 5s interval:
-        \begin{itemize}
-        \item For each OST: bytes read, bytes written, CPU \%
-        \item For each MDS: frequency counts of a bunch of ops (opens, close, getattr, ...)
-        \end{itemize}
-    \item Contrast with Darshan data related to time stamps:
-        \begin{itemize}
-        \item Darshan only stores absolute time of job start and end times
-        \item Darshan stores a few relative timestamps of first and last open/read/write/close ops
-        \end{itemize}
-    \item Shane has some scripts for post-processing LMT data into a format that is more easily
-          graphable, and made the following observations:
-        \begin{itemize}
-        \item CPU PCT is always 0 -- If we want to look at this metric, Glenn will need to find this
-              data in another LMT table
-        \item Some missing intervals in LMT data -- Glenn: LMT uses UDP and can drop packets, so
-              keep this in mind when analyzing this data
-        \end{itemize}
-    \item Glenn: still need to grab LMT data for \textbf{after} the BB runs, since this is whe data
-          is flushed to Lustre
-    \end{itemize}
-\item Incorporation of Lustre module into Darshan
-    \begin{itemize}
-    \item All: a Lustre module would be pretty useful...
-    \item Shane has stubbed out Lustre module implementation he has shared with Glenn
-        \begin{itemize}
-        \item Need to determine lowest overhead way of getting data: /proc or liblustre API?
-        \item Grab anything else besides: stripe params and OSTs associated with each file?
-        \item If enabled, every file opened at the POSIX layer will be handed to the Lustre
-              module to obtain Lustre data
-        \item Glenn: stripe params and OST mappings are immutable, so these data records
-              only need to be set once per file
-        \end{itemize}
-    \end{itemize}
-\item Initial observations of VPIC-IO runs:
-    \begin{itemize}
-    \item Glenn: every proc is opening the file, though only 1/3 are writing. Could the
-          low BB performance be due to the large metadata workload?
-        \begin{itemize}
-        \item Phil: compare ratio of I/O to metadata time for the Lustre runs and the BB
-              runs to confirm
-        \item Phil: MPI-IO hints can be used to force only aggregators to open files
-        \item Phil: is collective buffering even needed for burst buffers? Does increasing
-              aggregators generally lead to better performance, or do we need to limit BB
-              clients like we would try to do for a PFS
-            \begin{itemize}
-            \item Suren: has another fork of VPIC-IO which skirts H5Part and allows more control
-                  over the underlying I/O -- we could use this to investigate the tuning of
-                  collective I/O or to just use independent I/O
-            \end{itemize}
-        \item Suren: turns out metadata time is not significant in these runs, poor performance
-              is probably due to something else
-        \end{itemize}
-    \item Suren: One of the 16K total MPI-IO writes is taking 27 seconds, which is about 15\%
-          of the total I/O time
-        \begin{itemize}
-        \item This is not due to slow POSIX I/O (i.e., I/O to Lustre), so it's a skew or synchronization
-              problem
-        \item Suren: perhaps this is an issue with unbalanced aggregator workloads?
-            \begin{itemize}
-            \item All: we need to find out more specifically what each aggregator's workload looks like
-            \item Shane: we could set DARSHAN\_DISABLE\_SHARED\_REDUCTIONS=1 in the environment to
-                  get a basic understanding of the aggregator mapping and relative workloads
-            \end{itemize}
-        \end{itemize}
-    \end{itemize}
-\end{itemize}
-
-Initial figures showing correlation of LMT write traffic with Darshan's observed
-write activity for the 2K and 16K runs directly to Lustre (no burst buffer) are
-given in Figure~\ref{fig:2k-write} and Figure~\ref{fig:16k-write}, respectively.
-I'm not sure these graphs currently meet the pretty requirement given above...
-
-\begin{figure}
-\centering
-\includegraphics[width=0.5\textwidth]{figs/2k-lustre-wr-bw.pdf}
-\caption{Correlating Darshan observed write interval and B/W with LMT's aggregate
-write B/W for 2K VPIC run.}
-\label{fig:2k-write}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=0.5\textwidth]{figs/16k-lustre-wr-bw.pdf}
-\caption{Correlating Darshan observed write interval and B/W with LMT's aggregate
-write B/W for 16K VPIC run.}
-\label{fig:16k-write}
-\end{figure}
-
 \section{Conclusions}
 
-We know a little more about I/O.
 
 \bibliographystyle{IEEEtran}
 \bibliography{REFERENCES}
