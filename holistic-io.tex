@@ -95,11 +95,11 @@ new large-scale computing platforms incorporate more complex storage
 hierarchies.  A variety of instrumentation and analysis tools have been
 utilized to great effect to help understand and optimize specific aspects of
 HPC I/O, such as application access patterns, storage device traffic, and
-distributed file system configurations.  Analyzing individual aspects of
-the I/O ecosystem in isolation provides limited insight into the system as a
-whole, however: how do the I/O components interact, what \emph{combinations}
+distributed file system configurations.  However, analyzing individual services in the
+I/O ecosystem in isolation fails to provide insight into the most important
+questions: how do the I/O components interact, what \emph{combinations}
 of optimizations across the stack are most effective, and what are the
-underlying causes and effects of I/O performance problems.
+underlying causes and effects of I/O performance problems?
 
 In this work we explore the potential for holistic I/O characterization
 by combining I/O instrumentation data from multiple sources to obtain
@@ -127,12 +127,16 @@ construct the story of what happened and how to fix.
 \end{enumerate}
 Cite something to get bibtex working for now~\cite{carns200924}.
 
-Three strategic points will help to make this paper more appealing to SC
-committee:
+The primary contributions of this work are as follows:
+
 \begin{itemize}
-\item results from multiple, dissimilar platforms
-\item application-oriented benchmarks
-\item publishing artifacts (tools, data, etc.) from study
+\item A proposed model for holistic instrumentation of I/O subsystems,
+including identification of the key roles that individual data streams play
+\item An implementation of this model on two large-scale, diverse HPC
+platforms
+\item A demonstration of the types of insights that can be gleaned from this
+approach based on a case study of N scientific applications executed in a
+production environment
 \end{itemize}
 
 \section{Instrumentation methods}
