@@ -259,23 +259,83 @@ To do:
 \begin{itemize}
 \item create git repository to store benchmarks, config files, job scripts,
 and cron configs for our set of benchmarks \assign{Shane}
+\begin{itemize}
+\item status: repo created, includes ior source and mira build scripts, need
+to add more benchmarks
+\item Glenn: will sync up with Shane and add stuff from his own repo (hacc-io, vpic, etc.)
+\item discussion: store configs too, will need to experiment with job sizes
+\end{itemize}
 \item get new version of HACC-IO benchmark and parameters \assign{Suren}
+\begin{itemize}
+\item Suren: main difference is that this version would include HDF5 support
+for shared file instead of file per proc, not merged by HACC developers
+\item Suren: was done in context of fastforward project, need to find out if
+there are any dependencies on that software stack
+\end{itemize}
 \item get Boxlib benchmark and parameters \assign{Glenn}
+\begin{itemize}
+\item Glenn: turns out this isn't as interesting as we hoped; the IO
+benchmark is well balanced (because it doesn't actually run AMR computation)
+and even if it weren't they are doing their own buffering to compensate
+\item discussion: maybe Chombo would be better?  Suren will look for recent
+IO benchmark and send to Glenn to try out.
+\end{itemize}
 \item gather standard VPIC parameters \assign{William}
+\begin{itemize}
+\item William: there is just one parameter really
+\item discussion: Vorpal is another (possibly more complex IO pattern)
+possibility, but lets stick with VPIC for now
+\end{itemize}
 \item gather standard IOR parameters \assign{Glenn}
+\begin{itemize}
+\item discussion: doesn't have to match previous NERSC runs necessarily.
+Main purpose here is risk mitigation (have at least one benchmark that is
+very straightforward and easy to interpret)
+\end{itemize}
 \item make sure that mmpmon monitoring gets deployed on Mira \assign{Phil and
 Kevin}
+\begin{itemize}
+\item Phil: prototpe running on Vesta, coming along well and on track for
+eventual Mira deployment 
+\item discussion: share sample data with list, get Glenn to help normalize
+data format/archiving with what's being done with LMT data
+\end{itemize}
 \item coordinate LMT monitoring methods on Theta \assign{Glenn and Kevin}
+\begin{itemize}
+\item Phil/Glenn/Shane will help sync up with ALCF later this month
+\end{itemize}
 \item enable cron jobs to run periodic jobs on ALCF machines \assign{Shane}
+\begin{itemize}
+\item Phil: Kevin/Shane/Phil have a plan in place, going to use Jenkins for
+Mira, Cron job with lock file to prevent queue backup on Theta, run all
+benchmarks in a single script job
+\item discussion: if execution time is reasonable, cycle through benchmarks
+so we have multiple samples per run, grap state of queue at beginning and end
+too
+\end{itemize}
+
 \item enable cron jobs to run periodic jobs on NERSC machines \assign{Glenn}
-\item create and enable cron jobs to check Lustre failover status
-\assign{Glenn}
-\item create and enable cron jobs to check Lustre server capacity
-\assign{Glenn}
-\item create and enable cron jobs to check GPFS failover status
-\assign{Shane}
-\item create and enable cron jobs to check GPFS server capacity
-\assign{Shane}
+\begin{itemize}
+\item Glenn: has a master script for this already, gradually hardening, will
+add to git repo
+\end{itemize}
+\item create and enable cron jobs to check Lustre failover status and server
+capacity
+\begin{itemize}
+\item Glenn: have this already for capacity, gathering every 15 minutes
+\item discussion: what do we want for failover?  failover messages in Lustre
+log would be nice, but it might be more foolproof to just collect IP of each
+OST periodically.  These tools don't require admin access, so we should be
+able to run it on Theta too.
+\end{itemize}
+
+\item create and enable cron jobs to check GPFS failover status and server
+capacity
+\begin{itemize}
+\item discussion: we don't know how to do this.  Shane and Phil will check
+with Gordon to see if he knows.  If it requires admin access maybe we should
+roll it into mmpmon daemon work?
+\end{itemize}
 
 \end{itemize}
 
