@@ -105,7 +105,7 @@ In this work we explore the potential for holistic I/O characterization
 by combining I/O instrumentation data from multiple sources to obtain
 insights that were previously unobtainable. We describe a methodology that
 incorporates file system instrumenatation, application instrumentation,
-fault monitoring, and formalized periodic regression benchmarking as
+health monitoring, and formalized periodic regression benchmarking as
 the foundation of portable I/O instrumentation, and then demonstrate
 its applicability, portability, and inobtrusiveness by deploying that
 methodology in production on two distinct leadership-class computing
@@ -150,11 +150,13 @@ Brief description of tools that we are using.
 
 \subsection{mmpmon \assign{Phil}}
 
-\subsection{fault monitoring \assign{Glenn}}
+Pull in Zach as needed.
 
-\todo{Cron job to standardize data about what servers are up/down/failedover over
-time.}
-\todo{Can we put capacity monitoring in here too?  Very similar.}
+\subsection{health monitoring \assign{Glenn and Phil}}
+
+Do capacity monitoring and failover monitoring for both Lustre and GPFS.  The
+tools themselves are probably very simple, we should focus on how you go
+about extracting this information.
 
 \section{Platforms and workloads}
 
@@ -169,10 +171,9 @@ We selected 4 represenative application workloads for periodic regression
 benchmarking:
 
 \begin{itemize}
-\item \textbf{HACC} \assign{Suren}
+\item \textbf{HACC} \assign{Shane}
 \item \textbf{VPIC} \assign{Suren}
-\item \textbf{Boxlib} \assign{Glenn} \todo{emphasize why this is interesting
-because of anticipated challenges in AMR codes}
+\item \textbf{BDCATS} \assign{Suren}
 \item \textbf{IOR} \assign{Shane}
 \end{itemize}
 
@@ -231,7 +232,7 @@ coscheduling (to hit some buzzwords)
 
 \section{Related work}
 
-\todo{include SIOX, Xiaosong Ma's work}
+\assign{Phil} \todo{include SIOX, Xiaosong Ma's work}
 
 \section{Conclusions}
 
@@ -317,6 +318,8 @@ capacity
 automation already
 \end{itemize}
 
+\item start browsing existing HACC-IO data collected by Glenn to think about
+how to plot it, how to dig into details, etc. \assign{ALL}
 \end{itemize}
 
 Timeline:
