@@ -203,6 +203,18 @@ caused by a Lustre server problem.}
 \vspace{-.1in}
 \end{figure}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\columnwidth]{figs/example-bar-var.pdf}
+%\vspace{-.07in}
+\caption{Example of how to illustrate difference in relative performance of
+benchmarks across platforms.  Whiskers for either confidence intervals or
+min/max, bars for median across samples.  Expect shape of clusters (i.e.
+which benchmark performs best) to differ.}
+\label{fig:example-bar-var}
+\vspace{-.1in}
+\end{figure}
+
 \begin{itemize}
 \item Sometimes metadata operations are slow (e.g., file-per-process I/O)
     \begin{itemize}
@@ -224,6 +236,12 @@ caused by a Lustre server problem.}
     application's fault)
     \item Show jobs with and without background LMT load
     \item Show jobs with and without background mmpmon load
+    \end{itemize}
+\item Sometimes tuning strategies differ across platforms
+    \begin{itemize}
+    \item contrast which benchmark performs best on each platform
+    \item dig into why
+    \item See example of how we might show this in Figure~\ref{fig:example-bar-var}
     \end{itemize}
 \end{itemize}
 
@@ -330,6 +348,9 @@ automation already
 
 \item start browsing existing HACC-IO data collected by Glenn to think about
 how to plot it, how to dig into details, etc. \assign{ALL}
+    
+\item contrast benchmark performance across platforms once we have stable
+daily data \assign{William and Suren}
 \end{itemize}
 
 Timeline:
