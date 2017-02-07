@@ -148,6 +148,16 @@ Brief description of tools that we are using.
 
 \subsection{LMT \assign{Glenn}}
 
+The Lustre Monitoring Tool (LMT) is a framework that collects Lustre-specific
+counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents
+them to external consumers via a MySQL database.  NERSC Edison, NERSC Cori, and
+ALCF Theta all implement LMT as a part of the Cray Sonexion Lustre platform
+\cite{Keopp2014}, and we built upon the pyLMT framework developed at NERSC
+\cite{Uselton2009} to preserve server-side metrics during benchmark runs across
+all file systems evaluated.  These metrics include bytes read and written, CPU
+load averages, and metadata operation rates on a per-server basis at
+five-second intervals.
+
 \subsection{mmpmon \assign{Phil}}
 
 Pull in Zach as needed.
