@@ -200,6 +200,61 @@ ions to compute nodes, Cori does not, leads to different characteristics.  In
 either case goal is to exercise file system as much as we can within job
 sizes that will get through queue in daily cadence.}
 
+\subsection{Mira benchmark configuration}
+
+Mira's I/O architecture is fundamentally different from that of the Cray
+systems at NERSC, with fixed-size partitions of compute nodes connected to
+a single I/O node that forwards application I/O requests to the SAN.
+Saturating the I/O bandwidth of the underlying storage servers requires the
+use of many I/O nodes, meaning that peak storage bandwidth can only be
+attained using a large portion of the system's available compute nodes.
+Running daily I/O benchmarks that span a large portion of Mira's compute
+nodes is impractical due to the lengthy queue times of capability jobs and
+the obvious objection system administrators would have to this practice.
+
+For these reasons, we decided to use 1,024 Mira compute nodes (i.e., a single
+rack), a partition size that should be small enough to move quickly through
+scheduler queues, but large enough to exercise an adequate portion of the
+storage system. We use 16 processes per node, resulting in a total of 16,384
+processes executing each benchmark. The benchmark workloads were configured
+to use enough I/O volume to drive the storage system for 1--2 minutes.
+Full benchmark configurations for Mira are given below in
+Table~\ref{tab:mira-bench-config}.
+
+\begin{table*}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+benchmark & I/O motif & node count & proc count & I/O volume & I/O b/w (GiB/s) & I/O time (s) \\
+\hline
+IOR & MPI-IO; shared-file; write & 1,024 & 16,384 & 1 TiB & 9.7 & 106 \\
+\hline
+IOR & MPI-IO; shared-file; read & 1,024 & 16,384 & 1 TiB & 8.4 & 125 \\
+\hline
+IOR & POSIX; file-per-process; write & 1,024 & 16,384 & 1 TiB & 13.5 & 76 \\
+\hline
+IOR & POSIX; file-per-process; read & 1,024 & 16,384 & 1 TiB & 18.5 & 56 \\
+\hline
+HACC-IO & GLEAN; file-per-process; write & 1,024 & 16,384 & ~2.4 TiB & 12.6 & 198 \\
+\hline
+HACC-IO & GLEAN; file-per-process; read & 1,024 & 16,384 & ~2.4 TiB & 14.9 & 172 \\
+\hline
+VPIC-IO & pHDF5; shared file; write & 1,024 & 16,384 & ~512 GiB & 9.6 & 53.4 \\
+\hline
+BDCATS-IO & pHDF5; shared file; read & 1,024 & 16,384 & ~80 MiB & .01 & 16.5 \\
+\hline
+\end{tabular}
+\caption{Caption.}
+\label{tab:mira-bench-config}
+\end{table*}
+
+\textcolor{red}{NOTES:}
+\begin{itemize}
+    \item \textcolor{red}{I have scaled back HACC-IO to agg. size of 1.5 TiB to keep it closer to 2 minutes for all future runs.}
+    \item \textcolor{red}{I have scaled up VPIC-IO to agg. size of 1.0 TiB to get it closer to 2 minutes for future runs.}
+    \item \textcolor{red}{Why is the BDCATS-IO workload so small?}
+\end{itemize}
+
 \section{Evaluation}
 
 \todo{Fill this section in based on what we observe}
