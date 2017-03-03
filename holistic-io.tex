@@ -116,16 +116,52 @@ platforms. Based on our \todo{some time period} study we observe
 
 \section{Introduction \assign{Phil}}
 
-\emph{From Rob}: I think a component of the story is that when we approach these problems, there are a few challenges:
-\begin{enumerate}
-\item increasing number of interoperating components (in this case, additional
-BB and DVS and so forth)
-\item different components have different "views" on I/O, different levels of
-monitoring, some of which aren't practical in production
-\item no current framework for integration, lots of expert knowledge to
-construct the story of what happened and how to fix.
-\end{enumerate}
-Cite something to get bibtex working for now~\cite{carns200924}.
+% \emph{From Rob}: I think a component of the story is that when we approach
+% these problems, there are a few challenges:
+% \begin{enumerate}
+
+% \item increasing number of interoperating components (in this case, additional
+% BB and DVS and so forth)
+
+The stratification of the performance and capacity of storage technologies has
+resulted in increasingly complex architectures in parallel storage systems, and
+the many recent leadership-class computing systems are now being deployed with
+flash-based, on-fabric burst buffer tiers\cite{Henseler2016} that provide even higher performance
+than the traditional disk-based scratch file systems which are accessed through
+I/O forwarding nodes\cite{Bhimji2016}.  Although designed to provide optimal performance and
+capacity on an economic basis, this increasing number of interoperating
+components also complicates the task of understanding I/O performance
+degradation.
+
+% \item different components have different "views" on I/O, different levels of
+% monitoring, some of which aren't practical in production
+
+The current state of practice is to monitor each component in the I/O stack
+separately.  However, different components approach I/O from different
+perspectives, often resulting in component-level monitoring data that are not
+obviously compatible.  For example, server-side monitoring tools such as
+LMT\cite{lmt} measure a limited number of metrics at high frequency to achieve
+low overhead, while application-level profiling tools such as
+Darshan\cite{carns200924} track a wide range of metrics at very coarse time
+granularity to minimize overhead.  Data types representing the same logical
+quantity, such as data written, may also be expressed in units that are not
+totally compatible, such as bytes, pages, and blocks.
+
+% \item no current framework for integration, lots of expert knowledge to
+% construct the story of what happened and how to fix.
+
+At present, the gaps of information resulting from these incompatibilities are
+filled using expert knowledge of each tool that generates data.  Because this is
+neither a scalable nor sustainable model for diagnosing performance variation in
+the larger, more complicated I/O subsystems being deployed, there exists a need
+for a framework that integrates data from across all components and presents a
+coherent, holistic view of the inter-dependent behavior of these components.  To
+this end, we have developed a model for holistic instrumentation of I/O
+subsystems that combines server-side and application-level performance data to
+provide deeper insight into the factors that affect I/O performance in a way
+that is generalizable to parallel file system of differing architectures.
+
+% \end{enumerate}
 
 The primary contributions of this work are as follows:
 
