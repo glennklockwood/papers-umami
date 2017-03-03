@@ -294,17 +294,23 @@ file system and Edison's \texttt{scratch1} Lustre file system, respectively.
 \label{fig:tokio-abc-perf-edison-scratch1}
 \end{figure}
 
-\begin{figure}[t]
+Figure~\ref{fig:tokio-abc-fingerprints} shows example I/O fingerprints for the TOKIO-ABC 
+benchmarks on Mira and Edison.
+
+\begin{figure}[h]
 \centering
-\includegraphics[width=0.8\columnwidth]{figs/example-bar-var.pdf}
-%\vspace{-.07in}
-\caption{Example of how to illustrate difference in relative performance of
-benchmarks across platforms.  Whiskers for either confidence intervals or
-min/max, bars for median across samples.  Expect shape of clusters (i.e.
-which benchmark performs best) to differ.}
-\label{fig:example-bar-var}
-\vspace{-.1in}
+    \subfigure[write benchmarks] {
+        \includegraphics[width=\columnwidth]{figs/tokio-abc-write-fingerprints.pdf}
+        \label{fig:tokio-abc-write-fingerprints}
+    }
+    \subfigure[read benchmarks] {
+        \includegraphics[width=\columnwidth]{figs/tokio-abc-read-fingerprints.pdf}
+        \label{fig:tokio-abc-read-fingerprints}
+    }
+\caption{TOKIO-ABC I/O fingerprints for Mira and Edison.}
+\label{fig:tokio-abc-fingerprints}
 \end{figure}
+
 
 \begin{itemize}
 \item Sometimes metadata operations are slow (e.g., file-per-process I/O)
