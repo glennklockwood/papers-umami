@@ -311,7 +311,6 @@ benchmarks on Mira and Edison.
 \label{fig:tokio-abc-fingerprints}
 \end{figure}
 
-
 \begin{itemize}
 \item Sometimes metadata operations are slow (e.g., file-per-process I/O)
     \begin{itemize}
@@ -377,93 +376,121 @@ Assumption: assignments here and in preceding text are tentative, and really
 just guess at someone who can keep tabs on that activity.  Can re-assign,
 delegate, pull in more people, etc.
 
-Assumption: although the paper as outlined will focus on Cori and Mira, we
-should actually try to do these things across Theta and Edison as well.  Four
-total platforms, and we'll see which ones are most viable for study in paper.
+%Assumption: although the paper as outlined will focus on Cori and Mira, we
+%should actually try to do these things across Theta and Edison as well.  Four
+%total platforms, and we'll see which ones are most viable for study in paper.
+%
+%To do:
+%\begin{itemize}
+%\item create git repository to store benchmarks, config files, job scripts,
+%and cron configs for our set of benchmarks \assign{Shane}
+%\begin{itemize}
+%\item repo status: includes build scripts for hacc-io, bdcats, vpic, and ior
+%\item everything works at nersc, currently testing in 96 node runs on Cori
+%and Edison
+%\item todo: review configurations, get ALCF configs working, settle on
+%size/duration
+%\end{itemize}
+%
+%% other benchmarks to consider later: chombo and newer version of hacc-io
+%% with hdf support
+%
+%\item make sure that mmpmon monitoring gets deployed on Mira \assign{Phil and
+%Kevin}
+%\begin{itemize}
+%\item timeline: currently running on Vesta, will be running on Cetus this
+%Monday, will be running on Mira 2 weeks later if things look good
+%\item long term plan to do same thing on Theta DVS nodes
+%\end{itemize}
+%
+%\item coordinate LMT monitoring methods on Theta \assign{Glenn and Kevin}
+%\begin{itemize}
+%\item Meeting about this on Tuesday
+%\end{itemize}
+%
+%\item enable cron jobs to run periodic jobs on ALCF machines \assign{Shane}
+%\begin{itemize}
+%\item Kevin working on this for Mira using Jenkins
+%\item on Theta we will need to use cron with flock -n wrapper
+%\end{itemize}
+%
+%\item enable cron jobs to run periodic jobs on NERSC machines \assign{Glenn}
+%\begin{itemize}
+%\item probably won't fit in backfill as is, can work on reducing time, maybe
+%consider killalble queue too
+%\item Glenn has been getting 4 hour runs through queue so far without much
+%trouble using 96 nodes
+%\item Glenn: has a master script for this already, gradually hardening, will
+%add to git repo
+%\item For paper: measure saturation percentage of scripts and give rationale
+%for jobs of different sizes on different machines being comparable
+%\item remember to plot in relative rather than absolute times in paper where
+%we can, don't want people to get distracted by head to head comparison
+%\end{itemize}
+%
+%\item create and enable cron jobs to check Lustre failover status and server
+%capacity
+%\begin{itemize}
+%\item Glenn: already collecting this data at NERSC now
+%\end{itemize}
+%
+%\item create and enable cron jobs to check GPFS failover status and server
+%capacity
+%\begin{itemize}
+%\item plan to use Zach's periodic df monitoring data
+%\item for failover we will have to look at logs, they are doing some
+%automation already
+%\end{itemize}
+%
+%\item start browsing existing HACC-IO data collected by Glenn to think about
+%how to plot it, how to dig into details, etc. \assign{ALL}
+%    
+%\item contrast benchmark performance across platforms once we have stable
+%daily data \assign{William and Suren}
+%\end{itemize}
 
-To do:
 \begin{itemize}
-\item create git repository to store benchmarks, config files, job scripts,
-and cron configs for our set of benchmarks \assign{Shane}
-\begin{itemize}
-\item repo status: includes build scripts for hacc-io, bdcats, vpic, and ior
-\item everything works at nersc, currently testing in 96 node runs on Cori
-and Edison
-\item todo: review configurations, get ALCF configs working, settle on
-size/duration
-\end{itemize}
+    \item \textcolor{red}{ALL}: Begin analyzing TOKIO-ABC benchmark results and
+    and think about how we want to correlate this with GPFS/Lustre monitoring
+    data. Are there specific jobs or timeframes that we want to zoom in on
+    to better understand anomalous behavior? Are there I/O trends that we
+    can observe on specific systems or even across systems that would be
+    interesting to the reader? This is where we want to showcase the utility
+    of this framework, so we will need to find something interesting to demonstrate
+    here to convince the reader. 
 
-% other benchmarks to consider later: chombo and newer version of hacc-io
-% with hdf support
+    \item \textcolor{red}{ALL}: begin filling in paper intro, background,
+    methodology, system/benchmark descriptions, results, etc.
 
-\item make sure that mmpmon monitoring gets deployed on Mira \assign{Phil and
-Kevin}
-\begin{itemize}
-\item timeline: currently running on Vesta, will be running on Cetus this
-Monday, will be running on Mira 2 weeks later if things look good
-\item long term plan to do same thing on Theta DVS nodes
-\end{itemize}
+    \item \textcolor{red}{SHANE}: round up MMPMON data for a 2-week period
+    of TOKIO-ABC runs on Mira.
 
-\item coordinate LMT monitoring methods on Theta \assign{Glenn and Kevin}
-\begin{itemize}
-\item Meeting about this on Tuesday
-\end{itemize}
+    \item \textcolor{red}{GLENN}: round up LMT data for a 2-week period of
+    TOKIO-ABC runs on Edison.
 
-\item enable cron jobs to run periodic jobs on ALCF machines \assign{Shane}
-\begin{itemize}
-\item Kevin working on this for Mira using Jenkins
-\item on Theta we will need to use cron with flock -n wrapper
-\end{itemize}
-
-\item enable cron jobs to run periodic jobs on NERSC machines \assign{Glenn}
-\begin{itemize}
-\item probably won't fit in backfill as is, can work on reducing time, maybe
-consider killalble queue too
-\item Glenn has been getting 4 hour runs through queue so far without much
-trouble using 96 nodes
-\item Glenn: has a master script for this already, gradually hardening, will
-add to git repo
-\item For paper: measure saturation percentage of scripts and give rationale
-for jobs of different sizes on different machines being comparable
-\item remember to plot in relative rather than absolute times in paper where
-we can, don't want people to get distracted by head to head comparison
-\end{itemize}
-
-\item create and enable cron jobs to check Lustre failover status and server
-capacity
-\begin{itemize}
-\item Glenn: already collecting this data at NERSC now
-\end{itemize}
-
-\item create and enable cron jobs to check GPFS failover status and server
-capacity
-\begin{itemize}
-\item plan to use Zach's periodic df monitoring data
-\item for failover we will have to look at logs, they are doing some
-automation already
-\end{itemize}
-
-\item start browsing existing HACC-IO data collected by Glenn to think about
-how to plot it, how to dig into details, etc. \assign{ALL}
-    
-\item contrast benchmark performance across platforms once we have stable
-daily data \assign{William and Suren}
+    \item \textcolor{red}{WILLIAM}: look at MMPMON data to determine how
+    IOMiner can be extended to analyze GPFS data. 
 \end{itemize}
 
 Timeline:
 \begin{itemize}
-\item Start running periodic (daily) jobs by mid-January
-\item writing up text based on results by mid-February
+    \item \textcolor{red}{SC abstracts due March 20, 2017}
+    \item \textcolor{red}{SC full submissions due March 27, 2017}
+    \item Time to get moving!
 \end{itemize}
-
-Stretch goals:
-\begin{itemize}
-\item additional instrumentation sources
-\item more contributions from analysis framework perspective (i.e.,
-leveraging work from William's paper) 
-\item deploy on more platforms (either additional ALCF or NERSC systems, or
-reach out to another facility like Blue Waters)
-\end{itemize}
+%\begin{itemize}
+%\item Start running periodic (daily) jobs by mid-January
+%\item writing up text based on results by mid-February
+%\end{itemize}
+%
+%Stretch goals:
+%\begin{itemize}
+%\item additional instrumentation sources
+%\item more contributions from analysis framework perspective (i.e.,
+%leveraging work from William's paper) 
+%\item deploy on more platforms (either additional ALCF or NERSC systems, or
+%reach out to another facility like Blue Waters)
+%\end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{REFERENCES}
