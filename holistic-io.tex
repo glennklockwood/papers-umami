@@ -420,7 +420,29 @@ system that are shared (e.g., the file system servers).
 
 With this premise, we then correlate these variables with performance as
 measured by Darshan, essentially turning this into a smorgasbord of
-multivariate analyses.  For example,
+multivariate analyses.  For example, Figure \ref{fig:correlate-perf-and-fstraffic}
+shows the relationship between the observed benchmark performance and the
+fraction of server-side traffic that can be attributed to that benchmark.
+In those cases where the benchmark only represented part (e.g., less than 80
+percent) of server-side traffic, benchmark performance was always poor for
+some definition of poor.  Wahid suggested binning the data to reduce the
+number of data points and make the correlation more obvious, or accurately
+conveying the density of points that give rise to the statistically significant
+correlation coefficient.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\columnwidth]{figs/edison-perf-vs-fstraffic.png}
+%\vspace{-.07in}
+\caption{Correlation between benchmark performance and the amount of
+non-benchmark traffic occurring on the file system}
+\label{fig:correlate-perf-and-fstraffic}
+\vspace{-.1in}
+\end{figure}
+
+
+
+We may also want to consider exploring if the following would be interesting:
 
 \begin{itemize}
 \item 1. Some nominally contended jobs showed good performance while others showed bad.  Why?  Correlate with metadata rates measured by backend, or CPU loads that may indicate metadata loads?  Job diameter (mostly relevant to Cray XC)?
