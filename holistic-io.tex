@@ -196,11 +196,38 @@ observations that were consistently true at one site but not the other.
 Brief description of tools that we are using.
 \todo{overview diagram here?}
 
-\subsection{Darshan \assign{Shane}}
+\subsection{Darshan}
 
-Darshan \cite{carns200924} is a profiling library that tells us all sorts of
-great stuff about the I/O that an application does.  Obviously this section
-needs a little more meat.
+Darshan is an application-level I/O characterization tool that can be used to
+help better understand the I/O behavior of HPC applications. Principle to
+Darshan's design is its lightweight method for instrumenting relevant I/O
+characterization data from applications. Rather than tracing each I/O operation
+issued by an application, Darshan captures a bounded amount of I/O statistics
+for each file accessed by the application, effectively limiting the amount of
+memory needed to store instrumented data. Also, Darshan defers its own internal
+communication and I/O operations (for aggregating data across processes and for
+writing this data to log) until the end of the application, preventing these
+expensive operations from perturbing application I/O performance. These design
+decisions make Darshan amenable to full-time deployment on large-scale,
+production HPC systems. In fact, Darshan has been enabled by default on a number
+of such systems, including systems at the Argonne Leadership Computing Facility
+(ALCF), the National Energy Research Scientific Computing Center (NERSC), and
+the National Center for Supercomputing Applications (NCSA). Deploying Darshan
+full-time on these systems has not only enabled users to better understand the
+I/O behavior of their applications, but has also provided a mass of valuable
+data to researchers who wish to analyze HPC I/O behavior in production
+\cite{carns200924,carns2011understanding,luu2015multiplatform,snyder2015techniques}.
+
+Recently, Darshan's architecture has been modularized to allow new sources
+of I/O data to be more easily integrated into its summaries \cite{snyder2016modular}.
+This modification allows for data from distinct components within the deep
+HPC I/O stack to be more easily correlated, providing a more comprehensive view
+of application I/O behavior. For instance, data captured from higher-level I/O
+libraries like HDF5 and MPI-IO can be correlated with data from the POSIX layer
+to determine potential inefficiencies in an I/O workload. Also, this modularized
+version of Darshan includes a Lustre module that can be correlated with data from
+other modules to gain insight into how an I/O workload interacts with the
+underlying file system.
 
 \subsection{LMT \assign{Glenn}}
 
