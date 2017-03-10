@@ -13,7 +13,7 @@ normalize <- function(x) {
      x / m
 }
 
-alcf_perf <- read.csv("../dat/alcf_2-9_3-1.dat", header=TRUE, sep=',', col.names=c("sys", "fs", "app", "api", "op", "time", "rate", "size", "start", "end", "jobid"))
+alcf_perf <- read.csv("../dat/tokio-abc/alcf_2-9_3-8.dat", header=TRUE, sep=',', col.names=c("sys", "fs", "app", "api", "op", "time", "rate", "size", "start", "end", "jobid"))
 
 # split results into read/write tables
 alcf_perf_tables <- split(alcf_perf, alcf_perf$op)
@@ -28,7 +28,7 @@ alcf_read_perf_stats <- CalculateDataSummary(data=alcf_perf_tables$read, measure
 print(alcf_write_perf_stats)
 print(alcf_read_perf_stats)
 
-nersc_perf <- read.csv("../dat/nersc_2-14_3-1.dat", header=TRUE, sep=',', col.names=c("sys", "fs", "app", "api", "op", "time", "rate", "size", "start", "end", "jobid"))
+nersc_perf <- read.csv("../dat/tokio-abc/nersc_2-14_3-1.dat", header=TRUE, sep=',', col.names=c("sys", "fs", "app", "api", "op", "time", "rate", "size", "start", "end", "jobid"))
 
 # split results into read/write tables
 nersc_perf_tables <- split(nersc_perf, list(nersc_perf$fs, nersc_perf$op))
