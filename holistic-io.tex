@@ -533,14 +533,28 @@ monitoring provide a feedback loop for coscheduling?
 
 \assign{Phil} \todo{include SIOX} Let's cite Xiaosong Ma's work in server-side
 monitoring \cite{Liu2016}.  Matthieu showed how to
-minimize I/O jitter\cite{Dorier2012}.  Jay Lofstead wrote a paper on managing
-I/O variability in production\cite{Lofstead2010}.  Andrew Uselton's work on
+minimize I/O jitter\cite{Dorier2012}.
+
+Lofstead et al wrote a paper on managing I/O variability in production~
+\cite{Lofstead2010} which characterizied \emph{internal interference} and
+\emph{external interference} using purely client-side metrics.  They defined an
+\emph{imbalance factor}, the ratio of the slowest to fastest write times, as a
+means to infer the external interference, but we can precisely quantify it here
+with server-side metrics.
+
+Andrew Uselton's work on
 understanding I/O performance in terms of ensembles of bursts might be
 relevant\cite{Uselton2010}.  A long time ago, David Skinner and Bill Kramer
 wrote a paper that characterized sources of I/O variation, but it may be dated
-by now\cite{Skinner2005}.  More recently Xie et al also characterized I/O
-problems at Oak Ridge\cite{Xie2012}.  Is any of the BeeGFS stuff (dynamically
-provisioning file systems) relevant to interference isolation?
+by now\cite{Skinner2005}.
+
+More recently Xie et al also characterized I/O problems at Oak
+Ridge\cite{Xie2012} using IOR and quantified the effects of stripe counts,
+straggling writers, and shared-file I/O to target areas where middleware can
+optimize I/O for applications.
+
+Is any of the BeeGFS stuff (dynamically provisioning file systems) relevant to
+interference isolation?
 
 \section{Conclusions}
 
