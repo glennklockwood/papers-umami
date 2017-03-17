@@ -407,8 +407,32 @@ percentiles.}
 % \label{fig:tokio-abc-perf-edison-scratch1}
 % \end{figure}
 
-Show a distribution of our coverage metric, which is \( {\textup{bytes captured
-in darshan log}} \over {\sum_{time}^{ }{\textup{bytes captured by LMT}}} \)
+By aggregating the server-side I/O traffic from LMT and ggiostat during the time
+each test was run, we can also define the \emph{coverage factor} ($CF$) of a
+job:
+
+\[ 
+CF = \frac{N_{\textup{bytes}}^{\textup{Darshan}}}
+{\sum_{\textup{time,servers}}^{ }
+\left [ N_{\textup{bytes}}^{\textup{LMT,ggiostat}} \right ] }
+\]
+
+This metric provides a direct indication of if a job had exclusive access to the
+file systems' bandwidth while it was running; a coverage factor of 1.0 indicates
+that all of the server-side bytes were caused by the job that generated the
+Darshan log, while a converage factor of 0.5 indicates that only half of the
+server-side traffic was attributable to the job.
+
+Figure \ref{fig:coverage-factor-distribution} demonstrates the distribution of
+coverage factors across all experiments run and confirms that the vast majority
+of tests ($> 85\%$) had a high coverage factor ($ CF > 0.90 $).  Despite this, 
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1.0\columnwidth]{figs/coverage-factor-histogram.png}
+\caption{Frequency of coverage factors observed across all experiments}
+\label{fig:coverage-factor-distribution}
+\end{figure}
 
 Figure~\ref{fig:tokio-abc-fingerprints} shows example I/O fingerprints for the
 TOKIO-ABC benchmarks on Mira and Edison.  They represent a baseline indication

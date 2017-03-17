@@ -12,4 +12,4 @@ else
     preview_cmd="echo 'open this yourself: '"
 fi
 
-make clean && make && $preview=cmdholistic-io.pdf
+make clean && make && $preview_cmd holistic-io.pdf
