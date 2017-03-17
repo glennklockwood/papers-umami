@@ -23,6 +23,7 @@
 \usepackage[usenames, dvipsnames]{color}
 \usepackage{balance}
 \usepackage{mathtools}
+\usepackage{multirow}
 
 %\usepackage[pdftex]{graphicx}
 \usepackage{graphicx}
@@ -292,26 +293,22 @@ either case goal is to exercise file system as much as we can within job
 sizes that will get through queue in daily cadence.}  The specific details are
 described in Table \ref{tab:mira-bench-config}.
 
+% abandon all hope ye who try to edit this stupid table by hand.  I used
+% http://www.tablesgenerator.com to make it.
 \begin{table*}[h]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
-benchmark & I/O motif & node count (Mira) & proc count (Mira) & I/O volume (Mira) & node count (Edison) & proc count (Edison) & I/O volume (Edison) \\
-\hline
-IOR & MPI-IO; shared-file & 1,024 & 16,384 & 1.0 TiB & 128 & 2,048 & 0.5 TiB \\
-\hline
-IOR & POSIX; file-per-process & 1,024 & 16,384 & 1.0 TiB & 128 & 2,048 & 2.0 TiB \\
-\hline
-HACC-IO & GLEAN; file-per-process & 1,024 & 16,384 & 1.5 TiB & 128 & 2,048 & 2.0 TiB \\
-\hline
-VPIC-IO & pHDF5; shared file & 1,024 & 16,384 & 1.0 TiB & 128 & 2,048 & 2.0 TiB \\
-\hline
+\multirow{2}{*}{\textbf{Benchmark}}                    & \multirow{2}{*}{\textbf{I/O Motif}}                           & \multicolumn{3}{c|}{\textbf{Mira}}                        & \multicolumn{3}{c|}{\textbf{Edison}}                      \\ \cline{3-8} 
+                                                       &                                                               & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} \\ \hline
+IOR                                                    & \begin{tabular}[c]{@{}c@{}}MPI-IO\\ shared file\end{tabular}  & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 0.5 TiB           \\ \hline
+IOR                                                    & \begin{tabular}[c]{@{}c@{}}POSIX\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+\begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
 \end{tabular}
 \caption{Do you know how to make this table not look stupid?}
 \label{tab:mira-bench-config}
 \end{table*}
-
-
 
 \subsection{Mira benchmark configuration}
 
@@ -346,12 +343,13 @@ pool of I/O nodes for all of their traffic. \todo{make this less vague}
 When grouped by each specific application and read/write mode (Figure
 \ref{fig:tokio-abc-perf-boxplots}), the general trend of file-per-process (fpp)
 I/O performing faster than shared-file becomes evident across all file systems.
-However, there are start differences in performance where mira-fs1 generally
-shows a much lower level of performance variability above the mean, but is
-susceptible to a long-tail of degraded performance for the HACC workload.
-
-Show a distribution of our coverage metric, which is \( {\textup{bytes captured
-in darshan log}} \over {\sum_{time}^{ }{\textup{bytes captured by LMT}}} \)
+The variance for each file system in Figure \ref{fig:perf-summary-boxplots-fs}
+is proportionate for all applications tested and is not the result of one
+specific workload demonstrating significantly higher variance than the others.  
+That said, there are a subset of exceptions to this; for example, the HACC
+workload demonstrates susceptibility to a long tail of performance degradation
+on mira-fs1 despite that file system's overall lower variance.  The specific
+reason for this will be explored in Section \ref{discussion}.
 
 \begin{figure}[t]
 \centering
@@ -409,6 +407,9 @@ percentiles.}
 % \label{fig:tokio-abc-perf-edison-scratch1}
 % \end{figure}
 
+Show a distribution of our coverage metric, which is \( {\textup{bytes captured
+in darshan log}} \over {\sum_{time}^{ }{\textup{bytes captured by LMT}}} \)
+
 Figure~\ref{fig:tokio-abc-fingerprints} shows example I/O fingerprints for the
 TOKIO-ABC benchmarks on Mira and Edison.  They represent a baseline indication
 of strengths, weaknesses, and susceptibility to variance for each file system.
@@ -417,14 +418,6 @@ performance is normalized to focus on trends rather than absolute throughput.
 Whiskers indicate minimum and maximum sample values. \todo{What does this tell
 us about high-level similarities/differences between Mira/GPFS and
 Edison/Lustre?}
-
-Figure~\ref{fig:tokio-abc-perf-boxplots} shows the same data (but in boxplot
-format and not normalized) which suggests that the magnitude of variance in
-Edison is significantly larger than the variance on Mira.  It also confirms that
-shared-file I/O is more expensive than file-per-process I/O on both platforms.
-\todo{What are the benefits of the fingerprint approach rather than a box plot
-of the tests?  I haven't entirely thought this through so maybe the answer is
-obvious.}
 
 \begin{figure}[h]
 \centering
