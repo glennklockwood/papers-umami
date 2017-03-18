@@ -423,16 +423,35 @@ that all of the server-side bytes were caused by the job that generated the
 Darshan log, while a converage factor of 0.5 indicates that only half of the
 server-side traffic was attributable to the job.
 
-Figure \ref{fig:coverage-factor-distribution} demonstrates the distribution of
-coverage factors across all experiments run and confirms that the vast majority
-of tests ($> 85\%$) had a high coverage factor ($ CF > 0.90 $).  Despite this, 
+Figure \ref{fig:cdf-coverage} demonstrates the distribution of coverage
+factors across all experiments run.  This distribution indicates that the
+majority of tests ($> 85\%$) have high coverage factor ($ CF > 0.90 $), which
+is consistent with the observation that I/O occurs in bursts\cite{Liu2016}\todo{more}, and the
+probability of two bursts coinciding and causing interference is relatively
+low.  Despite this low incidence of overlapping bursts, though, the cumulative
+distribution function of performance relative to the peak observed bandwidth
+(Figure \ref{fig:cdf-performance}) is far more evenly distributed; this is a
+clear indication that server-side interference (of which the coverage factor is
+a direct indicator) is far from the only contributor to sub-optimal peformance
+on all file systems tested.
 
-\begin{figure}[t]
+\begin{figure}[h]
 \centering
-\includegraphics[width=1.0\columnwidth]{figs/coverage-factor-histogram.png}
-\caption{Frequency of coverage factors observed across all experiments}
+    \subfigure[Coverage Factor] {
+        \includegraphics[width=\columnwidth]{figs/cdf-coverage-factor.png}
+        \label{fig:cdf-coverage}
+    }
+    \subfigure[Fraction of Peak Performance] {
+        \includegraphics[width=\columnwidth]{figs/cdf-performance.png}
+        \label{fig:cdf-performance}
+    }
+\caption{Cumulative distribution function of the peformance relative to the
+maximum throughput observed across each file system (\ref{fig:cdf-coverage}) and the coverage
+factor (\ref{fig:cdf-performance}).}
 \label{fig:coverage-factor-distribution}
 \end{figure}
+
+
 
 Figure~\ref{fig:tokio-abc-fingerprints} shows example I/O fingerprints for the
 TOKIO-ABC benchmarks on Mira and Edison.  They represent a baseline indication
