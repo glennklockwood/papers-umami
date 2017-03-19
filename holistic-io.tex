@@ -341,23 +341,40 @@ nodes.  By comparison, the three Lustre file systems tested each use a common
 pool of I/O nodes for all of their traffic. \todo{make this less vague}
 
 When grouped by each specific application and read/write mode (Figure
-\ref{fig:tokio-abc-perf-boxplots}), the general trend of file-per-process (fpp)
-I/O performing faster than shared-file becomes evident across all file systems.
-The variance for each file system in Figure \ref{fig:perf-summary-boxplots-fs}
-is proportionate for all applications tested and is not the result of one
-specific workload demonstrating significantly higher variance than the others.  
-That said, there are a subset of exceptions to this; for example, the HACC
-workload demonstrates susceptibility to a long tail of performance degradation
-on mira-fs1 despite that file system's overall lower variance.  The specific
-reason for this will be explored in Section \ref{discussion}.
+\ref{fig:tokio-abc-perf-boxplots}), it becomes clear that the variance of each
+file system in Figure \ref{fig:perf-summary-boxplots-fs} is proportionate for
+all applications tested and is not the result of one specific workload
+demonstrating significantly higher variance than the others.  For example, the
+the trend of file-per-process (fpp) I/O performing faster than shared-file is
+observed across all file systems evaluated, contributing equally to the 
+file system-wide variance shown in Figure \ref{fig:perf-summary-boxplots-fs}.
+
+That said, the variance in performance \emph{within} each application is a
+function of each file system.  For example, the HACC workload demonstrates
+susceptibility to a long tail of performance degradation on mira-fs1 despite
+that file system's overall lower performance variance.  Similarly, scratch3
+demonstrates very broad performance variation for the VPIC write workload that
+is a marked departure from the very tight distributions of VPIC write
+performance on all other file systems.
+
+\textbf{Thus, Figure \ref{fig:tokio-abc-perf-boxplots} demonstrates that the
+performance variability of a file system is not an intrinsic property};
+different I/O patterns result in different levels of variability.  Furthermore,
+these behaviors are not a function of the parallel file system architecture
+either; because scratch1/scratch2/scratch3 are all Lustre file systems (at the
+same version of Lustre), the differences between them are either a result of
+their different hardware configurations (scratch3 vs. scratch1/scratch2), or
+even the specific user distributions across identically configured hardware
+(scratch1 and scratch2).
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.png}
 \caption{TOKIO-ABC I/O performance for Edison (\texttt{scratch1},
 \texttt{scratch2}, \texttt{scratch3}) and Mira (\texttt{mira-fs1}) normalized to
-the mean performance of each file system.  Whiskers represent the 5th and 95th
-percentiles.}
+the mean of all tests performed on each file system.  Each box reflects the
+distribution of all four application workloads and both read and write
+performance. Whiskers represent the 5th and 95th percentiles.}
 \label{fig:perf-summary-boxplots-fs}
 \end{figure}
 
@@ -370,43 +387,6 @@ percentiles.}
 \label{fig:tokio-abc-perf-boxplots}
 \end{figure}
 
-
-%%% Glenn: the following figures are informationally sparse since I don't think
-%%% we want to talk about the time dependence of performance.  I added box plots
-%%% to (hopefully) more concisely show the distribution of performance.
-%
-% Figures \ref{fig:tokio-abc-perf-mira-fs1} and \ref{fig:tokio-abc-perf-edison-scratch1}
-% show the performance of each TOKIO-ABC benchmark run on Mira's \texttt{mira-fs1} GPFS
-% file system and Edison's \texttt{scratch1} Lustre file system, respectively. 
-% 
-% \begin{figure}[h]
-% \centering
-%     \subfigure[write performance]{
-%         \includegraphics[width=\columnwidth]{figs/mira-fs1-write-perf.pdf}
-%         \label{fig:tokio-abc-perf-mira-fs1-write}
-%     }
-%     \subfigure[read performance]{
-%         \includegraphics[width=\columnwidth]{figs/mira-fs1-read-perf.pdf}
-%         \label{fig:tokio-abc-perf-mira-fs1-read}
-%     }
-% \caption{I/O performance for TOKIO-ABC runs on Mira's \texttt{mira-fs1} GPFS file system.}
-% \label{fig:tokio-abc-perf-mira-fs1}
-% \end{figure}
-% 
-% \begin{figure}[h]
-% \centering
-%     \subfigure[write performance]{
-%         \includegraphics[width=\columnwidth]{figs/edison-scratch1-write-perf.pdf}
-%         \label{fig:tokio-abc-perf-edison-scratch1-write}
-%     }
-%     \subfigure[read performance]{
-%         \includegraphics[width=\columnwidth]{figs/edison-scratch1-read-perf.pdf}
-%         \label{fig:tokio-abc-perf-edison-scratch1-read}
-%     }
-% \caption{I/O performance for TOKIO-ABC runs on Edison's \texttt{scratch1} Lustre file system.}
-% \label{fig:tokio-abc-perf-edison-scratch1}
-% \end{figure}
-
 By aggregating the server-side I/O traffic from LMT and ggiostat during the time
 each test was run, we can also define the \emph{coverage factor} ($CF$) of a
 job:
@@ -417,23 +397,25 @@ CF = \frac{N_{\textup{bytes}}^{\textup{Darshan}}}
 \left [ N_{\textup{bytes}}^{\textup{LMT,ggiostat}} \right ] }
 \]
 
-This metric provides a direct indication of if a job had exclusive access to the
-file systems' bandwidth while it was running; a coverage factor of 1.0 indicates
-that all of the server-side bytes were caused by the job that generated the
-Darshan log, while a converage factor of 0.5 indicates that only half of the
-server-side traffic was attributable to the job.
+This metric is a direct reflection of how much I/O traffic the job in question
+was competing against in the underlying file systems.  When $CF = 1.0$,
+all of the server-side bytes were caused by the job that generated the Darshan
+log, while $CF = 0.5$ indicates that only half of the server-side traffic was
+attributable to the job.  In practice, it is possible to observe $CF > 1.0$ if
+the server-side monitoring (e.g., LMT or ggiostat) did not capture data from all
+servers during a polling interval due to UDP packet loss or other factors.
 
-Figure \ref{fig:cdf-coverage} demonstrates the distribution of coverage
-factors across all experiments run.  This distribution indicates that the
-majority of tests ($> 85\%$) have high coverage factor ($ CF > 0.90 $), which
-is consistent with the observation that I/O occurs in bursts\cite{Liu2016}\todo{more}, and the
+The distribution of coverage factors across all experiments run are shown in
+Figure \ref{fig:cdf-coverage}, which indicates that the majority of tests
+($> 85\%$) have high coverage factor ($ CF > 0.90 $).  This is consistent with
+the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the
 probability of two bursts coinciding and causing interference is relatively
 low.  Despite this low incidence of overlapping bursts, though, the cumulative
-distribution function of performance relative to the peak observed bandwidth
-(Figure \ref{fig:cdf-performance}) is far more evenly distributed; this is a
-clear indication that server-side interference (of which the coverage factor is
-a direct indicator) is far from the only contributor to sub-optimal peformance
-on all file systems tested.
+distribution function (CDF) of performance relative to the peak observed
+bandwidth (Figure \ref{fig:cdf-performance}) is far more broadly distributed.
+This is a clear indication that server-side interference, represented by the
+coverage factor, is only one of many contributors to sub-optimal peformance on
+all file systems tested.
 
 \begin{figure}[h]
 \centering
@@ -451,35 +433,34 @@ factor (\ref{fig:cdf-performance}).}
 \label{fig:coverage-factor-distribution}
 \end{figure}
 
+To more directly understand this relationship between application-side
+performance and server-side contention, we plot these two variables for each
+experiment in Figure \ref{fig:correlate-perf-and-fstraffic}.  Although there is
+no striking visual correlation, this diagram does show that high performance
+($performance > 1.0$) is very unlikely even when server-side contention is only
+modestly high ($CF \leq 0.8$).  More quantitatively, the Pearson correlation
+coefficient between application performance and the coverage factor is modest
+(0.429) but significant (p-value $\approx 10^{-37}$).  This is consistent with
+the previous qualitative observation that the coverage factor is a contributor
+to performance variability, but not the only one.
 
-
-Figure~\ref{fig:tokio-abc-fingerprints} shows example I/O fingerprints for the
-TOKIO-ABC benchmarks on Mira and Edison.  They represent a baseline indication
-of strengths, weaknesses, and susceptibility to variance for each file system.
-This example shows the median performance of several workloads over time, and
-performance is normalized to focus on trends rather than absolute throughput.
-Whiskers indicate minimum and maximum sample values. \todo{What does this tell
-us about high-level similarities/differences between Mira/GPFS and
-Edison/Lustre?}
-
-\begin{figure}[h]
+\begin{figure}[t]
 \centering
-    \subfigure[write benchmarks] {
-        \includegraphics[width=\columnwidth]{figs/tokio-abc-write-fingerprints.pdf}
-        \label{fig:tokio-abc-write-fingerprints}
-    }
-    \subfigure[read benchmarks] {
-        \includegraphics[width=\columnwidth]{figs/tokio-abc-read-fingerprints.pdf}
-        \label{fig:tokio-abc-read-fingerprints}
-    }
-\caption{TOKIO-ABC I/O fingerprints for Mira and Edison.}
-\label{fig:tokio-abc-fingerprints}
+\includegraphics[width=0.8\columnwidth]{figs/edison-perf-vs-fstraffic.png}
+\caption{Correlation between performance, measured by Darshan, and the coverage
+factor, measured by on the storage servers, for all tests run on file systems.
+The performance given is relative to the mean performance measured for each
+unique combination of application, read-write mode, and file system.}
+\label{fig:correlate-perf-and-fstraffic}
+\vspace{-.1in}
 \end{figure}
+
 
 \subsection{Discussion} \label{discussion}
 
 This section will discuss \emph{why} we saw the behavior that we did by
-correlating data sources, then make broader conclusions about the differences
+aligning and correlating data sources, then make broader conclusions about the
+differences
 between Mira and Edison results.  I envision a general approach of extracting
 or calculating \emph{internal} and \emph{external} variables from the data we
 have, where internal variables are measurements from components of the system
@@ -487,39 +468,34 @@ that were exclusively reserved for our jobs (e.g., all data from the compute
 nodes), and external variables are those measurements from components of the
 system that are shared (e.g., the file system servers).
 
-With this premise, we then correlate these variables with performance as
-measured by Darshan, essentially turning this into a smorgasbord of
-multivariate analyses.  For example, Figure \ref{fig:correlate-perf-and-fstraffic}
-shows the relationship between the observed benchmark performance and the
-fraction of server-side traffic that can be attributed to that benchmark.
-In those cases where the benchmark only represented part (e.g., less than 80
-percent) of server-side traffic, benchmark performance was always poor for
-some definition of poor.  Wahid suggested binning the data to reduce the
-number of data points and make the correlation more obvious, or accurately
-conveying the density of points that give rise to the statistically significant
-correlation coefficient.
+We will present the prototype TOKIO dashboard (\ref{fig:edison-haccio-write-dashboard})
+which is an easy way for users to see trends of how well their specific
+workload has performed in the past along with various metrics from Darshan,
+server-side monitoring, and machine-specific sources that may contribute to
+performance.  This has a twofold benefit.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.8\columnwidth]{figs/edison-perf-vs-fstraffic.png}
-%\vspace{-.07in}
-\caption{Correlation between benchmark performance and the amount of
-non-benchmark traffic occurring on the file systems on Edison}
-\label{fig:correlate-perf-and-fstraffic}
-\vspace{-.1in}
-\end{figure}
+Foremost, users can quickly see how their application's performance compares
+to similar I/O workloads in the past.  The boxplots on the right side of the
+dashboard offer a percentile in which the job's performance falls.  In addition,
+the other components that affect I/O performance are also displayed, composing
+what we refer to as the \emph{I/O subsystem weather}, and the relative rarity
+of these states are shown in the accompanying box plots, which we refer to as
+the \emph{I/O subsystem climate}.  By providing a view of the I/O subsystem
+weather and the overall climate, the user can quickly contextualize job
+performance with respect to normal levels of variation.  This context allows
+users to differentiate between a long-term performance problem (as would occur
+if the application I/O is not optimized for the underlying file system) and a
+stastitically rare event analogous to an extreme weather event.
 
-We may also want to consider exploring if the following would be interesting:
+With this framework, we then deep-dive into several specific cases of
+performance degradation identified by the TOKIO dashboard.  For example,
+(\ref{fig:edison-haccio-write-dashboard}) shows a particular date (March 4) on
+which performance was abnormally low while both the coverage factor and metadata
+open/close rates were abnormal.
 
-\begin{itemize}
-\item 1. Some nominally contended jobs showed good performance while others showed bad.  Why?  Correlate with metadata rates measured by backend, or CPU loads that may indicate metadata loads?  Job diameter (mostly relevant to Cray XC)?
-\item 2. Can we calculate some of William's metrics during each day's jobs and correlate with that?  This should be done before the PI meeting next week.
-\end{itemize}
-
-We may also want to deep-dive into one or two specific cases of performance
-degradation to root-cause them.  We have some candidates abnormally slow runs,
-and we also know that VPIC-IO behaves very differently on Mira vs. Edison.
-This would be a good place to showcase William's metrics and methods as well.
+We also know that VPIC-IO behaves very differently on Mira vs. Edison, and this
+might make a good deep dive.  Similarly, understanding HACC's long tail would
+be great.
 
 Once we have shown that we understand several different sources of performance
 loss, we can then establish a taxonomy and enumerate how often bad I/O
@@ -557,15 +533,39 @@ example,
     \end{itemize}
 \end{itemize}
 
-We should refer heavily to past work (see Section \ref{related}) to make sure we
-aren't reinventing anything
-
 If we have enough data to make a statistically significant statement, we should
 aim to discuss how susceptible different file systems are to these bad I/O
 performance root causes to stir up controversy (GPFS is better/worse than
 Lustre when facing problem X).  If we do this, we can also propose strategies
 to work around these common bottlenecks.  For example, can holistic I/O
-monitoring provide a feedback loop for coscheduling?
+monitoring provide a feedback loop for coscheduling?  These would be stretch
+statements.
+
+In addition, we can point out that the dashboard is most useful when an historic
+record of similar jobs executions is already known \emph{a priori}, Liu et al~\cite{Liu2016}
+has demonstrated that it is possible to combine resource manager logs alongside
+server-side I/O logs to identify a series of I/O bursts with specific jobs,
+users, and applications.  Future work may be to incorporate this I/O pattern
+identification algorithm with the TOKIO dashboard to automatically build an
+historic record for any arbitrary job.
+
+It may also be worth saying that the TOKIO dashboard can display an historic
+record for any grouping of I/O patterns.  Although groupings were established
+around specific applications based on Darshan logs, it is equally useful to
+use groupings built around similar periods of server-side traffic.  For example,
+it is possible to identify collections of applications that, when run together,
+produce abnormally poor server-side performance or, conversely, surprisingly
+good performance.  From this would arise an opportunity to inform scheduling
+to optimize for or avoid I/O contention between two frequently conflicting
+applications.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1.0\columnwidth]{figs/edison-haccio-write-dashboard.png}
+\caption{Dashboard indicating the performance variation of HACC write workloads
+on the scratch2 file system.}
+\label{fig:edison-haccio-write-dashboard}
+\end{figure}
 
 \section{Related work} \label{related}
 
