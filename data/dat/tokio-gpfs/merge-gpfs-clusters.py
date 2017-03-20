@@ -77,4 +77,4 @@ if __name__ == "__main__":
     print agg_df.sum()
     #print "****"
     #print agg_df
-    agg_df.to_csv("mira-fs1_2-25_3-9_merged.dat")
+    agg_df.to_csv("mira-fs1_2-25_3-19_merged.dat")
