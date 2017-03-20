@@ -333,6 +333,8 @@ Table~\ref{tab:mira-bench-config}.
 
 \section{Results} \label{results}
 
+\todo{It's not great that Figs \ref{fig:perf-summary-boxplots-fs}, \ref{fig:tokio-abc-perf-boxplots}, and \ref{fig:cumulative-distribution-functions} all show the same data in slightly different ways.}
+
 Figure \ref{fig:perf-summary-boxplots-fs} provides an overall distribution of
 performance measured by all benchmarks run on each file system.  GPFS on Mira
 clearly shows the more narrow distribution of variation around the mean, which
@@ -358,13 +360,13 @@ is a marked departure from the very tight distributions of VPIC write
 performance on all other file systems.
 
 \textbf{Thus, Figure \ref{fig:tokio-abc-perf-boxplots} demonstrates that the
-performance variability of a file system is not an intrinsic property};
+performance variability is not an intrinsic property of a file system};
 different I/O patterns result in different levels of variability.  Furthermore,
 these behaviors are not a function of the parallel file system architecture
 either; because scratch1/scratch2/scratch3 are all Lustre file systems (at the
 same version of Lustre), the differences between them are either a result of
 their different hardware configurations (scratch3 vs. scratch1/scratch2), or
-even the specific user distributions across identically configured hardware
+the specific user workload distributions across identically configured hardware
 (scratch1 and scratch2).
 
 \begin{figure}[t]
@@ -430,7 +432,7 @@ all file systems tested.
 \caption{Cumulative distribution function of the peformance relative to the
 maximum throughput observed across each file system (\ref{fig:cdf-coverage}) and the coverage
 factor (\ref{fig:cdf-performance}).}
-\label{fig:coverage-factor-distribution}
+\label{fig:cumulative-distribution-functions}
 \end{figure}
 
 To more directly understand this relationship between application-side
