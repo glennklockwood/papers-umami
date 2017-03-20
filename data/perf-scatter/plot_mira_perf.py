@@ -29,6 +29,8 @@ df['coverage_factor'] = df['total_bytes'].values / (df['ggio_bytes_read'] + df['
 ### Drop rows where the coverage factor is > 2; these rows have data missing
 df = df[df['coverage_factor'] < 2.0]
 
+### Generate scatter plots to visualize the relationships between performance
+### and ggiostat measurements
 for counter_name in [ x for x in df.keys() if x.startswith('ggio_') ] \
                + ['coverage_factor']:
     fig = plt.figure(figsize=(8,6))
@@ -48,16 +50,51 @@ for counter_name in [ x for x in df.keys() if x.startswith('ggio_') ] \
 #   fig.suptitle('Correlation between %s and %s' 
 #                 % (x_label.split('(',1)[0].strip(),
 #                    y_label.split('(',1)[0].strip()))
-    ax.set_title("Coefficient=%.4f, P-value=%.2g" 
-                    % stats.pearsonr(x, y), fontsize=12 )
-#                   % stats.spearmanr(x, y), fontsize=12 )
+    title_str = "Coefficient=%.4f, P-value=%.2g" \
+                    % stats.pearsonr(x, y)
+#                   % stats.spearmanr(x, y)
+    ax.set_title(title_str, fontsize=12 )
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     plt.grid(True)
 
     if counter_name.startswith('ggio_'):
-        output_file = 'perf_vs_%s.pdf' % counter_name.split('_', 1)[1]
+        output_file = 'perf_vs_%s.png' % counter_name.split('_', 1)[1]
     else:
-        output_file = 'perf_vs_%s.pdf' % counter_name
-    print "Generating %s" % output_file
+        output_file = 'perf_vs_%s.png' % counter_name
+    print "Generating %s (%s)" % (output_file, title_str)
     fig.savefig(output_file, bbox_inches='tight')
+
+### Calculate the Pearson correlation coefficient and the associated
+### p-value for every permutation of counter pairs
+pearson_results = []
+for i in range(len(df.columns) - 1):
+    i_name = df.columns[i]
+    for j in range(i, len(df.columns)):
+        j_name = df.columns[j]
+        try:
+            coeff, pval = stats.pearsonr(df[i_name], df[j_name])
+            pearson_results.append((i_name, j_name, coeff, pval))
+        except TypeError:
+            ### when passing non-numeric arguments to stats.pearsonr
+            pass
+
+### Now print the calculated Pearson correlations by the lowest p-values
+only_print_key = 'agg_perf_by_slowest' # only care about performance correlation
+print "%10s %10s %30s : %-15s" % ("P.Coeff", "P-val", "Counter1", "Counter2")
+for (col_name1, col_name2, coeff, pval) in sorted(pearson_results, key=lambda x: x[3]):
+    ### don't print trivial relationships
+    if pval == 0 or pval == 1:
+        continue
+    ### don't print relationships with very high p-values
+    if pval > 0.05:
+        continue
+    ### don't correlate data from the same source since much of it is degenerate
+    if col_name1.split('_',1)[0] == col_name2.split('_',1)[0]:
+        continue
+    ### don't print anything except for the key of interest (if provided)
+    if only_print_key is not None \
+    and col_name1 != only_print_key \
+    and col_name2 != only_print_key:
+        continue
+    print "%10.4f %10.4g %30s : %-15s" % (coeff, pval, col_name1, col_name2)
