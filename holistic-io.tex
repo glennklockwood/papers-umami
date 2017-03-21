@@ -367,15 +367,18 @@ Table~\ref{tab:mira-bench-config}.
 
 \section{Results} \label{results}
 
-\todo{It's not great that Figs \ref{fig:perf-summary-boxplots-fs}, \ref{fig:tokio-abc-perf-boxplots}, and \ref{fig:cumulative-distribution-functions} all show the same data in slightly different ways.}
+\todo{It's not great that Figs \ref{fig:perf-summary-boxplots-fs}, \ref{fig:tokio-abc-perf-boxplots}, and \ref{fig:cdfs} all show the same data in slightly different ways.}
 
 Figure \ref{fig:perf-summary-boxplots-fs} provides an overall distribution of
 performance measured by all benchmarks run on each file system.  GPFS on Mira
 clearly shows the more narrow distribution of variation around the mean, which
 is likely a result of Blue Gene/Q's static mapping of I/O nodes to compute
-nodes.  By comparison, the three Lustre file systems tested each use a common
-pool of I/O nodes for all of their traffic. \todo{make this less vague}
+nodes.  By comparison, all I/O traffic bound for a specific Lustre file system
+on Edison routes through the same set of 10 or 13 I/O nodes (scratch1/scratch2
+and scratch3, respectively), increasing the potential for contention on these
+file systems.
 
+%%% following paragraph needs to be firmed up a little --gkl
 When grouped by each specific application and read/write mode (Figure
 \ref{fig:tokio-abc-perf-boxplots}), it becomes clear that the variance of each
 file system in Figure \ref{fig:perf-summary-boxplots-fs} is proportionate for
@@ -385,23 +388,22 @@ the trend of file-per-process (fpp) I/O performing faster than shared-file is
 observed across all file systems evaluated, contributing equally to the 
 file system-wide variance shown in Figure \ref{fig:perf-summary-boxplots-fs}.
 
-That said, the variance in performance \emph{within} each application is a
-function of each file system.  For example, the HACC workload demonstrates
+That said, the degree of performance variation \emph{within} each application 
+varies with each file system.  For example, the HACC workload demonstrates
 susceptibility to a long tail of performance degradation on mira-fs1 despite
-that file system's overall lower performance variance.  Similarly, scratch3
-demonstrates very broad performance variation for the VPIC write workload that
-is a marked departure from the very tight distributions of VPIC write
-performance on all other file systems.
+that file system's overall lower variation in \ref{fig:perf-summary-boxplots-fs}.
+Similarly, scratch3 demonstrates very broad performance variation for the VPIC
+write workload which is a marked departure from the very tight distributions of
+VPIC write performance on all other file systems.
 
 \textbf{Thus, Figure \ref{fig:tokio-abc-perf-boxplots} demonstrates that the
 performance variability is not an intrinsic property of a file system};
 different I/O patterns result in different levels of variability.  Furthermore,
 these behaviors are not a function of the parallel file system architecture
-either; because scratch1/scratch2/scratch3 are all Lustre file systems (at the
-same version of Lustre), the differences between them are either a result of
-their different hardware configurations (scratch3 vs. scratch1/scratch2), or
-the specific user workload distributions across identically configured hardware
-(scratch1 and scratch2).
+either; because scratch1/scratch2/scratch3 are all Lustre file systems, the
+differences between them must be a result of their different hardware
+configurations (see Section \ref{platforms}), their specific user workload
+distributions, or a combination of both.
 
 \begin{figure}[t]
 \centering
@@ -437,36 +439,64 @@ This metric is a direct reflection of how much I/O traffic the job in question
 was competing against in the underlying file systems.  When $CF = 1.0$,
 all of the server-side bytes were caused by the job that generated the Darshan
 log, while $CF = 0.5$ indicates that only half of the server-side traffic was
-attributable to the job.  In practice, it is possible to observe $CF > 1.0$ if
-the server-side monitoring (e.g., LMT or ggiostat) did not capture data from all
-servers during a polling interval due to UDP packet loss or other factors.
+attributable to the job.  In practice, it is possible to observe $CF > 1.0$ 
+under two cirumstances: (1) if server-side monitoring (e.g., LMT or ggiostat)
+did not capture data from all servers during a polling interval (e.g., due to
+UDP packet loss in LMT), or (2) if clock skew exists between the compute nodes
+(affecting the Darshan logs) and the I/O servers (affecting LMT and ggiostat
+data).  To eliminate erroneous data, we discard all test results where
+$CF > 1.2$ from the analysis that follows.
 
 The distribution of coverage factors across all experiments run are shown in
-Figure \ref{fig:cdf-coverage}, which indicates that the majority of tests
-($> 85\%$) have high coverage factor ($ CF > 0.90 $).  This is consistent with
-the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the
-probability of two bursts coinciding and causing interference is relatively
-low.  Despite this low incidence of overlapping bursts, though, the cumulative
-distribution function (CDF) of performance relative to the peak observed
-bandwidth (Figure \ref{fig:cdf-performance}) is far more broadly distributed.
-This is a clear indication that server-side interference, represented by the
-coverage factor, is only one of many contributors to sub-optimal peformance on
-all file systems tested.
+Figure \ref{fig:cdfs}b, which indicates that the majority of tests
+($> 85\%$ on Edison and $> 75\%$ on Mira) have high coverage factor
+($CF > 0.90$).  This is consistent with the observation that I/O occurs in
+bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding
+and causing contention for bandwidth is relatively low.
 
-\begin{figure}[h]
+Despite this low incidence of overlapping bursts, though, the cumulative
+distribution function (CDF) of performance relative to the peak observed
+bandwidth (Figure \ref{fig:cdfs}a) is far more broadly distributed, and the
+probability of getting less than 50\% of peak performance is surprisingly
+high on Edison (between 47\% on Edison scratch3 and 19\%-23\% on scratch1/scratch2).
+This is a clear indication that the coverage factor is only one of many
+contributors to sub-optimal peformance, and this finding is consistent with
+the work of Uselton and Wright\cite{Uselton2013} who demonstrated that Lustre
+file system performance is constrained by the weighted sum of both bandwidth
+\emph{and} I/O operation (IOP) rate.
+
+Although server-side IOPS were not captured on Edison for this study, they
+were captured for Mira.  Figure \todo{XXX} shows \todo{see if we can reproduce
+Uselton and Wright plot for Mira} and suggests that the Uselton and Wright
+model does not necessarily extend to non-Lustre file systems.  However, the
+coverage factor alone correlates even less strongly with performance on Mira,
+as shown in Figure \todo{XXX-plot perf vs CF, opencount, closecount}; in
+addition to the coverage factor, several metadata op rates (e.g., open and
+close) correlate as strongly and with similar statistical confidence.  Given
+that Mira's file system encodes metadata in the same physical servers as data
+blocks\todo{find out if this is true!}, this relationship is logical and
+indicates that a suitable performance model for GPFS must account for additional
+factors beyond bandwidth and IOP rates.
+
+%\begin{figure}[h]
+\begin{figure}[t]
 \centering
-    \subfigure[Coverage Factor] {
-        \includegraphics[width=\columnwidth]{figs/cdf-coverage-factor.png}
-        \label{fig:cdf-coverage}
-    }
-    \subfigure[Fraction of Peak Performance] {
-        \includegraphics[width=\columnwidth]{figs/cdf-performance.png}
-        \label{fig:cdf-performance}
-    }
+\includegraphics[width=\columnwidth]{figs/cdf-both.png}
+%   \subfigure[Coverage Factor] {
+%       \includegraphics[width=\columnwidth]{figs/cdf-coverage-factor.png}
+%       \label{fig:cdf-coverage}
+%   }
+%   \subfigure[Fraction of Peak Performance] {
+%       \includegraphics[width=\columnwidth]{figs/cdf-performance.png}
+%       \label{fig:cdf-performance}
+%   }
 \caption{Cumulative distribution function of the peformance relative to the
-maximum throughput observed across each file system (\ref{fig:cdf-coverage}) and the coverage
-factor (\ref{fig:cdf-performance}).}
-\label{fig:cumulative-distribution-functions}
+maximum throughput observed across each file system (a) and the coverage
+factor (b).  The line demarcating 50\% probability corresponds to coverage
+factors of 0.028, 0.004, 0.015, and 0.050 and peak performance fractions of
+0.227, 0.185, 0.467, and 0.040 on Edison scratch1-scratch3 and Mira,
+respectively.}
+\label{fig:cdfs}
 \end{figure}
 
 To more directly understand this relationship between application-side
