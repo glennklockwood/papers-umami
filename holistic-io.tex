@@ -86,11 +86,31 @@
 \newcommand{\fixme}[1]{\textcolor{green}{(#1)}}
 
 \begin{document}
-\title{Towards Total Knowledge of I/O through Multicomponent Instrumentation}
+\title{Towards Total Knowledge of I/O through Integrated Multicomponent Instrumentation}
 
 \maketitle
 
 \begin{abstract}
+%%% I had to submit a 150-word abstract to SC, so below is the shortened
+%%% version I submitted
+%
+% As scientific computing becomes more data-intensive and storage hierarchies
+% deepen, I/O performance is becoming increasingly critical to productivity in
+% HPC.  Instrumentation and analysis tools have long been used to understand
+% parallel I/O performance, but analyzing the individual components of I/O
+% subsystems in isolation fails to answer how these components interact and
+% result in poor I/O performance.
+%
+% To this end, we have developed a framework for holistic I/O characterization
+% that integrates instrumentation from file system servers, applications, file
+% system health monitors, and other system resources.  Along with formalized
+% periodic regression benchmarking, we then demonstrate this framework's
+% portability and unobtrusiveness by deploying it in production on two
+% leadership-class computing platforms.  Using data collected during a month
+% long study, we provide unique insights into applications' I/O performance
+% that are enabled by this approach.  We then extend these findings to provide
+% a broader understanding of how application performance varies across
+% different file systems and workloads.
 
 I/O efficiency is essential to productivity in scientific computing,
 especially as most scientific domains become more data-intensive and
@@ -112,8 +132,11 @@ health monitoring, and formalized periodic regression benchmarking as
 the foundation of portable I/O instrumentation, and then demonstrate
 its applicability, portability, and inobtrusiveness by deploying that
 methodology in production on two distinct leadership-class computing
-platforms. Based on our \todo{some time period} study we observe
-\todo{some outcome}.
+platforms. Based on our month-long study, we demonstrate the utility of our
+methodology through case studies that highlight how holistic I/O
+characterization can improve our understanding of scientific applications'
+I/O performance. We then extend these findings to provide broader insights
+into how parallel file systems perform under different types of load.
 
 \end{abstract}
 
