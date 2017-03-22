@@ -140,7 +140,7 @@ into how parallel file systems perform under different types of load.
 
 \end{abstract}
 
-\section{Introduction \assign{Phil}} \label{introduction}
+\section{Introduction \assign{Phil}} \label{sec:introduction}
 
 % \emph{From Rob}: I think a component of the story is that when we approach
 % these problems, there are a few challenges:
@@ -203,24 +203,24 @@ approach based on a case study of N scientific applications executed in a
 production environment
 \end{itemize}
 
-In section \ref{methods} and \ref{platforms} we describe the tools, tests, and
-platforms used to conduct this work.  In section \ref{results} we summarize the
+In section \ref{sec:methods} and \ref{sec:platforms} we describe the tools, tests, and
+platforms used to conduct this work.  In section \ref{sec:results} we summarize the
 statistical features of the benchmark results and highlight interesting features
 that arise from combining the application-level Darshan logs with server-side
-file system logs.  In section \ref{discussion} we then explain \emph{why} the
-features described in section \ref{discussion} arose by correlating and
+file system logs.  In section \ref{sec:discussion} we then explain \emph{why} the
+features described in section \ref{sec:discussion} arose by correlating and
 comapring different data sources and including information from our own
 understanding of the Lustre and GPFS architectures.  We then go on to make
 broader conclusions about general parallel I/O behavior we observed at both
 ALCF and NERSC, and make risky assertions about GPFS and Lustre based on those
 observations that were consistently true at one site but not the other.
 
-\section{Instrumentation methods} \label{methods}
+\section{Instrumentation methods} \label{sec:methods}
 
 Brief description of tools that we are using.
 \todo{overview diagram here?}
 
-\subsection{Darshan}
+\subsection{Darshan} \label{sec:methods/darshan}
 
 Darshan is an application-level I/O characterization tool that can be used to
 help better understand the I/O behavior of HPC applications. Principle to
@@ -253,7 +253,7 @@ version of Darshan includes a Lustre module that can be correlated with data fro
 other modules to gain insight into how an I/O workload interacts with the
 underlying file system.
 
-\subsection{LMT \assign{Glenn}}
+\subsection{LMT \assign{Glenn}} \label{sec:methods/lmt}
 
 The Lustre Monitoring Tool (LMT) is a framework that collects Lustre-specific
 counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents
@@ -264,7 +264,7 @@ server-side metrics during benchmark runs across all file systems evaluated.
 These metrics include bytes read and written, CPU load averages, and metadata
 operation rates on a per-server basis at five-second intervals.
 
-\subsection{ggiostat \assign{Phil}}
+\subsection{ggiostat \assign{Phil}} \label{sec:methods/ggiostat}
 
 \texttt{ggiostat} is a tool developed at ALCF that uses the \texttt{mmpmon}
 tool, included as a part of IBM Spectrum Scale, to collect a variety of counters
@@ -273,13 +273,13 @@ five-second intervals.  The metrics collected include bytes read and written,
 read and write operations, and number of inode updates \todo{(is this
 a proxy for metadata operation rates?)}.
 
-\subsection{health monitoring \assign{Glenn and Phil}}
+\subsection{health monitoring \assign{Glenn and Phil}} \label{sec:methods/health}
 
 Do capacity monitoring and failover monitoring for both Lustre and GPFS.  The
 tools themselves are probably very simple, we should focus on how you go
 about extracting this information.
 
-\section{Platforms and workloads} \label{platforms}
+\section{Platforms and workloads} \label{sec:platforms}
 
 We employ our methodology on two platforms:
 
@@ -325,7 +325,7 @@ platform.  See mailing list discussion Jan27-Feb6.  Mira has fixed ratio of
 ions to compute nodes, Cori does not, leads to different characteristics.  In
 either case goal is to exercise file system as much as we can within job
 sizes that will get through queue in daily cadence.}  The specific details are
-described in Table \ref{tab:mira-bench-config}.
+described in Table \ref{tab:bench-config}.
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
@@ -340,11 +340,11 @@ IOR                                                    & \begin{tabular}[c]{@{}c
 HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
 \begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
 \end{tabular}
-\caption{Do you know how to make this table not look stupid?}
-\label{tab:mira-bench-config}
+\caption{Formalized regression testing parameters}
+\label{tab:bench-config}
 \end{table*}
 
-\subsection{Mira benchmark configuration}
+\subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
 
 Mira's I/O architecture is fundamentally different from that of the Cray
 systems at NERSC, with fixed-size partitions of compute nodes connected to
@@ -363,11 +363,11 @@ storage system. We use 16 processes per node, resulting in a total of 16,384
 processes executing each benchmark. The benchmark workloads were configured
 to use enough I/O volume to drive the storage system for 1--2 minutes.
 Full benchmark configurations for Mira are given below in
-Table~\ref{tab:mira-bench-config}.
+Table~\ref{tab:bench-config}.
 
-\section{Results} \label{results}
+\section{Results} \label{sec:results}
 
-\todo{It's not great that Figs \ref{fig:perf-summary-boxplots-fs}, \ref{fig:tokio-abc-perf-boxplots}, and \ref{fig:cdfs} all show the same data in slightly different ways.}
+\subsection{Statistical Overview} \label{sec:results/overview}
 
 Figure \ref{fig:perf-summary-boxplots-fs} provides an overall distribution of
 performance measured by all benchmarks run on each file system.  GPFS on Mira
@@ -397,17 +397,17 @@ write workload which is a marked departure from the very tight distributions of
 VPIC write performance on all other file systems.
 
 \textbf{Thus, Figure \ref{fig:tokio-abc-perf-boxplots} demonstrates that the
-performance variability is not an intrinsic property of a file system};
-different I/O patterns result in different levels of variability.  Furthermore,
+performance variability is not an intrinsic property of a file system} and
+that different I/O patterns result in different levels of variability.  Furthermore,
 these behaviors are not a function of the parallel file system architecture
 either; because scratch1/scratch2/scratch3 are all Lustre file systems, the
 differences between them must be a result of their different hardware
-configurations (see Section \ref{platforms}), their specific user workload
+configurations (see Section \ref{sec:platforms}), their specific user workload
 distributions, or a combination of both.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.png}
+\includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-fs.pdf}
 \caption{TOKIO-ABC I/O performance for Edison (\texttt{scratch1},
 \texttt{scratch2}, \texttt{scratch3}) and Mira (\texttt{mira-fs1}) normalized to
 the mean of all tests performed on each file system.  Each box reflects the
@@ -418,12 +418,14 @@ performance. Whiskers represent the 5th and 95th percentiles.}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=1.0\columnwidth]{figs/perf-boxplots.png}
+\includegraphics[width=1.0\columnwidth]{figs/perf-boxplots.pdf}
 \caption{TOKIO-ABC I/O performance for all file systems tested grouped by test
 applications and read/write mode.  Whiskers represent the 5th and 95th
 percentiles.}
 \label{fig:tokio-abc-perf-boxplots}
 \end{figure}
+
+\subsection{Correlating Application and Server-side Telemetry} \label{sec:results/correlations}
 
 By aggregating the server-side I/O traffic from LMT and ggiostat during the time
 each test was run, we can also define the \emph{coverage factor} ($CF$) of a
@@ -448,19 +450,19 @@ data).  To eliminate erroneous data, we discard all test results where
 $CF > 1.2$ from the analysis that follows.
 
 The distribution of coverage factors across all experiments run are shown in
-Figure \ref{fig:cdfs}b, which indicates that the majority of tests
+Figure \ref{fig:cdfs}a and shows that the majority of tests
 ($> 85\%$ on Edison and $> 75\%$ on Mira) have high coverage factor
 ($CF > 0.90$).  This is consistent with the observation that I/O occurs in
 bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding
-and causing contention for bandwidth is relatively low.
+and causing contention for bandwidth (thereby reducing $CF$) is relatively low.
 
 Despite this low incidence of overlapping bursts, though, the cumulative
 distribution function (CDF) of performance relative to the peak observed
-bandwidth (Figure \ref{fig:cdfs}a) is far more broadly distributed, and the
+bandwidth (Figure \ref{fig:cdfs}b) is far more broadly distributed, and the
 probability of getting less than 50\% of peak performance is surprisingly
 high on Edison (between 47\% on Edison scratch3 and 19\%-23\% on scratch1/scratch2).
-This is a clear indication that the coverage factor is only one of many
-contributors to sub-optimal peformance, and this finding is consistent with
+This is a clear indication that the coverage factor represents only one of the
+factors that contribute to sub-optimal peformance, and this finding is consistent with
 the work of Uselton and Wright\cite{Uselton2013} who demonstrated that Lustre
 file system performance is constrained by the weighted sum of both bandwidth
 \emph{and} I/O operation (IOP) rate.
@@ -474,28 +476,18 @@ as shown in Figure \todo{XXX-plot perf vs CF, opencount, closecount}; in
 addition to the coverage factor, several metadata op rates (e.g., open and
 close) correlate as strongly and with similar statistical confidence.  Given
 that Mira's file system encodes metadata in the same physical servers as data
-blocks\todo{find out if this is true!}, this relationship is logical and
-indicates that a suitable performance model for GPFS must account for additional
-factors beyond bandwidth and IOP rates.
+blocks, this relationship is logical and indicates that a suitable performance
+model for GPFS must account for additional factors beyond bandwidth and IOP
+rates.
 
-%\begin{figure}[h]
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figs/cdf-both.png}
-%   \subfigure[Coverage Factor] {
-%       \includegraphics[width=\columnwidth]{figs/cdf-coverage-factor.png}
-%       \label{fig:cdf-coverage}
-%   }
-%   \subfigure[Fraction of Peak Performance] {
-%       \includegraphics[width=\columnwidth]{figs/cdf-performance.png}
-%       \label{fig:cdf-performance}
-%   }
-\caption{Cumulative distribution function of the peformance relative to the
-maximum throughput observed across each file system (a) and the coverage
-factor (b).  The line demarcating 50\% probability\todo{draw this line} corresponds to coverage
-factors of 0.028, 0.004, 0.015, and 0.050 and peak performance fractions of
-0.227, 0.185, 0.467, and 0.040 on Edison scratch1-scratch3 and Mira,
-respectively.}
+\includegraphics[width=\columnwidth]{figs/cdf-both.pdf}
+\caption{Cumulative distribution function of the coverage factor (a) and the
+peformance relative to the maximum throughput observed across each file system
+(b).  The line demarcating 50\% probability corresponds to coverage factors of
+0.028, 0.004, 0.015, and 0.050 and peak performance fractions of 0.227, 0.185,
+0.467, and 0.040 on Edison scratch1-scratch3 and Mira, respectively.}
 \label{fig:cdfs}
 \end{figure}
 
@@ -522,7 +514,7 @@ unique combination of application, read-write mode, and file system.}
 \end{figure}
 
 
-\subsection{Discussion} \label{discussion}
+\subsection{Discussion} \label{sec:results/discussion}
 
 This section will discuss \emph{why} we saw the behavior that we did by
 aligning and correlating data sources, then make broader conclusions about the
@@ -633,7 +625,7 @@ on the scratch2 file system.}
 \label{fig:edison-haccio-write-dashboard}
 \end{figure}
 
-\section{Related work} \label{related}
+\section{Related work} \label{sec:related}
 
 \assign{Phil} \todo{include SIOX} Let's cite Xiaosong Ma's work in server-side
 monitoring \cite{Liu2016}; her work uses server-side logs to make scheduling
@@ -673,7 +665,7 @@ optimize I/O for applications.
 Is any of the BeeGFS stuff (dynamically provisioning file systems) relevant to
 interference isolation?
 
-\section{Conclusions}
+\section{Conclusions} \label{sec:conclusions}
 
 \todo{It would be great if there were some tangible artifacts from this work.
 Possible examples:}
