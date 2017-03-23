@@ -3,4 +3,5 @@
     chmod +x $@; \
     sed -i '1s~^~#!/usr/bin/env python~' $@; \
     sed -i '/^ *get_ipython/d' $@; \
-    sed -ri 's/^( *import matplotlib *)$$/\1\nmatplotlib.use("Agg")/' $@ )
+    sed -ri 's/^( *import matplotlib *)$$/\1\nmatplotlib.use("Agg")/' $@; \
+    sed -i '/^# In\[[0-9 ]*\]: *$$/d' $@ )

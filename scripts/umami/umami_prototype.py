@@ -3,7 +3,6 @@
 
 # # TOKIO Dashboard Prototype
 
-# In[1]:
 
 import matplotlib
 matplotlib.use("Agg")
@@ -13,7 +12,6 @@ import matplotlib.gridspec
 import os
 
 
-# In[2]:
 
 import pandas
 import numpy as np
@@ -27,7 +25,6 @@ import textwrap
 
 # ## Load and refine data
 
-# In[3]:
 
 ### Relative path to the repository's root directory
 _REPO_BASE_DIR = os.path.join('..', '..')
@@ -36,7 +33,6 @@ _REPO_BASE_DIR = os.path.join('..', '..')
 counter_labels = json.load(open(os.path.join(_REPO_BASE_DIR, 'scripts', 'counter_labels.json'), 'r'))
 
 
-# In[4]:
 
 df_edison = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
                                                    'data',
@@ -77,7 +73,6 @@ df.drop(df.index[df['coverage_factor'] > 1.2], inplace=True)
 # 
 # Decide what to display on the dashboard by subselecting a specific view from the loaded data via `df_plot` and then populating the `row_plots` list with only those variables we want to display.
 
-# In[5]:
 
 ### Specify the type of job we're going to track on the dashboard
 filter_list = [ (df['darshan_app'] == "VPIC-IO"),
@@ -97,7 +92,6 @@ df_plot = df[net_filter].copy()
 print "%d rows will be included in UMAMI" % len(df_plot.index)
 
 
-# In[6]:
 
 ### Then specify the variables which wish to display on the
 ### dashboard.  Keyed by variables to display, and the values
@@ -124,7 +118,6 @@ _DASHBOARD_LINE_COLOR = '#853692'
 
 # Once the correct input view and outputs are defined, make a copy of the data that we manipulate to get the data into a plottable form.
 
-# In[7]:
 
 df_plot['darshan_agg_perf_by_slowest_gibs'] = df_plot['darshan_agg_perf_by_slowest'] / 1024.0
 # df_plot['darshan_end_time_dt'] = [ datetime.datetime.fromtimestamp(x) for x in df_plot['darshan_end_time'].values ]
@@ -134,7 +127,6 @@ df_plot['darshan_agg_perf_by_slowest_gibs'] = df_plot['darshan_agg_perf_by_slowe
 df_plot['lmt_ops_opencloses'] = df_plot['lmt_ops_opens'] + df_plot['lmt_ops_closes']
 
 
-# In[8]:
 
 ### Can also just add up all the MDS ops (of interest).
 ### Even though they are not weighted evenly in terms
@@ -167,7 +159,6 @@ for i in df_plot.keys():
 
 # Now actually generate the dashboard diagram.
 
-# In[16]:
 
 fig = plt.figure()
 fig.set_size_inches(6,12)
@@ -281,7 +272,6 @@ fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
 
 
-# In[ ]:
 
 
 

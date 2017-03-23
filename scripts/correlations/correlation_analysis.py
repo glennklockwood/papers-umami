@@ -19,7 +19,6 @@
 # 
 # This script is used to identify interesting patterns and correlations across jobs.  For intra-job inspection, use other analysis notebooks such as `analysis/per_ost_deep_dive.ipynb`.
 
-# In[1]:
 
 import matplotlib
 matplotlib.use("Agg")
@@ -27,11 +26,9 @@ import matplotlib.pyplot as plt
 matplotlib.rcParams.update({'font.size': 18})
 plt.rcParams['image.cmap'] = 'gray'
 import matplotlib.gridspec
-import IPython.display
 import os
 
 
-# In[2]:
 
 import pandas
 import numpy as np
@@ -49,7 +46,6 @@ def wrap(text, width=15):
     return '\n'.join(textwrap.wrap(text=text,width=width))
 
 
-# In[4]:
 
 ### Relative path to the repository's root directory
 _REPO_BASE_DIR = os.path.join('..', '..')
@@ -61,7 +57,6 @@ counter_labels = json.load(open(os.path.join(_REPO_BASE_DIR, 'scripts', 'counter
 _FILE_SYSTEM_ORDER = [ 'scratch1', 'scratch2', 'scratch3', 'mira-fs1' ]
 
 
-# In[4]:
 
 def plot_corr(df,size=20):
     """
@@ -87,7 +82,6 @@ def plot_corr(df,size=20):
 
 # ## Load data
 
-# In[5]:
 
 ### Edison
 df_edison = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
@@ -125,7 +119,6 @@ df_concat = pandas.concat( (df_mira, df_edison) )
 
 # Calculate the normalization factors (the denominators), then apply that factor to all of the data in the DataFrame.  These normalized data will be saved as new columns in the DataFrame.
 
-# In[8]:
 
 ### The actual variable we want to normalize
 summarize_key = 'darshan_agg_perf_by_slowest'
@@ -181,7 +174,6 @@ for df in df_edison, df_mira, df_concat:
 # - `darshan_normalized_perf_by_max`, which is normalized by the maximum observed performance
 # - `darshan_normalized_perf_by_mean`, which is normalized by the mean observed performance
 
-# In[9]:
 
 performance_key = 'darshan_normalized_perf_by_max'
 
@@ -191,7 +183,6 @@ performance_key = 'darshan_normalized_perf_by_max'
 # 
 # At any rate, this correlation matrix is not of interest to this paper so don't bother generating it here.
 
-# In[10]:
 
 ### make a pretty plot to flag highlights
 if False:
@@ -206,7 +197,6 @@ if False:
 # ### Numerical Correlation Analysis
 # Now we repeat this correlation analysis, but this time use `scipy.stats` instead of `pandas` so that we can calculate p-values associated with each correlation.
 
-# In[11]:
 
 def correlation_calculation(df, analysis_func=stats.pearsonr, only_print_key=performance_key, ignore_cols=[]):
     """
@@ -256,7 +246,6 @@ def correlation_calculation(df, analysis_func=stats.pearsonr, only_print_key=per
     return ret_results
 
 
-# In[12]:
 
 print "===== Edison ====="
 correlations_edison = correlation_calculation(df_edison)
@@ -267,7 +256,6 @@ correlations_mira = correlation_calculation(df_mira)
 # ### Scatter Plots
 # To visualize these correlations, we define pairs of counters to plot against each other:
 
-# In[13]:
 
 scatterplots = [ 
     (performance_key, 'coverage_factor'),
@@ -283,7 +271,6 @@ scatterplots = [
 
 # ...and then plot them:
 
-# In[14]:
 
 blacklist = set([
     'ost_max_id', 'ost_min_id', 'lmt_tot_zeros',
@@ -335,7 +322,6 @@ for scatterplot in scatterplots:
 
 # Combine all of the interesting Mira correlations into a single plot:
 
-# In[15]:
 
 fig = plt.figure(figsize=(8,4))
 ax = fig.add_subplot(111)
@@ -396,7 +382,6 @@ fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
 
 
-# In[16]:
 
 for key in 'ggio_bytes_written', 'ggio_bytes_read', 'ggio_write_reqs', 'ggio_read_reqs':
     if key.endswith('_reqs'):
@@ -407,7 +392,6 @@ for key in 'ggio_bytes_written', 'ggio_bytes_read', 'ggio_write_reqs', 'ggio_rea
 
 # Plot the correlation between coverage factor and performance for each file system separately
 
-# In[17]:
 
 # for scatterplot in correlations_mira:
 for idx, fs in enumerate(_FILE_SYSTEM_ORDER):
@@ -462,14 +446,12 @@ for idx, fs in enumerate(_FILE_SYSTEM_ORDER):
 # 
 # First build a dataframe with normalized data so that we can fairly compare Mira and Edison if desired:
 
-# In[18]:
 
 ### Juggle these for the purposes of correlating performance
 old_performance_key = performance_key
 performance_key = 'darshan_normalized_perf_by_max'
 
 
-# In[19]:
 
 df_plot_e = df_edison[['darshan_file_system', 'darshan_app', 'darshan_rw', performance_key]].copy()
 df_plot_e['opens'] = df_edison['lmt_ops_opens']
@@ -494,7 +476,6 @@ df_plot = pandas.concat([df_plot_e, df_plot_m], axis=0)
 # 
 # That said, there is a non-causational relationship between metadata rates and data rates on Edison by virtue of the fact that lots of metadata implies that a lot of I/O (perhaps small transactions) is also happening on those file systems.  Because we aren't capturing IOPS rates on Lustre, we have no way to tell what the combined bandwidth and IOPS loads on Lustre are.
 
-# In[20]:
 
 _USE_LOG = False
 fig = plt.figure(figsize=(8,6))
@@ -535,7 +516,6 @@ del _USE_LOG
 
 # On Mira, is application performance related to IOPS or bandwidth load?
 
-# In[21]:
 
 _USE_LOG = False
 fig = plt.figure(figsize=(8,6))
@@ -580,7 +560,6 @@ del _USE_LOG
 
 # What about everything else on Mira?  What is affecting Mira's performance?
 
-# In[22]:
 
 _USE_LOG = False
 fig = plt.figure(figsize=(8,6))
@@ -623,7 +602,6 @@ ax.set_title(wrap("No compelling relationship between IOPS and bandwidth on GPFS
 del _USE_LOG
 
 
-# In[23]:
 
 performance_key = old_performance_key
 
@@ -632,7 +610,6 @@ performance_key = old_performance_key
 
 # Following cell defines which variable we wish to aggregate into boxplots and a few plotting parameters that depend on our choice of variable.
 
-# In[24]:
 
 boxplot_settings = {
     'fontsize': 15,
@@ -663,7 +640,6 @@ boxplot_settings = {
 # 1. performance variation varies across different file systems and different applications
 # 2. even within an application, the magnitude of performance variation varies with file system
 
-# In[25]:
 
 for plot_variable in performance_key, performance_key.replace('_by_', '_by_fs_'):
     fig, axes = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True)
@@ -738,7 +714,6 @@ for plot_variable in performance_key, performance_key.replace('_by_', '_by_fs_')
 
 # Also plot a more general overview of performance across each file system.
 
-# In[26]:
 
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
@@ -768,7 +743,6 @@ print "Saved %s" % output_file
 
 # Also create a boxplot of the coverage factor to demonstrate how often jobs were impacted by other jobs
 
-# In[27]:
 
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
@@ -798,7 +772,6 @@ print "Saved %s" % output_file
 
 # Also try a coverage factor histogram since boxplots don't represent the long tail very well.
 
-# In[28]:
 
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
@@ -829,7 +802,6 @@ print "Saved %s" % output_file
 
 # Calculate the cumulative distribution function (CDF) from the histogram data to get a probability distribution of observing a given coverage factor (CF).
 
-# In[29]:
 
 for i in range(len(histogram[0])): # 4
     sums = [0 for x in range(len(histogram[0][i]))]
@@ -849,7 +821,6 @@ for idx, probability in enumerate(probabilities):
 # 
 # First calculate the cumulative distribution function for keys of interest:
 
-# In[30]:
 
 def calculate_cdf( values ):
     """Create a pandas.Series that is the CDF of a list-like object"""
@@ -860,7 +831,6 @@ def calculate_cdf( values ):
     return pandas.Series( y, index=x )
 
 
-# In[31]:
 
 ### Calculate CDFs for (1) each file system and (2) performance and coverage factor
 cdfs = {}
@@ -876,7 +846,6 @@ for fs in _FILE_SYSTEM_ORDER:
         }
 
 
-# In[32]:
 
 ### don't use counter_labels because the context is slightly different
 cdf_labels = {
@@ -889,7 +858,6 @@ cdf_file_labels = {
 }
 
 
-# In[33]:
 
 ### Plot CDF side-by-side
 
@@ -938,7 +906,6 @@ fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
 
 
-# In[ ]:
 
 
 
