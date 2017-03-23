@@ -1,5 +1,6 @@
 {
-    "darshan_agg_perf_by_slowest": "Job performance (GiB/sec)",
+    "darshan_agg_perf_by_slowest": "Job performance (MiB/sec)",
+    "darshan_agg_perf_by_slowest_gibs": "Job performance (GiB/sec)",
     "darshan_api_mpiio?": "Used shared-file I/O?",
     "darshan_end_time": "Job end time",
     "darshan_io_time": "I/O time (sec)",
@@ -17,6 +18,7 @@
     "job_max_radius": "Max radius within job nodes",
     "job_min_radius": "Min radius within job nodes",
     "lmt_bytes_covered": "Coverage Factor",
+    "coverage_factor": "Coverage Factor",
     "lmt_frac_missing": "Fraction of Lustre server data missing",
     "lmt_mds_ave": "Avg MDS CPU load (%)",
     "lmt_mds_max": "Max OSS CPU load (%)",
