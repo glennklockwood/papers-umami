@@ -397,7 +397,7 @@ that file system's overall lower variation shown in \ref{fig:perf-summary-boxplo
 
 \textbf{Thus, Figure \ref{fig:perf-summary-boxplots-motif} demonstrates that the
 performance variability results from factors intrinsic to the application (e.g., I/O motif) \emph{and} factors intrinsic to the file system}, and
-different I/O motifs result in different levels of performance \emph{and} variability.  Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, and yet there is a marked difference in variability between scratch1/scratch and scratch3 shown in Figure \ref{fig:perf-summary-boxplots-motif}.  Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
+different I/O motifs result in different levels of performance \emph{and} variability.  Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, and yet there is a marked difference in variability between scratch1/scratch and scratch3 shown in Figure~\ref{fig:perf-summary-boxplots-motif}.  Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
 
 \subsection{Combining Application and Server-side Telemetry} \label{sec:results/combining}
 
@@ -408,52 +408,31 @@ To obtain a better understanding of how performance variation is caused by facto
 	{\sum_{t,s}^{\textup{time,servers}}
 	\left [ N_{\textup{bytes}}^{\textup{LMT,ggiostat}}(t,s) \right ] }
 \end{equation}
-
+%
 where $N_{\textup{bytes}}^{\textup{Darshan}}$ is the number of bytes read and written by job $j$ according to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ is the number of bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.  The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are both taken from the job's Darshan log~\cite{snyder2016modular}.
 
-This coverage factor is a direct reflection of how much I/O traffic a job
-competed against in the underlying file systems.  When $CF = 1.0$,
-all of the server-side bytes were caused by the job that generated the Darshan
-log, while $CF = 0.5$ indicates that only half of the server-side traffic was
-attributable to the job.  In practice, it is possible to observe $CF > 1.0$ 
-under two circumstances: (1) if server-side monitoring (e.g., LMT or ggiostat)
-did not capture data from all servers during a polling interval (e.g., due to
-UDP packet loss in LMT), or (2) if clock skew exists between the compute nodes
-(affecting the Darshan logs) and the I/O servers (affecting LMT and ggiostat
-data).  To eliminate severely misaligned or incomplete data, we discard all test results where $CF > 1.2$ from the analysis that follows.
+The coverage factor is a direct reflection of how much I/O traffic a job
+competed against in the underlying file systems.  $CF = 1.0$ when
+all of the server-side I/O was caused by job $j$, while $CF = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.  In practice, it is possible to observe $CF > 1.0$ 
+if (1) server-side monitoring (e.g., LMT or ggiostat)
+did not capture data from all servers during a polling interval, or (2) clock skew exists between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.  To eliminate the most erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
 
 The distribution of coverage factors across all experiments run are shown in
-Figure \ref{fig:cdfs}a which reveals that the majority of tests
+Figure~\ref{fig:cdfs}a which reveals that the majority of tests
 ($> 85\%$ on Edison and $> 75\%$ on Mira) have high coverage factor
 ($CF > 0.90$).  This is consistent with the observation that I/O occurs in
 bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding
-and causing contention for bandwidth (thereby reducing $CF$) is relatively low.
+and causing contention for bandwidth (thereby reducing $CF$) is relatively low.  In particular, Mira's CF distribution is so narrow that over 50\% of tests effectively ran completely uncontended for bandwidth; $\textit{CF} >= 0.99$ corresponds to the 43rd percentile on that system.
 
 Despite this low incidence of overlapping bursts, though, the cumulative
 distribution function (CDF) of performance relative to the peak observed
-bandwidth (Figure \ref{fig:cdfs}b) is far more broadly distributed, and the
-probability of getting less than 50\% of peak performance is surprisingly
-high on Edison (between 47\% on Edison scratch3 and 19\%-23\% on scratch1/scratch2).
-This is a clear indication that the coverage factor, and therefore server-side
-I/O bandwidth, is not the only contributor to sub-optimal performance.  
+bandwidth for each application (Figure~\ref{fig:cdfs}b) is far more broadly distributed.
+Between 19\%-23\% (scratch1/scratch2) and 47\% (scratch3) of jobs on Edison got less than half of the peak observed performance, clearly indicating that the coverage factor (and therefore server-side
+I/O bandwidth) is not the only contributor to sub-optimal performance.  
 This finding is consistent with
 the work of Uselton and Wright\cite{Uselton2013} who demonstrated that Lustre
-file system performance is constrained by the weighted sum of both bandwidth
-\emph{and} I/O operation (IOP) rate.  When we combine the CF CDF with the CDF
-of peak IOPS observed on Mira, ...
-
-Although server-side IOPS were not captured on Edison for this study, they
-were captured for Mira.  Figure \todo{XXX} shows \todo{see if we can reproduce
-Uselton and Wright plot for Mira} and suggests that the Uselton and Wright
-model does not necessarily extend to non-Lustre file systems.  However, the
-coverage factor alone correlates even less strongly with performance on Mira,
-as shown in Figure \todo{XXX-plot perf vs CF, opencount, closecount}; in
-addition to the coverage factor, several metadata op rates (e.g., open and
-close) correlate as strongly and with similar statistical confidence.  Given
-that Mira's file system encodes metadata in the same physical servers as data
-blocks, this relationship is logical and indicates that a suitable performance
-model for GPFS must account for additional factors beyond bandwidth and IOP
-rates.
+file system performance is constrained by both the weighted sum of both bandwidth
+\emph{and} I/O operation (IOP) rate.  
 
 \begin{figure}[t]
 	\centering
@@ -466,9 +445,39 @@ rates.
 	\label{fig:cdfs}
 \end{figure}
 
+\subsection{Correlating Different Data Sources} \label{sec:results/correlating}
+
+To make more concrete statements about the relationship between performance, coverage factor, IOPS, and other factors, we then directly correlate the data from application-level profiling and server-side monitoring as shown in Figure~\ref{fig:scatter-mira-ops}.  As mentioned in the previous section, server-side IOPS load also correlates with application-level performance, but the relationship is less clear than with the coverage factor.  In particular, Mira showed modest negative correlation between performance and the number of read ops ($r_{pearson} = -0.371$), but no significant correlation between performance and write ops.  This lack of correlation is in large part due to several tests than ran during a single period of intense write operation activity; despite the extremely high write ops registered by ggiostat, the benchmarks all ran within 80\% of peak performance.  For comparison, if the results of this one day are removed, modest correlation is found between performance and both read and write ops ($r_{pearson} = -0.368$ and $-0.320$, respectively).
+
+% excluding job #1039807
+%Write Ops -0.320345445989 0.00185127360885
+%Read Ops -0.368378583027 0.000302695362085
+
+% including job #1039807
+%Write Ops  0.04480585901 0.658020505864
+%Read Ops -0.370709343374 0.000146638888281
+
+\todo{this paragraph needs to be rewritten}  However, the
+coverage factor alone correlates even less strongly with performance on Mira,
+as shown in Figure \todo{XXX-plot perf vs CF, opencount, closecount}; in
+addition to the coverage factor, several metadata op rates (e.g., open and
+close) correlate as strongly and with similar statistical confidence.  Given
+that Mira's file system encodes metadata in the same physical servers as data
+blocks, this relationship is logical and indicates that a suitable performance
+model for GPFS must account for additional factors beyond bandwidth and IOP
+rates.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\columnwidth]{figs/scatter-mira-ops.pdf}
+	\caption{Fraction of peak performance, normalized to each I/O motif, along with the fraction of maximum op counts measured on mira-fs1.  Correlation coefficient between performance and read op rate is -0.371 with a p-value $\mathcal{O}(10^{-4})$; no significant correlation exists between performance and write op rate.  Linear regression line included as a visual aid.
+    }
+	\label{fig:scatter-mira-ops}
+\end{figure}
+
 To more directly understand this relationship between application-side
 performance and server-side contention, we plot these two variables for each
-experiment in Figure \ref{fig:correlate-perf-and-fstraffic}.  Although there is
+experiment in Figure~\ref{fig:correlate-perf-and-fstraffic}.  Although there is
 no striking visual correlation, this diagram does show that high performance
 ($performance > 1.0$) is very unlikely even when server-side contention is only
 modestly high ($CF \leq 0.8$).  More quantitatively, the Pearson correlation
