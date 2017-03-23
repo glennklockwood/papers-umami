@@ -1,0 +1,5 @@
+### don't track the artifacts of this script; figures that we use should be moved into ../../figs
+*.pdf
+*.png
+*.csv
+.ipynb_checkpoints
