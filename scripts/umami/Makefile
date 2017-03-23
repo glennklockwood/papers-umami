@@ -1,6 +1,6 @@
 .PHONY: clean default
 
-targets=correlation_analysis.py
+targets=umami_prototype.py
 
 all: $(targets)
 
@@ -10,4 +10,4 @@ clean:
 	rm -vf $(targets)
 
 clean-all: clean
-	rm -vf *.pdf *.png scatter_*_vs_*.csv
+	rm -vf *.pdf
