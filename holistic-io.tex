@@ -471,6 +471,15 @@ To understand the relationship between IOP contention and performance degradatio
 
 \todo{The purpose of this section is to take the range of expected behaviors we explored in the previous section and begin looking at very specific correlations between those variables.  This will (hopefully) guide our subsequent exploration into frequency of different performance issues.}
 
+Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.  However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis. As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are most useful to examine in cases of abnormal performance.
+
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as calculated in Fig XX) with a wide range of metric collected on Edison and Mira, and the most interesting results are summarized in Figure XX.
+
+As assumed in the previous sections, the coverage factor correlates most strongly with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to 
+
+%%%%%%%%%%%% this is as far as I've gotten on my most recent pass
+\hrulefill
+
 \todo{WORK IN PROGRESS} To more directly understand this relationship between application-side
 performance and server-side contention, we plot these two variables for each
 experiment in Figure~\ref{fig:correlate-perf-and-fstraffic}.  Although there is
