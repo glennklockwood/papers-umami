@@ -184,10 +184,12 @@ neither a scalable nor sustainable model for diagnosing performance variation in
 the larger, more complicated I/O subsystems being deployed, there exists a need
 for a framework that integrates data from across all components and presents a
 coherent, holistic view of the inter-dependent behavior of these components.  To
-this end, we have developed a model for holistic instrumentation of I/O
+this end, we have developed a framework for holistic instrumentation of I/O
 subsystems that combines server-side and application-level performance data to
 provide deeper insight into the factors that affect I/O performance in a way
 that is generalizable to parallel file system of differing architectures.
+
+We then apply this framework, called the Total Knowledge of I/O (TOKIO) framework, to define a statistical description of how performance typically varies across different workloads and different file systems.  This description of \emph{file system climate} provides a backdrop against which we can then compare the health of each file system component at the time a specific job ran, or the \emph{file system weather}.  Through a universal metrics and measurements interface (TOKIO-UMAMI), we demonstrate how a job's I/O performance can be quickly classified as being within the variation of the file system climate, or if it can be attributed to an extreme file system weather event.
 
 % \end{enumerate}
 
@@ -367,7 +369,11 @@ Table~\ref{tab:bench-config}.
 
 \section{Results} \label{sec:results}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Statistical Overview} \label{sec:results/overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\todo{remove: The point of this section is to introduce a metric that combines user-facing (application-level) performance along with server-side workload metrics upon which we can build a holistically integrated view.}
 
 Figure \ref{fig:perf-summary-boxplots-fs} provides an overall distribution of
 performance measured by all benchmarks normalized to the highest performance observed on each file system.  Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.  By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).  Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
@@ -399,7 +405,11 @@ that file system's overall lower variation shown in \ref{fig:perf-summary-boxplo
 performance variability results from factors intrinsic to the application (e.g., I/O motif) \emph{and} factors intrinsic to the file system}, and
 different I/O motifs result in different levels of performance \emph{and} variability.  Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, and yet there is a marked difference in variability between scratch1/scratch and scratch3 shown in Figure~\ref{fig:perf-summary-boxplots-motif}.  Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Combining Application and Server-side Telemetry} \label{sec:results/combining}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\todo{The purpose of this section is to take our metric of an integrated view and define the range of expected behavior that we might expect from file systems based on a few obvious causes of contention.}
 
 To obtain a better understanding of how performance variation is caused by factors extrinsic to the application, we then combine what we know from application-level analysis provided by Darshan with file system-level analysis provided by LMT (on Edison) and ggiostat (on Mira).  An intuitive source of performance loss would be from other jobs that are also consuming file system bandwidth, so to explore the effects of competing I/O traffic, we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$:
 
@@ -445,37 +455,23 @@ file system performance is constrained by both the weighted sum of both bandwidt
 	\label{fig:cdfs}
 \end{figure}
 
-\subsection{Correlating Different Data Sources} \label{sec:results/correlating}
-
-To make more concrete statements about the relationship between performance, coverage factor, IOPS, and other factors, we then directly correlate the data from application-level profiling and server-side monitoring as shown in Figure~\ref{fig:scatter-mira-ops}.  As mentioned in the previous section, server-side IOPS load also correlates with application-level performance, but the relationship is less clear than with the coverage factor.  In particular, Mira showed modest negative correlation between performance and the number of read ops ($r_{pearson} = -0.371$), but no significant correlation between performance and write ops.  This lack of correlation is in large part due to several tests than ran during a single period of intense write operation activity; despite the extremely high write ops registered by ggiostat, the benchmarks all ran within 80\% of peak performance.  For comparison, if the results of this one day are removed, modest correlation is found between performance and both read and write ops ($r_{pearson} = -0.368$ and $-0.320$, respectively).
-
-% excluding job #1039807
-%Write Ops -0.320345445989 0.00185127360885
-%Read Ops -0.368378583027 0.000302695362085
-
-% including job #1039807
-%Write Ops  0.04480585901 0.658020505864
-%Read Ops -0.370709343374 0.000146638888281
-
-\todo{this paragraph needs to be rewritten}  However, the
-coverage factor alone correlates even less strongly with performance on Mira,
-as shown in Figure \todo{XXX-plot perf vs CF, opencount, closecount}; in
-addition to the coverage factor, several metadata op rates (e.g., open and
-close) correlate as strongly and with similar statistical confidence.  Given
-that Mira's file system encodes metadata in the same physical servers as data
-blocks, this relationship is logical and indicates that a suitable performance
-model for GPFS must account for additional factors beyond bandwidth and IOP
-rates.
-
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=\columnwidth]{figs/scatter-mira-ops.pdf}
-	\caption{Fraction of peak performance, normalized to each I/O motif, along with the fraction of maximum op counts measured on mira-fs1.  Correlation coefficient between performance and read op rate is -0.371 with a p-value $\mathcal{O}(10^{-4})$; no significant correlation exists between performance and write op rate.  Linear regression line included as a visual aid.
+	\includegraphics[width=\columnwidth]{figs/hist-cf-bw-and-ops.pdf}
+	\caption{Distribution  of the coverage factor for both bandwidth ($\textit{CF}_{\textup{bandwidth}}$) and read/write operations ($\textit{CF}_{\textup{iops}}$) for Mira.
     }
-	\label{fig:scatter-mira-ops}
+	\label{fig:hist-cf-mira}
 \end{figure}
 
-To more directly understand this relationship between application-side
+To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.  If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution.  However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a clear bias towards high values.  From this, we can conclude that many tests on Mira achieved high performance despite other I/O loads concurrently generating commensurate IOP loads.  None of the I/O motifs used here were designed to generate a significant number of IOPs though, so this may be simply an indication that the Mira file system can deliver reliable performance even under modest aggregate IOP loads coming from its applications.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Correlating Different Data Sources} \label{sec:results/correlating}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\todo{The purpose of this section is to take the range of expected behaviors we explored in the previous section and begin looking at very specific correlations between those variables.  This will (hopefully) guide our subsequent exploration into frequency of different performance issues.}
+
+\todo{WORK IN PROGRESS} To more directly understand this relationship between application-side
 performance and server-side contention, we plot these two variables for each
 experiment in Figure~\ref{fig:correlate-perf-and-fstraffic}.  Although there is
 no striking visual correlation, this diagram does show that high performance
@@ -486,19 +482,19 @@ coefficient between application performance and the coverage factor is modest
 the previous qualitative observation that the coverage factor is a contributor
 to performance variability, but not the only one.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.8\columnwidth]{figs/edison-perf-vs-fstraffic.png}
-\caption{Correlation between performance, measured by Darshan, and the coverage
-factor, measured by on the storage servers, for all tests run on file systems.
-The performance given is relative to the mean performance measured for each
-unique combination of application, read-write mode, and file system.}
-\label{fig:correlate-perf-and-fstraffic}
-\vspace{-.1in}
-\end{figure}
+However, the
+coverage factor alone correlates even less strongly with performance on Mira,
+as shown in Figure \todo{XXX-plot perf vs CF, opencount, closecount}; in
+addition to the coverage factor, several metadata op rates (e.g., open and
+close) correlate as strongly and with similar statistical confidence.  Given
+that Mira's file system encodes metadata in the same physical servers as data
+blocks, this relationship is logical and indicates that a suitable performance
+model for GPFS must account for additional factors beyond bandwidth and IOP
+rates.
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Discussion} \label{sec:results/discussion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This section will discuss \emph{why} we saw the behavior that we did by
 aligning and correlating data sources, then make broader conclusions about the
@@ -510,7 +506,7 @@ that were exclusively reserved for our jobs (e.g., all data from the compute
 nodes), and external variables are those measurements from components of the
 system that are shared (e.g., the file system servers).
 
-We will present the prototype TOKIO dashboard (\ref{fig:edison-haccio-write-dashboard})
+We will present the prototype TOKIO dashboard (\ref{fig:edison-haccio-write-umami})
 which is an easy way for users to see trends of how well their specific
 workload has performed in the past along with various metrics from Darshan,
 server-side monitoring, and machine-specific sources that may contribute to
@@ -602,11 +598,12 @@ to optimize for or avoid I/O contention between two frequently conflicting
 applications.
 
 \begin{figure}[t]
-\centering
-\includegraphics[width=1.0\columnwidth]{figs/edison-haccio-write-dashboard.png}
-\caption{Dashboard indicating the performance variation of HACC write workloads
-on the scratch2 file system.}
-\label{fig:edison-haccio-write-dashboard}
+	\centering
+	\includegraphics[width=1.0\columnwidth]{figs/edison-haccio-write-dashboard.png}
+	\caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of HACC write workloads
+	on the Edison scratch2 file system compared to a most recent run, which showed
+    highly unusual \emph{file system weather}.}
+	\label{fig:edison-haccio-write-umami}
 \end{figure}
 
 \section{Related work} \label{sec:related}
