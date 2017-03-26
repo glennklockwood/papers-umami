@@ -373,8 +373,6 @@ Table~\ref{tab:bench-config}.
 \subsection{Statistical Overview} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\todo{remove: The point of this section is to introduce a metric that combines user-facing (application-level) performance along with server-side workload metrics upon which we can build a holistically integrated view.}
-
 Figure \ref{fig:perf-summary-boxplots-fs} provides an overall distribution of
 performance measured by all benchmarks normalized to the highest performance observed on each file system.  Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.  By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).  Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
 
@@ -389,7 +387,9 @@ performance measured by all benchmarks normalized to the highest performance obs
 	\label{fig:perf-summary-boxplots-fs}
 \end{figure}
 
-Such variation in peak file system performance caused by suboptimal I/O access patterns is well documented\cite{Lofstead2010,Uselton2010,Xie2012}, so to focus solely on the variation caused by factors \emph{extrinsic} to each application, we also normalize our performance measurements to the maximum bandwidth observed for each unique I/O motif (see Table \ref{tab:bench-config}).  This distribution, shown in Figure \ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.  For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite
+Such variation in peak file system performance caused by suboptimal I/O access patterns is well documented\cite{Lofstead2010,Uselton2010,Xie2012}.  To focus solely on the variation caused by factors \emph{extrinsic} to each application, we then define the \emph{fraction of peak performance} as the performance of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.  For example, the fraction peak performance for a HACC write test is only normalized to the maximum performance of all other HACC write tests.  References to fraction peak performance are hereafter defined this way.
+
+This fraction peak performance distribution, shown in Figure \ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.  For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite
 that file system's overall lower variation shown in \ref{fig:perf-summary-boxplots-fs}.  Similarly, all Edison file systems show a long tail of performance loss for the IOR/shared file read workload.  Edison's scratch3 also demonstrates very broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application VPIC on all other file systems.
 
 \begin{figure}[t]
@@ -408,8 +408,6 @@ different I/O motifs result in different levels of performance \emph{and} variab
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Combining Application and Server-side Telemetry} \label{sec:results/combining}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\todo{The purpose of this section is to take our metric of an integrated view and define the range of expected behavior that we might expect from file systems based on a few obvious causes of contention.}
 
 To obtain a better understanding of how performance variation is caused by factors extrinsic to the application, we then combine what we know from application-level analysis provided by Darshan with file system-level analysis provided by LMT (on Edison) and ggiostat (on Mira).  An intuitive source of performance loss would be from other jobs that are also consuming file system bandwidth, so to explore the effects of competing I/O traffic, we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$:
 
@@ -469,11 +467,9 @@ To understand the relationship between IOP contention and performance degradatio
 \subsection{Correlating Different Data Sources} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\todo{The purpose of this section is to take the range of expected behaviors we explored in the previous section and begin looking at very specific correlations between those variables.  This will (hopefully) guide our subsequent exploration into frequency of different performance issues.}
-
 Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.  However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis. As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
 
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as calculated in Fig XX) with a wide range of metric collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.  Although an exhaustive examination of all correlations is beyond the scope of this work, several key points can be gleaned by what these data do \emph{and do not} show.
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview} ) with a wide range of metric collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.  Although an exhaustive examination of all correlations is beyond the scope of this work, several key points can be gleaned by what these data do \emph{and do not} show.
 
 \begin{figure}[t]
 	\centering
@@ -500,13 +496,46 @@ blocks, this relationship is reasonable.  By comparison, Edison's file systems e
 
 \end{itemize}
 
-In addition to the measurements and metrics presented in Figure \ref{fig:correlation-table}, the TOKIO framework collected a larger number of system-specific measurements that did not correlate significantly to performance.  However it is important to underscore the fact that this demonstration was not intended to be exhaustive, and the differences in the three Edison file systems contribute to a slightly muddier view of correlation 
+In addition to the measurements and metrics presented in Figure \ref{fig:correlation-table}, the TOKIO framework collected a larger number of system-specific measurements that did not correlate significantly to performance.  However it is important to underscore the fact that this demonstration was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that all three Edison file systems, each with unique users, workloads, and governance policies, were combined for this analysis.
 
-\todo{Present TOKIO-UMAMI; correlation is not causation so we present the data as is and still require an understanding of the underlying storage system to interpret, etc}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Unified Measurements and Metrics Interface} \label{sec:results/umami}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+By establishing an understanding of the baseline distribution of performance for each I/O motif and file system in Sections \ref{sec:results/overview} and \ref{sec:results/combining} and identifying how different measurements and metrics correlate with performance in \ref{sec:results/correlating}, we now have a foundation from which we can describe
+
+\begin{enumerate}
+\item where on the spectrum of normalcy a specific job's I/O behavior fell relative to other jobs with a similar I/O motif, and
+\item which measurements and metrics are the best places to start investigating abnormal conditions based on how they have historically correlated with performance
+\end{enumerate}
+
+To concisely visualize all of this information, we present the TOKIO Unified Measurements and Metrics Interface (UMAMI), shown in Figure \ref{fig:umami-scratch2-hacc-write}, with the goal of enabling end-users to quickly see how their application's performance compares
+to similar I/O workloads in the past.  TOKIO-UMAMI presents historic measurements from the components monitored by TOKIO, composing what we refer to as the \emph{I/O subsystem climate}, and summarizes each metric's distribution in a box plot to the right of each metric's time series plot.  These time series plots terminate with the measurements taken for the job in question, describing the \emph{I/O subsystem weather} at the time that job ran.  By overlaying this weather on the climate box plots in the form of dashed lines, TOKIO-UMAMI provides a quick visualization of how each metric's weather compared to the statistical distribution of past weather conditions.  This conceptualization of a file system's weather with its overall climate, a user can differentiate between a long-term performance problem (as would occur if the application I/O is not optimized for the underlying file system) and a statistically rare event analogous to an extreme weather event.
+
+The specific UMAMI example shown in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test which took place on March 3.  This particular job showed abnormally low performance as evidenced by the "Job performance (GiB/sec)" measurement and its value relative to the previous six instances of this type of job.  This abnormally poor job performance was accompanied by an unusually low coverage factor and high metadata load, and these unfavorable conditions (which fell into the bottom-most quartile of past measurements) are highlighted as red dashed lines in the box plots.  The metrics corresponding to blue dashed lines fell into the uppermost quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, have no history of correlation with performance.  Thus, we can quickly attribute the poor performance of this HACC job to an I/O extrinsic to this HACC job which was competing for both bandwidth on the data servers and metadata resources on the metadata server.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{figs/umami-scratch2-hacc-write.pdf}
+	\caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of HACC write workloads
+	on the Edison scratch2 file system compared to a most recent run, which showed
+    highly unusual \emph{file system weather}.}
+	\label{fig:umami-scratch2-hacc-write}
+\end{figure}
+
+Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload that showed poor performance on Mira.  However, its coverage factor is within normal parameters (denoted by an orange line in the box plot, indicating its value is in the second quartile) indicating a general lack of bandwidth contention.  Although the IOPS coverage factor is also abnormally low, previous conditions have been worse despite a lack of dramatic performance loss.  The only metric that shows an uncommonly undesirable value is the number of \emph{readdir(3)} operations handled by the file system, which is indicative of an expansive file system traversal and was demonstrated to correlate moderately with performance in Figure \ref{fig:correlation-table}.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{figs/umami-mira-fs1-vpic-write.pdf}
+	\caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of VPIC-IO read workloads
+	on Mira compared to a most recent run, which showed
+    highly unusual \emph{file system weather}.}
+	\label{fig:umami-mira-fs1-vpic-write}
+\end{figure}
 
 %%%%%%%%%%%% this is as far as I've gotten on my most recent pass
 \hrulefill
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Discussion} \label{sec:results/discussion}
@@ -515,35 +544,12 @@ In addition to the measurements and metrics presented in Figure \ref{fig:correla
 This section will discuss \emph{why} we saw the behavior that we did by
 aligning and correlating data sources, then make broader conclusions about the
 differences
-between Mira and Edison results.  I envision a general approach of extracting
-or calculating \emph{internal} and \emph{external} variables from the data we
-have, where internal variables are measurements from components of the system
-that were exclusively reserved for our jobs (e.g., all data from the compute
-nodes), and external variables are those measurements from components of the
-system that are shared (e.g., the file system servers).
+between Mira and Edison results.
 
-We will present the prototype TOKIO dashboard (\ref{fig:edison-haccio-write-umami})
-which is an easy way for users to see trends of how well their specific
-workload has performed in the past along with various metrics from Darshan,
-server-side monitoring, and machine-specific sources that may contribute to
-performance.  This has a twofold benefit.
-
-Foremost, users can quickly see how their application's performance compares
-to similar I/O workloads in the past.  The boxplots on the right side of the
-dashboard offer a percentile in which the job's performance falls.  In addition,
-the other components that affect I/O performance are also displayed, composing
-what we refer to as the \emph{I/O subsystem weather}, and the relative rarity
-of these states are shown in the accompanying box plots, which we refer to as
-the \emph{I/O subsystem climate}.  By providing a view of the I/O subsystem
-weather and the overall climate, the user can quickly contextualize job
-performance with respect to normal levels of variation.  This context allows
-users to differentiate between a long-term performance problem (as would occur
-if the application I/O is not optimized for the underlying file system) and a
-statistically rare event analogous to an extreme weather event.
 
 With this framework, we then deep-dive into several specific cases of
 performance degradation identified by the TOKIO dashboard.  For example,
-(\ref{fig:edison-haccio-write-umami}) shows a particular date (March 4) on
+(\ref{fig:umami-scratch2-hacc-write}) shows a particular date (March 4) on
 which performance was abnormally low while both the coverage factor and metadata
 open/close rates were abnormal.
 
@@ -613,14 +619,6 @@ good performance.  From this would arise an opportunity to inform scheduling
 to optimize for or avoid I/O contention between two frequently conflicting
 applications.
 
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=1.0\columnwidth]{figs/edison-haccio-write-dashboard.png}
-	\caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of HACC write workloads
-	on the Edison scratch2 file system compared to a most recent run, which showed
-    highly unusual \emph{file system weather}.}
-	\label{fig:edison-haccio-write-umami}
-\end{figure}
 
 \section{Related work} \label{sec:related}
 
