@@ -219,45 +219,51 @@ observations that were consistently true at one site but not the other.
 
 \section{Instrumentation methods} \label{sec:methods}
 
-Brief description of tools that we are using.
-\todo{overview diagram here?}
+We identified the following categories of ongoing instrumentation as being
+critical to understanding both the I/O climate and I/O weather of a
+production system.  \todo{overview diagram here?}
 
-\subsection{Darshan} \label{sec:methods/darshan}
+\subsection{Application behavior}
+\label{sec:methods/darshan}
 
-Darshan is an application-level I/O characterization tool that can be used to
-help better understand the I/O behavior of HPC applications. Principle to
-Darshan's design is its lightweight method for instrumenting relevant I/O
-characterization data from applications. Rather than tracing each I/O operation
-issued by an application, Darshan captures a bounded amount of I/O statistics
-for each file accessed by the application, effectively limiting the amount of
-memory needed to store instrumented data. Also, Darshan defers its own internal
-communication and I/O operations (for aggregating data across processes and for
-writing this data to log) until the end of the application, preventing these
-expensive operations from perturbing application I/O performance. These design
-decisions make Darshan amenable to full-time deployment on large-scale,
-production HPC systems. In fact, Darshan has been enabled by default on a number
-of such systems, including systems at the Argonne Leadership Computing Facility
-(ALCF), the National Energy Research Scientific Computing Center (NERSC), and
-the National Center for Supercomputing Applications (NCSA). Deploying Darshan
-full-time on these systems has not only enabled users to better understand the
-I/O behavior of their applications, but has also provided a mass of valuable
-data to researchers who wish to analyze HPC I/O behavior in production
-\cite{carns200924,carns2011understanding,luu2015multiplatform,snyder2015techniques}.
+Application behavior refers to the I/O pattern of a job as expressed from
+the perspective of the application itself (i.e., the I/O pattern of the
+application itself before any system-level optimizations are applied).
+We rely on the Darshan I/O characterization tool~\cite{TODO}
+to capture this information.  Darshan transparently records concise,
+bounded statistics about an application, such as the amount of time it
+spent performing I/O, the distribution of access sizes, and what files
+were accessed.  Reduction, compression, and storage of these statistics
+is deferred until the application exits in order to minimize overhead.
+Darshan has two notable properties that are desirable for use in TOKIO.
+Because of it's lightweight design, Darshan can be deployed for all
+production applications on large-scale systems without perturbing
+performance.  Because it operates at the application level, it is also highly
+portable and can be deployed on nearly any major HPC platform.
 
-Recently, Darshan's architecture has been modularized to allow new sources
-of I/O data to be more easily integrated into its summaries \cite{snyder2016modular}.
-This modification allows for data from distinct components within the deep
-HPC I/O stack to be more easily correlated, providing a more comprehensive view
-of application I/O behavior. For instance, data captured from higher-level I/O
-libraries like HDF5 and MPI-IO can be correlated with data from the POSIX layer
-to determine potential inefficiencies in an I/O workload. Also, this modularized
-version of Darshan includes a Lustre module that can be correlated with data from
-other modules to gain insight into how an I/O workload interacts with the
-underlying file system.
+% PHC: does the modularity thing have an impact on the rest of the paper?
+%
+% Recently, Darshan's architecture has been modularized to allow new sources
+% of I/O data to be more easily integrated into its summaries \cite{snyder2016modular}.
+% This modification allows for data from distinct components within the deep
+% HPC I/O stack to be more easily correlated, providing a more comprehensive view
+% of application I/O behavior. For instance, data captured from higher-level I/O
+% libraries like HDF5 and MPI-IO can be correlated with data from the POSIX layer
+% to determine potential inefficiencies in an I/O workload. Also, this modularized
+% version of Darshan includes a Lustre module that can be correlated with data from
+% other modules to gain insight into how an I/O workload interacts with the
+% underlying file system.
 
-\subsection{LMT \assign{Glenn}} \label{sec:methods/lmt}
+\subsection{Storage system traffic}
 
-The Lustre Monitoring Tool (LMT) is a framework that collects Lustre-specific
+Storage system traffic refers to the aggregate system-wide I/O workload
+observed by the primary storage system.  On most modern-day HPC systems this
+is is reflected in the aggregate traffic that reaches the parallel file
+system, and is most easily represented with ongoing time-series metrics.
+
+\label{sec:methods/lmt}
+The most widely used tool for this purpose on Lustre file systems is the Lustre
+Monitoring Tool (LMT).  LMT collects Lustre-specific
 counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents
 them to external consumers via a MySQL database.  NERSC Edison implements LMT
 as a part of the Cray Sonexion Lustre platform \cite{Keopp2014}, and we built
@@ -266,32 +272,44 @@ server-side metrics during benchmark runs across all file systems evaluated.
 These metrics include bytes read and written, CPU load averages, and metadata
 operation rates on a per-server basis at five-second intervals.
 
-\subsection{ggiostat \assign{Zach}} \label{sec:methods/ggiostat}
-
-\texttt{ggiostat} is a tool developed at ALCF that uses the \texttt{mmpmon}
-tool, included as a part of IBM Spectrum Scale, to collect a variety of counters
-from each Spectrum Scale server and retain them in an IBM DB2 database at
-five-second intervals.  The metrics collected include bytes read and written,
+\label{sec:methods/ggiostat}
+We developed the \emph{ggiostat} tool in order to collect analogous data from
+IBM Spectrum Scale (GPFS) file systems.  \assign{Zach}  It relies upon the
+\texttt{mmpmon} monitoring system in GPFS to retrieve metrics from server and
+client clusters.  These metrics are queried on five second intervals by a
+persistent monitoring daemon and stored in an IBM DB2 database.
+The metrics collected include bytes read and written,
 read and write operations, and number of inode updates \todo{(is this
 a proxy for metadata operation rates?)}.
 
-\subsection{health monitoring \assign{Glenn and Kevin}} \label{sec:methods/health}
+\subsection{Health monitoring \assign{Glenn and Kevin}}
+\label{sec:methods/health}
 
-Do capacity monitoring and failover monitoring for both Lustre and GPFS.  The
-tools themselves are probably very simple, we should focus on how you go
-about extracting this information.
+Health monitoring refers to the current fault status and capacity of the
+storage system: what components are offline, and how much storage space
+remains on the available components.
 
-\section{Platforms and workloads} \label{sec:platforms}
+For Lustre we do \todo{something}, and for GPFS we do \todo{something
+else.}
 
-We employ our methodology on two platforms:
+\subsection{Job scheduling \assign{Glenn and Kevin}}
 
-\begin{itemize}
-\item \textbf{Cori} \assign{Glenn}
-\item \textbf{Mira} \assign{Phil}
-\end{itemize}
+Job scheduling refers to the mix of concurrent application jobs that are
+running on the compute resources of a system at any given time.
+\todo{describe how we pull concurrent job activity from Edison and Mira?}
 
-We selected 4 representative application workloads for periodic regression
-benchmarking:
+\subsection{I/O performance regression tests}
+
+Passive monitoring and logging are critical for TOKIO, but they have a
+notable shortcoming in that they don't necessarily observe any controlled
+reference point: the workload and state of the system evolves over time.  In
+order to compensate for this, we also incorporate routine I/O performance
+regression tests as a key element of our framework.
+\todo{is this what we are refering to as TOKIO-ABC?  Define?}  I/O
+performance is not well-represented by a single benchmark result, however;
+each storage system has its own strengths and weaknesses for different
+workloads.  We therefore subdivide our regression testing into a suite of
+representative applications:
 
 \begin{itemize}
 \item \textbf{HACC} \assign{Shane}
@@ -320,6 +338,29 @@ IOR to determine each file system's performance variability under conditions
 where an application is performing I/O using the ideal parameters for each
 file system.
 
+\end{itemize}
+
+This benchmark suite is encapsulated in a single meta-job that is executed
+daily in order to provide a controlled referency point for I/O behavior on
+the system.  We scale the size of this meta-job according to the
+characteristics of the system on which TOKIO is deployed.  Our two goals in
+selecting the size are a) to attempt to saturate the storage system and b) to
+choose a job size that can realistically matriculate through the scheduler on
+a daily basis within the system's normal workload mix.
+
+\section{Data integration}
+
+\todo{PHC: fill this in.  Maybe it comes after experimental platforms?  At
+any rate, say something, even if brief, about how we bring together all of
+the instrumentation sources we listed into a coherent data set.}
+
+\section{Experimental platforms} \label{sec:platforms}
+
+We have deployed the TOKIO framework on two distinct platforms in this study.
+
+\begin{itemize}
+\item \textbf{Cori} \assign{Glenn}
+\item \textbf{Mira} \assign{Phil}
 \end{itemize}
 
 \todo{Here or in evaluation, describe how we sized the jobs for each
