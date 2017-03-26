@@ -266,7 +266,7 @@ server-side metrics during benchmark runs across all file systems evaluated.
 These metrics include bytes read and written, CPU load averages, and metadata
 operation rates on a per-server basis at five-second intervals.
 
-\subsection{ggiostat \assign{Phil}} \label{sec:methods/ggiostat}
+\subsection{ggiostat \assign{Zach}} \label{sec:methods/ggiostat}
 
 \texttt{ggiostat} is a tool developed at ALCF that uses the \texttt{mmpmon}
 tool, included as a part of IBM Spectrum Scale, to collect a variety of counters
@@ -275,7 +275,7 @@ five-second intervals.  The metrics collected include bytes read and written,
 read and write operations, and number of inode updates \todo{(is this
 a proxy for metadata operation rates?)}.
 
-\subsection{health monitoring \assign{Glenn and Phil}} \label{sec:methods/health}
+\subsection{health monitoring \assign{Glenn and Kevin}} \label{sec:methods/health}
 
 Do capacity monitoring and failover monitoring for both Lustre and GPFS.  The
 tools themselves are probably very simple, we should focus on how you go
