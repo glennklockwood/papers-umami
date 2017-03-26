@@ -315,6 +315,10 @@ Health monitoring refers to the current fault status and capacity of the
 storage system: what components are offline, and how much storage space
 remains on the available components.
 
+% lfs df
+% lctl dl -t
+% mmlsdisk
+% mmdf
 For Lustre we do record the fullness of each Lustre object storage target (OST) every fifteen minutes.  We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that are the recipient of failed-over OSTs.  For GPFS we record the fullness of each disk LUN that contains data
 
 \subsection{Job scheduling \assign{Glenn and Kevin}}
@@ -539,7 +543,18 @@ file system performance is constrained by both the weighted sum of both bandwidt
     \label{fig:hist-cf-mira}
 \end{figure}
 
-To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.  If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution.  However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a clear bias towards high values.  From this, we can conclude that many tests on Mira achieved high performance despite other I/O loads concurrently generating commensurate IOP loads.  None of the I/O motifs used here were designed to generate a significant number of IOPs though, so this may be simply an indication that the Mira file system can deliver reliable performance even under modest aggregate IOP loads coming from its applications.
+To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.
+If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution.
+However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a clear bias towards high values.
+From this, we can conclude that many tests on Mira achieved high performance despite other I/O loads concurrently generating commensurate IOP loads.
+Thus, high background IOPS can be a cause for performance loss, but their presence do not necessarily preclude achieving high performance.
+
+% We should point out that the coverage factor for IOPS is more ambiguous than
+% the coverage factor for bandwidth because file system clients are able to
+% coalesce many small transactions into a single large transaction.  Although
+% we don't see this happen on IOR, HACC, or VPIC, the BDCATS-IO benchmark
+% issues a TON of small (512-byte) transactions (per Darshan) that do not
+% appear on the server side.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Correlating Different Data Sources} \label{sec:results/correlating}
@@ -593,6 +608,15 @@ By establishing an understanding of the baseline distribution of performance for
 \item which measurements and metrics are the best places to start investigating abnormal conditions based on how they have historically correlated with performance
 \end{enumerate}
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figs/umami-scratch2-hacc-write.pdf}
+    \caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of HACC write workloads
+    on the Edison scratch2 file system compared to a most recent run, which showed
+    highly unusual \emph{file system weather}.}
+    \label{fig:umami-scratch2-hacc-write}
+\end{figure}
+
 To concisely visualize all of this information, we present the TOKIO Unified Measurements and Metrics Interface (UMAMI), shown in Figure \ref{fig:umami-scratch2-hacc-write}, with the goal of enabling end-users to quickly see how their application's performance compares to similar I/O workloads in the past.
 TOKIO-UMAMI presents historic measurements from the components monitored by TOKIO, composing what we refer to as the \emph{I/O subsystem climate}, and summarizes each metric's distribution in a box plot to the right of each metric's time series plot.
 These time series plots terminate with the measurements taken for the job in question, describing the \emph{I/O subsystem weather} at the time that job ran.
@@ -605,21 +629,12 @@ This abnormally poor job performance was accompanied by an unusually low coverag
 The metrics corresponding to blue dashed lines fell into the uppermost quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, have no history of correlation with performance.
 Thus, we can quickly attribute the poor performance of this HACC job to an I/O extrinsic to this HACC job which was competing for both bandwidth on the data servers and metadata resources on the metadata server.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=1.0\columnwidth]{figs/umami-scratch2-hacc-write.pdf}
-    \caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of HACC write workloads
-    on the Edison scratch2 file system compared to a most recent run, which showed
-    highly unusual \emph{file system weather}.}
-    \label{fig:umami-scratch2-hacc-write}
-\end{figure}
-
-Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload that showed poor performance on Mira.  However, its coverage factor is within normal parameters (denoted by an orange line in the box plot, indicating its value is in the second quartile) indicating a general lack of bandwidth contention.  Although the IOPS coverage factor is also abnormally low, previous conditions have been worse despite a lack of dramatic performance loss.  The only metric that shows an uncommonly undesirable value is the number of \emph{readdir(3)} operations handled by the file system, which is indicative of an expansive file system traversal and was demonstrated to correlate moderately with performance in Figure \ref{fig:correlation-table}.
+Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload that showed poor performance on Mira.  However, its coverage factor is within normal parameters (the orange lines in each metric's box plot signifies a value in the second quartile) indicating a general lack of bandwidth contention.  Although the IOPS coverage factor is also abnormally low, previous conditions have been worse despite a lack of dramatic performance loss (e.g., on March 7).  The only metric that shows a unique, undesirable value is the number of \emph{readdir(3)} operations handled by the file system.  This is indicative of an expansive file system traversal and was demonstrated to correlate moderately negatively with performance in Figure \ref{fig:correlation-table}.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-mira-fs1-vpic-write.pdf}
-    \caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of VPIC-IO read workloads
+    \caption{TOKIO-UMAMI demonstrating the \emph{file system climate} of VPIC-IO write workloads
     on Mira compared to a most recent run, which showed
     highly unusual \emph{file system weather}.}
     \label{fig:umami-mira-fs1-vpic-write}
