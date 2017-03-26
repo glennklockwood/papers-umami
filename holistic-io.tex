@@ -150,7 +150,7 @@ different types of load.
 
 \end{abstract}
 
-\section{Introduction \assign{Phil}} \label{sec:introduction}
+\section{Introduction} \label{sec:introduction}
 
 % \emph{From Rob}: I think a component of the story is that when we approach
 % these problems, there are a few challenges:
@@ -159,15 +159,13 @@ different types of load.
 % \item increasing number of interoperating components (in this case, additional
 % BB and DVS and so forth)
 
-The stratification of the performance and capacity of storage technologies has
-resulted in increasingly complex architectures in parallel storage systems, and
-the many recent leadership-class computing systems are now being deployed with
-flash-based, on-fabric burst buffer tiers\cite{Henseler2016} that provide even higher performance
-than the traditional disk-based scratch file systems which are accessed through
-I/O forwarding nodes\cite{Bhimji2016}.  Although designed to provide optimal performance and
+The stratification performance and capacity in storage technology is 
+motivating the design of increasingly complex parallel storage systems architectures.  For
+example, leadership-class computing systems are now being deployed with
+flash-based, on-fabric burst buffer tiers~\cite{Henseler2016} that provide even higher performance
+than traditional disk-based scratch file systems~\cite{Bhimji2016}.  Although designed to provide optimal performance and
 capacity on an economic basis, this increasing number of interoperating
-components also complicates the task of understanding I/O performance
-degradation.
+components also complicates the task of understanding I/O performance.
 
 % \item different components have different "views" on I/O, different levels of
 % monitoring, some of which aren't practical in production
@@ -176,30 +174,48 @@ The current state of practice is to monitor each component in the I/O stack
 separately.  However, different components approach I/O from different
 perspectives, often resulting in component-level monitoring data that are not
 obviously compatible.  For example, server-side monitoring tools such as
-LMT\cite{lmt} measure a limited number of metrics at high frequency to achieve
+LMT\cite{lmt} measure a limited number of metrics as a high-frequency time
+series to achieve
 low overhead, while application-level profiling tools such as
-Darshan\cite{carns200924} track a wide range of metrics at very coarse time
-granularity to minimize overhead.  \todo{Scope different too: LMT is ongoing
-time series, while Darshan captures 1 application run. -PHC}
+Darshan\cite{carns200924} track metrics that are expressed as bounded
+summaries of individual jobs.
 Data types representing the same logical
-quantity, such as data written, may also be expressed in units that are not
-totally compatible, such as bytes, pages, and blocks.
+quantity, such as data written, may also be expressed in different units such
+as bytes, pages, and blocks.  Bytes written at one level may also be
+transformed by aggregation, coalescing, and caching before reaching another
+level.
 
 % \item no current framework for integration, lots of expert knowledge to
 % construct the story of what happened and how to fix.
 
 At present, the gaps of information resulting from these incompatibilities are
-filled using expert knowledge of each tool that generates data.  Because this is
+filled using expert knowledge.  Because this is
 neither a scalable nor sustainable model for diagnosing performance variation in
 the larger, more complicated I/O subsystems being deployed, there exists a need
 for a framework that integrates data from across all components and presents a
 coherent, holistic view of the inter-dependent behavior of these components.  To
 this end, we have developed a framework for holistic instrumentation of I/O
-subsystems that combines server-side and application-level performance data to
+subsystems known as the Total Knowledge of I/O (TOKIO) framework.  TOKIO
+combines server-side and application-level performance data to
 provide deeper insight into the factors that affect I/O performance in a way
-that is generalizable to parallel file system of differing architectures.
+that is generalizable to different architectures.
 
-We then apply this framework, called the Total Knowledge of I/O (TOKIO) framework, to define a statistical description of how performance typically varies across different workloads and different file systems.  This description of \emph{file system climate} provides a backdrop against which we can then compare the health of each file system component at the time a specific job ran, or the \emph{file system weather}.  Through a universal metrics and measurements interface (TOKIO-UMAMI), we demonstrate how a job's I/O performance can be quickly classified as being within the variation of the file system climate, or if it can be attributed to an extreme file system weather event.
+One of the most fundamental challenges in understanding I/O performance
+is is how to gauge the performance and behavior of application within a
+broader context absent the application of expert institutional knowledge.
+Does the I/O performance of a given job meet expectations given the
+capabilities of the system and the nature of the access pattern?
+To this end, one of the initial goals of TOKIO is to differentiate
+general performance expectations (\emph{I/O climate}) from transient
+effects (\emph{I/O weather}).  The I/O climate is determined by the
+characteristics of storage components, their age and capacity, and the
+way they generally respond to a specific workload.  The I/O weather is
+determined by momentary job scheduler load, contention, and short-term
+failure events.  Through a universal metrics and measurements interface
+(TOKIO-UMAMI), we demonstrate how a job's I/O performance can be quickly
+classified as being within the expected variation of the file system
+climate, or if it can be attributed to an extreme file system weather
+event.
 
 % \end{enumerate}
 
