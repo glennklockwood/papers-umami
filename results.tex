@@ -4,8 +4,12 @@
 \subsection{Statistical Overview} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Figure \ref{fig:perf-summary-boxplots-fs} provides an overall distribution of
-performance measured by all benchmarks normalized to the highest performance observed on each file system.  Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.  By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).  Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
+We begin our analysis by evaluating the overall behavior of the TOKIO-ABC workloads
+on our example systems.
+Figure \ref{fig:perf-summary-boxplots-fs} illustrates the distribution of
+performance measured by all benchmarks normalized to the highest performance
+observed on each file system.  Each plot represents at least \todo{HOW MANY?}
+samples collected over a period of \todo{HOW MANY?} days.  Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.  By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).  Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
 
 \begin{figure}[t]
     \centering
