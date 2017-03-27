@@ -84,16 +84,27 @@ running on the compute resources of a system at any given time.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
-Passive monitoring and logging are critical for TOKIO, but they have a
-notable shortcoming in that they don't necessarily observe any controlled
-reference point: the workload and state of the system evolves over time.  In
-order to compensate for this, we also incorporate routine I/O performance
-regression tests as a key element of our framework.
-\todo{is this what we are refering to as TOKIO-ABC?  Define?}  I/O
-performance is not well-represented by a single benchmark result, however;
-each storage system has its own strengths and weaknesses for different
-workloads.  We therefore subdivide our regression testing into a suite of
-representative applications:
+The passive instrumentation methods described above are essential for
+ongoing understanding production workloads, but they have an inherent
+drawback in that there is no fixed reference point: the workload
+and state of the system evolves over time.  We must therefore incorporate
+routine, formalized I/O performance regression tests in order establish baseline behavior.
+
+We developed the TOKIO Automated Benchmark Collection (TOKIO-ABC) to meet
+this need.  TOKIO-ABC consists of a collection of benchmarks, including
+both synthetic and application-derived workloads, that can be scaled in
+both the number of processes and data volume according to the constraints
+of the system on which it is deployed. Our two goals in choosing a scale
+for TOKIO-ABC deployment are a) to saturate the storage system and b)
+to limit core-hour consumption sufficiently for daily execution.  We use
+a collection of benchmarks because performance may not well-represented
+by a single benchmark result; each storage system has its own strengths
+and weaknesses for different workloads.  The collection of benchmarks is
+executed within a job script that can be scheduled nightly by a continuous
+integration system or cron job.  The script insures that no more than
+one TOKIO-ABC instance is active at a time, and all benchmark results
+and Darshan logs are archived for analysis at the conclusion of the job.
+The initial set of benchmarks included in TOKIO-ABC are as follows:
 
 \begin{itemize}
 \item \textbf{HACC} \assign{Shane}
@@ -124,13 +135,6 @@ file system.
 
 \end{itemize}
 
-This benchmark suite is encapsulated in a single meta-job that is executed
-daily in order to provide a controlled referency point for I/O behavior on
-the system.  We scale the size of this meta-job according to the
-characteristics of the system on which TOKIO is deployed.  Our two goals in
-selecting the size are a) to attempt to saturate the storage system and b) to
-choose a job size that can realistically matriculate through the scheduler on
-a daily basis within the system's normal workload mix.
 
 \section{Data integration}
 
