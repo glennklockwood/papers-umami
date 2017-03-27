@@ -1,0 +1,193 @@
+\section{Instrumentation methods} \label{sec:methods}
+
+We identified the following categories of ongoing instrumentation as being
+critical to understanding both the I/O climate and I/O weather of a
+production system.  \todo{overview diagram here?}
+
+\subsection{Application behavior}
+\label{sec:methods/darshan}
+
+Application behavior refers to the I/O pattern of a job as expressed from
+the perspective of the application itself (i.e., the I/O pattern of the
+application itself before any system-level optimizations are applied).
+We rely on the Darshan I/O characterization tool~\cite{carns200924}
+to capture this information.  Darshan transparently records concise,
+bounded statistics about an application, such as the amount of time it
+spent performing I/O, the distribution of access sizes, and what files
+were accessed.  Reduction, compression, and storage of these statistics
+is deferred until the application exits in order to minimize overhead.
+Darshan has two notable properties that are desirable for use in TOKIO.
+Because of its lightweight design, Darshan can be deployed for all
+production applications on large-scale systems without perturbing
+performance.  Because it operates at the application level, it is also highly
+portable and can be deployed on nearly any major HPC platform.
+
+% PHC: does the modularity thing have an impact on the rest of the paper?
+%
+% Recently, Darshan's architecture has been modularized to allow new sources
+% of I/O data to be more easily integrated into its summaries \cite{snyder2016modular}.
+% This modification allows for data from distinct components within the deep
+% HPC I/O stack to be more easily correlated, providing a more comprehensive view
+% of application I/O behavior. For instance, data captured from higher-level I/O
+% libraries like HDF5 and MPI-IO can be correlated with data from the POSIX layer
+% to determine potential inefficiencies in an I/O workload. Also, this modularized
+% version of Darshan includes a Lustre module that can be correlated with data from
+% other modules to gain insight into how an I/O workload interacts with the
+% underlying file system.
+
+\subsection{Storage system traffic}
+
+Storage system traffic refers to the aggregate system-wide I/O workload
+observed by the primary storage system.  On most modern-day HPC systems this
+is is reflected in the aggregate traffic that reaches the parallel file
+system, and is most easily represented with ongoing time-series metrics.
+
+\label{sec:methods/lmt}
+The most widely used tool for this purpose on Lustre file systems is the Lustre
+Monitoring Tool (LMT).  LMT collects Lustre-specific
+counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents
+them to external consumers via a MySQL database.  NERSC Edison implements LMT
+as a part of the Cray Sonexion Lustre platform \cite{Keopp2014}, and we built
+upon the pyLMT framework developed at NERSC \cite{Uselton2009} to preserve
+server-side metrics during benchmark runs across all file systems evaluated.
+These metrics include bytes read and written, CPU load averages, and metadata
+operation rates on a per-server basis at five-second intervals.
+
+\label{sec:methods/ggiostat}
+We developed the \emph{ggiostat} tool in order to collect analogous data from
+IBM Spectrum Scale (GPFS) file systems.  \assign{Zach}  It relies upon the
+\texttt{mmpmon} monitoring system in GPFS to retrieve metrics from server and
+client clusters.  These metrics are queried on five second intervals by a
+persistent monitoring daemon and stored in an IBM DB2 database.
+The metrics collected include bytes read and written,
+read and write operations, and number of inode updates \todo{(is this
+a proxy for metadata operation rates?)}.
+
+\subsection{Health monitoring \assign{Glenn and Kevin}}
+\label{sec:methods/health}
+
+Health monitoring refers to the current fault status and capacity of the
+storage system: what components are offline, and how much storage space
+remains on the available components.
+
+% lfs df
+% lctl dl -t
+% mmlsdisk
+% mmdf
+For Lustre we do record the fullness of each Lustre object storage target (OST) every fifteen minutes.  We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that are the recipient of failed-over OSTs.  For GPFS we record the fullness of each disk LUN that contains data
+
+\subsection{Job scheduling \assign{Glenn and Kevin}}
+
+Job scheduling refers to the mix of concurrent application jobs that are
+running on the compute resources of a system at any given time.
+\todo{describe how we pull concurrent job activity from Edison and Mira?}
+
+\subsection{I/O performance regression tests} \label{sec:methods/tests}
+
+Passive monitoring and logging are critical for TOKIO, but they have a
+notable shortcoming in that they don't necessarily observe any controlled
+reference point: the workload and state of the system evolves over time.  In
+order to compensate for this, we also incorporate routine I/O performance
+regression tests as a key element of our framework.
+\todo{is this what we are refering to as TOKIO-ABC?  Define?}  I/O
+performance is not well-represented by a single benchmark result, however;
+each storage system has its own strengths and weaknesses for different
+workloads.  We therefore subdivide our regression testing into a suite of
+representative applications:
+
+\begin{itemize}
+\item \textbf{HACC} \assign{Shane}
+\item \textbf{VPIC} \assign{Suren} 
+Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
+interactions among trillions of plasma physics particles  \cite{Bowers2008}.
+VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
+simulation, where each MPI process writes 8M (i.e., 8*1024*1024) particles. Each
+particle has eight properties (six floating point and two integer) and each
+property is a single dimension array. The total number of particles depend on
+the number of MPI ranks used. The kernel uses H5Part API \cite{H5Part} to write
+the data to a single shared HDF5 file. The execution of the kernel includes
+creating and opening a file, writing data to the file, and closing the file.
+
+\item \textbf{BDCATS} \assign{Suren} The BD-CATS-IO benchmark emulates the I/O
+pattern of the BD-CATS clustering system~\cite{Patwary2015}, and it represents
+one of the analyses that is performed on the output of VPIC's particle data files.
+For this study, we emulate the I/O workload of a clustering both particle
+positions and momenta in three dimensions.  This amounts to 75\% of the data
+contained in the HDF5 file (generated by the VPIC-IO kernel) being read.
+
+\item \textbf{IOR} \assign{Shane} The IOR benchmark has been used extensively
+to characterize the performance characteristics of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}
+due to its extensive configurability.  For the purposes of this work, we applied
+IOR to determine each file system's performance variability under conditions
+where an application is performing I/O using the ideal parameters for each
+file system.
+
+\end{itemize}
+
+This benchmark suite is encapsulated in a single meta-job that is executed
+daily in order to provide a controlled referency point for I/O behavior on
+the system.  We scale the size of this meta-job according to the
+characteristics of the system on which TOKIO is deployed.  Our two goals in
+selecting the size are a) to attempt to saturate the storage system and b) to
+choose a job size that can realistically matriculate through the scheduler on
+a daily basis within the system's normal workload mix.
+
+\section{Data integration}
+
+\todo{PHC: fill this in.  Maybe it comes after experimental platforms?  At
+any rate, say something, even if brief, about how we bring together all of
+the instrumentation sources we listed into a coherent data set.}
+
+\section{Experimental platforms} \label{sec:platforms}
+
+We have deployed the TOKIO framework on two distinct platforms in this study.
+
+\begin{itemize}
+\item \textbf{Cori} \assign{Glenn}
+\item \textbf{Mira} \assign{Phil}
+\end{itemize}
+
+\todo{Here or in evaluation, describe how we sized the jobs for each
+platform.  See mailing list discussion Jan27-Feb6.  Mira has fixed ratio of
+ions to compute nodes, Cori does not, leads to different characteristics.  In
+either case goal is to exercise file system as much as we can within job
+sizes that will get through queue in daily cadence.}  The specific details are
+described in Table \ref{tab:bench-config}.
+
+% abandon all hope ye who try to edit this stupid table by hand.  I used
+% http://www.tablesgenerator.com to make it.
+\begin{table*}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{\textbf{Benchmark}}                    & \multirow{2}{*}{\textbf{I/O Motif}}                           & \multicolumn{3}{c|}{\textbf{Mira}}                        & \multicolumn{3}{c|}{\textbf{Edison}}                      \\ \cline{3-8} 
+                                                       &                                                               & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} \\ \hline
+IOR                                                    & \begin{tabular}[c]{@{}c@{}}MPI-IO\\ shared file\end{tabular}  & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 0.5 TiB           \\ \hline
+IOR                                                    & \begin{tabular}[c]{@{}c@{}}POSIX\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+\begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+\end{tabular}
+\caption{Formalized regression testing parameters}
+\label{tab:bench-config}
+\end{table*}
+
+\subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
+
+Mira's I/O architecture is fundamentally different from that of the Cray
+systems at NERSC, with fixed-size partitions of compute nodes connected to
+a single I/O node that forwards application I/O requests to the SAN.
+Saturating the I/O bandwidth of the underlying storage servers requires the
+use of many I/O nodes, meaning that peak storage bandwidth can only be
+attained using a large portion of the system's available compute nodes.
+Running daily I/O benchmarks that span a large portion of Mira's compute
+nodes is impractical due to the lengthy queue times of capability jobs and
+the obvious objection system administrators would have to this practice.
+
+For these reasons, we decided to use 1,024 Mira compute nodes (i.e., a single
+rack), a partition size that should be small enough to move quickly through
+scheduler queues, but large enough to exercise an adequate portion of the
+storage system. We use 16 processes per node, resulting in a total of 16,384
+processes executing each benchmark. The benchmark workloads were configured
+to use enough I/O volume to drive the storage system for 1--2 minutes.
+Full benchmark configurations for Mira are given below in
+Table~\ref{tab:bench-config}.
