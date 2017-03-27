@@ -2,7 +2,9 @@ PDFS := holistic-io.pdf
 
 all: $(PDFS)
 
-holistic-io.pdf: holistic-io.tex REFERENCES.bib
+SECTIONS=abstract.tex introduction.tex methods.tex results.tex related.tex appendix.tex appendix-analysis.tex appendix-artifacts.tex
+
+holistic-io.pdf: holistic-io.tex REFERENCES.bib $(SECTIONS)
 	pdflatex $<
 	bibtex holistic-io
 	pdflatex $<
