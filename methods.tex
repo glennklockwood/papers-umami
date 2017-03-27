@@ -39,14 +39,12 @@ portable and can be deployed on nearly any major HPC platform.
 
 Storage system traffic refers to the aggregate system-wide I/O workload
 observed by the primary storage system.  On most modern-day HPC systems this
-is is reflected in the aggregate traffic that reaches the parallel file
+is reflected in the aggregate traffic that reaches the parallel file
 system, and is most easily represented with ongoing time-series metrics.
 
 \label{sec:methods/lmt}
-The most widely used tool for this purpose on Lustre file systems is the Lustre
-Monitoring Tool (LMT).  LMT collects Lustre-specific
-counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents
-them to external consumers via a MySQL database.  NERSC Edison implements LMT
+The Lustre Monitoring Tool (LMT) is a widely used tool for Lustre file systems that collects Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents them to external consumers via a MySQL database.
+NERSC Edison implements LMT
 as a part of the Cray Sonexion Lustre platform \cite{Keopp2014}, and we built
 upon the pyLMT framework developed at NERSC \cite{Uselton2009} to preserve
 server-side metrics during benchmark runs across all file systems evaluated.
@@ -74,13 +72,16 @@ remains on the available components.
 % lctl dl -t
 % mmlsdisk
 % mmdf
-For Lustre we do record the fullness of each Lustre object storage target (OST) every fifteen minutes.  We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that are the recipient of failed-over OSTs.  For GPFS we record the fullness of each disk LUN that contains data
+For Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes and associate the last measurement to precede the start of a job with that job.
+We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that are the recipient of failed-over OSTs.
+On GPFS, we record the fullness of each disk LUN that contains data and the failure status of each LUN at the start of each job.
+These data are then associated with job in which the collection was triggered.
 
 \subsection{Job scheduling \assign{Glenn and Kevin}}
 
 Job scheduling refers to the mix of concurrent application jobs that are
-running on the compute resources of a system at any given time.
-\todo{describe how we pull concurrent job activity from Edison and Mira?}
+running on the compute resources of a system at any given time.  Since I/O contention is often the result of other jobs running concurrently with a job of interest, we record the total number of jobs that were in flight at any point during the execution time of each TOKIO-ABC job.  On the Edison system, this is accomplished by querying the Slurm job accounting logs for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
+\todo{describe how we pull concurrent job activity from Mira?}
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
@@ -112,18 +113,17 @@ The initial set of benchmarks included in TOKIO-ABC are as follows:
 Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
 interactions among trillions of plasma physics particles  \cite{Bowers2008}.
 VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
-simulation, where each MPI process writes 8M (i.e., 8*1024*1024) particles. Each
+simulation, where each MPI process writes 8M (i.e., $8 \times 1024 \times 1024$) particles. Each
 particle has eight properties (six floating point and two integer) and each
-property is a single dimension array. The total number of particles depend on
-the number of MPI ranks used. The kernel uses H5Part API \cite{H5Part} to write
-the data to a single shared HDF5 file. The execution of the kernel includes
+property is a single dimension array. The total number of particles depends on
+the number of MPI ranks used. The kernel uses the H5Part API \cite{H5Part} to write
+the data to a single shared HDF5 file, and the execution of the I/O kernel includes
 creating and opening a file, writing data to the file, and closing the file.
 
-\item \textbf{BDCATS} \assign{Suren} The BD-CATS-IO benchmark emulates the I/O
-pattern of the BD-CATS clustering system~\cite{Patwary2015}, and it represents
-one of the analyses that is performed on the output of VPIC's particle data files.
+\item \textbf{BD-CATS} \assign{Suren} The BD-CATS clustering system~\cite{Patwary2015}  represents
+one of the analyses that is commonly performed on the output of VPIC's particle data files.
 For this study, we emulate the I/O workload of a clustering both particle
-positions and momenta in three dimensions.  This amounts to 75\% of the data
+positions and momenta in three dimensions using the BD-CATS-IO I/O kernel benchmark.  This amounts to 75\% of the data
 contained in the HDF5 file (generated by the VPIC-IO kernel) being read.
 
 \item \textbf{IOR} \assign{Shane} The IOR benchmark has been used extensively
@@ -134,7 +134,6 @@ where an application is performing I/O using the ideal parameters for each
 file system.
 
 \end{itemize}
-
 
 \section{Data integration}
 
