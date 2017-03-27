@@ -137,9 +137,18 @@ file system.
 
 \section{Data integration}
 
-\todo{PHC: fill this in.  Maybe it comes after experimental platforms?  At
-any rate, say something, even if brief, about how we bring together all of
-the instrumentation sources we listed into a coherent data set.}
+% \todo{PHC: fill this in.  Maybe it comes after experimental platforms?  At
+% any rate, say something, even if brief, about how we bring together all of
+% the instrumentation sources we listed into a coherent data set.}
+
+The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source discussed in Section \label{sec:methods} by time.
+Starting with a job's Darshan log, which contains a job start and end time, scalar measurements such as concurrent job count and file system fullness are joined directly to the Darshan counters.
+Timeseries data such as that provided by LMT and ggiostat are both reduced into scalar values (for example, as minimum, maximum, average) as well as retained as time-resolved slices which are indexed using the job identifier stored in the Darshan log file.
+
+This data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
+When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and timeseries data can be encoded in a portable binary format such as HDF5.
+
+For the purposes of the analyses performed in this work, all TOKIO-ABC data was aggregated and indexed on system (Mira or Edison), application, I/O motif (as described below and in Table \ref{tab:bench-config}), and whether the application primarily read or wrote its data. \todo{Should we make mention of the artifacts appendix and the data formats therein?}
 
 \section{Experimental platforms} \label{sec:platforms}
 
