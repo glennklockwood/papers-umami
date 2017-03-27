@@ -327,7 +327,7 @@ Job scheduling refers to the mix of concurrent application jobs that are
 running on the compute resources of a system at any given time.
 \todo{describe how we pull concurrent job activity from Edison and Mira?}
 
-\subsection{I/O performance regression tests}
+\subsection{I/O performance regression tests} \label{sec:methods/tests}
 
 Passive monitoring and logging are critical for TOKIO, but they have a
 notable shortcoming in that they don't necessarily observe any controlled
@@ -640,9 +640,6 @@ Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write wo
     \label{fig:umami-mira-fs1-vpic-write}
 \end{figure}
 
-%%%%%%%%%%%% this is as far as I've gotten on my most recent pass
-\hrulefill
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Discussion} \label{sec:results/discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -651,79 +648,66 @@ This section will discuss \emph{why} we saw the behavior that we did by
 aligning and correlating data sources, then make broader conclusions about the
 differences between Mira and Edison results.
 
+Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).  Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
 
-With this framework, we then deep-dive into several specific cases of
-performance degradation identified by the TOKIO dashboard.  For example,
-(\ref{fig:umami-scratch2-hacc-write}) shows a particular date (March 4) on
-which performance was abnormally low while both the coverage factor and metadata
-open/close rates were abnormal.
+The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.  In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.  For example, Figure \ref{fig:umami-deepdive} shows a "deep-dive" view of a particular VPIC run that showed a 3x performance loss.  By showing a server-side, time-resolved trace of write bandwidth on a per-OST basis, we see that there are no straggling writers as if often implicated in collective I/O.  Rather, the bubbles are likely due to a server-side blocking situation, such as journal flushing, which would arise from a high rate of small I/O transactions from another source filling the journal on one or more Lustre OSSes.
 
-We also know that VPIC-IO behaves very differently on Mira vs. Edison, and this
-might make a good deep dive.  Similarly, understanding HACC's long tail would
-be great.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figs/deepdive-scratch3-vpic-write_feb24.pdf}
+    \caption{TOKIO-UMAMI time resolved view of a poorly performing VPIC job.  Each row in the heat map corresponds to an OST, and the line graph represents the sum over all OSTs at each time step.  Each I/O burst corresponds to writing out a single VPIC variable (see \ref{sec:methods/tests}) and, under normal conditions, does not demonstrate the discrete bubble of low bandwidth after each write operation.}
+    \label{fig:umami-deepdive}
+\end{figure}
 
-Once we have shown that we understand several different sources of performance
-loss, we can then establish a taxonomy and enumerate how often bad I/O
-performance can be attributed to each of the different causes we categorized so
-that we can offer one or two specifically common sources of interference.  For
-example,
+The TOKIO framework was also able to identify longer-term performance issues which progressively degraded write performance. Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing 2x slowdown over the normal 50 GIB/sec.  The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.  Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades with increasing OST fullness.
 
-\begin{itemize}
-\item Sometimes metadata operations are slow (e.g., file-per-process I/O)
-    \begin{itemize}
-    \item Show Darshan logs showing high metadata time
-    \item Show LMT MDT logs showing high background metadata or CPU rate
-    \item Show GPFS NSD metadata loads?  Can we do this?
-    \end{itemize}
-\item Sometimes hardware goes bad
-    \begin{itemize}
-    \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
-    application's fault)
-    \item Show Lustre OSTs that stall out
-    \item Show slow Lustre OSTs due to failover/oversubscription (a la Darshan 3 paper)
-    \item Show poorly performing GPFS NSDs
-    \end{itemize}
-\item Sometimes there is interference from other applications
-    \begin{itemize}
-    \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
-    application's fault)
-    \item Show jobs with and without background LMT load
-    \item Show jobs with and without background mmpmon load
-    \end{itemize}
-\item Sometimes tuning strategies differ across platforms
-    \begin{itemize}
-    \item contrast which benchmark performs best on each platform
-    \item dig into why
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figs/umami-scratch3-hacc-write-long-term.pdf}
+    \caption{TOKIO-UMAMI of HACC write performance on Edison's scratch3 file system showing a longer-term period of performance degradation that was associated with unusually high OSS CPU load.}
+    \label{fig:umami-scratch3-hacc-write-long-term}
+\end{figure}
+
+Qualitatively, the highly variable I/O workload and "I/O weather" conditions across the Edison file systems obfuscate a straightforward analysis of all of the sources of performance variation on its file systems.  Over the course of this study, we found that the TOKIO framework often exposed variation resulting from the confluence of several factors that only correlate weakly with performance when examined independently.  Thus, TOKIO requires some amount of expert knowledge to confidently determine the root cause of I/O problems on file systems that are subject to large amounts of incoherent or otherwise noisy I/O.  That said, presenting the historic correlations between performance and each variable through UMAMI does dramatically reduce the exploration space in this effort.
+
+Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.  Alternatively, UMAMI can be seeded with data from baseline performance tests, as was done in this study, provided that the user's I/O motif is sufficiently similar to one of the baseline tests' motifs.  This can be automated to a large degree though; the simplest approach is to scan Darshan logs for similar I/O transaction size distributions as seeds.  Recently, Liu et al
+have also demonstrated combining resource manager logs and
+server-side I/O logs to identify a series of I/O bursts with specific jobs using a density-based clustering method~\cite{Liu2016}.  We believe that adapting this clustering-based classification approach with TOKIO-UMAMI should be a straightforward approach to building an I/O climate record for any arbitrary job.
+
+Finally, although we applied TOKIO and UMAMI to build I/O climate histories specific to applications based on Darshan logs, it is equally possible to group historic data around similar periods of server-side traffic.  For example, TOKIO can be used to identify collections of applications that, when run together,
+result in an uncommonly adversarial I/O load or, conversely, surprisingly
+good performance.  From this, it is easy to envision an opportunity to inform job scheduling
+to avoid I/O contention between two frequently conflicting applications.
+
+% \begin{itemize}
+% \item Sometimes metadata operations are slow (e.g., file-per-process I/O)
+%     \begin{itemize}
+%     \item Show Darshan logs showing high metadata time
+%     \item Show LMT MDT logs showing high background metadata or CPU rate
+%     \item Show GPFS NSD metadata loads?  Can we do this?
+%     \end{itemize}
+% \item Sometimes hardware goes bad
+%     \begin{itemize}
+%     \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
+%     application's fault)
+%     \item Show Lustre OSTs that stall out
+%     \item Show slow Lustre OSTs due to failover/oversubscription (a la Darshan 3 paper)
+%     \item Show poorly performing GPFS NSDs
+%     \end{itemize}
+% \item Sometimes there is interference from other applications
+%     \begin{itemize}
+%     \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
+%     application's fault)
+%     \item Show jobs with and without background LMT load
+%     \item Show jobs with and without background mmpmon load
+%     \end{itemize}
+% \item Sometimes tuning strategies differ across platforms
+%     \begin{itemize}
+%     \item contrast which benchmark performs best on each platform
+%     \item dig into why
 %   \item See example of how we might show this in Figure~\ref{fig:example-bar-var}
-    \end{itemize}
-\end{itemize}
-
-If we have enough data to make a statistically significant statement, we should
-aim to discuss how susceptible different file systems are to these bad I/O
-performance root causes to stir up controversy (GPFS is better/worse than
-Lustre when facing problem X).  If we do this, we can also propose strategies
-to work around these common bottlenecks.  For example, can holistic I/O
-monitoring provide a feedback loop for coscheduling?  These would be stretch
-statements.
-
-In addition, we can point out that the dashboard is most useful when an historic
-record of similar jobs executions is already known \emph{a priori}, Liu et al~\cite{Liu2016}
-has demonstrated that it is possible to combine resource manager logs alongside
-server-side I/O logs to identify a series of I/O bursts with specific jobs,
-users, and applications.  Future work may be to incorporate this I/O pattern
-identification algorithm with the TOKIO dashboard to automatically build an
-historic record for any arbitrary job.
-
-It may also be worth saying that the TOKIO dashboard can display an historic
-record for any grouping of I/O patterns.  Although groupings were established
-around specific applications based on Darshan logs, it is equally useful to
-use groupings built around similar periods of server-side traffic.  For example,
-it is possible to identify collections of applications that, when run together,
-produce abnormally poor server-side performance or, conversely, surprisingly
-good performance.  From this would arise an opportunity to inform scheduling
-to optimize for or avoid I/O contention between two frequently conflicting
-applications.
-
+%     \end{itemize}
+% \end{itemize}
 
 \section{Related work} \label{sec:related}
 
@@ -777,41 +761,41 @@ performance regression testing
 mmpmon monitoring, etc.)
 \end{itemize}
 
-\section{TEMPORARY: TECHNICAL TASKS}
-
-Assumption: assignments here and in preceding text are tentative, and really
-just guess at someone who can keep tabs on that activity.  Can re-assign,
-delegate, pull in more people, etc.
-
-\begin{itemize}
-    \item \textcolor{red}{ALL}: Begin analyzing TOKIO-ABC benchmark results and
-    and think about how we want to correlate this with GPFS/Lustre monitoring
-    data. Are there specific jobs or timeframes that we want to zoom in on
-    to better understand anomalous behavior? Are there I/O trends that we
-    can observe on specific systems or even across systems that would be
-    interesting to the reader? This is where we want to showcase the utility
-    of this framework, so we will need to find something interesting to demonstrate
-    here to convince the reader. 
-
-    \item \textcolor{red}{ALL}: begin filling in paper intro, background,
-    methodology, system/benchmark descriptions, results, etc.
-
-    \item \textcolor{red}{SHANE}: round up MMPMON data for a 2-week period
-    of TOKIO-ABC runs on Mira.
-
-    \item \textcolor{red}{GLENN}: round up LMT data for a 2-week period of
-    TOKIO-ABC runs on Edison.
-
-    \item \textcolor{red}{WILLIAM}: look at MMPMON data to determine how
-    IOMiner can be extended to analyze GPFS data. 
-\end{itemize}
-
-Timeline:
-\begin{itemize}
-    \item \textcolor{red}{SC abstracts due March 20, 2017}
-    \item \textcolor{red}{SC full submissions due March 27, 2017}
-    \item Time to get moving!
-\end{itemize}
+% \section{TEMPORARY: TECHNICAL TASKS}
+% 
+% Assumption: assignments here and in preceding text are tentative, and really
+% just guess at someone who can keep tabs on that activity.  Can re-assign,
+% delegate, pull in more people, etc.
+% 
+% \begin{itemize}
+%     \item \textcolor{red}{ALL}: Begin analyzing TOKIO-ABC benchmark results and
+%     and think about how we want to correlate this with GPFS/Lustre monitoring
+%     data. Are there specific jobs or timeframes that we want to zoom in on
+%     to better understand anomalous behavior? Are there I/O trends that we
+%     can observe on specific systems or even across systems that would be
+%     interesting to the reader? This is where we want to showcase the utility
+%     of this framework, so we will need to find something interesting to demonstrate
+%     here to convince the reader. 
+% 
+%     \item \textcolor{red}{ALL}: begin filling in paper intro, background,
+%     methodology, system/benchmark descriptions, results, etc.
+% 
+%     \item \textcolor{red}{SHANE}: round up MMPMON data for a 2-week period
+%     of TOKIO-ABC runs on Mira.
+% 
+%     \item \textcolor{red}{GLENN}: round up LMT data for a 2-week period of
+%     TOKIO-ABC runs on Edison.
+% 
+%     \item \textcolor{red}{WILLIAM}: look at MMPMON data to determine how
+%     IOMiner can be extended to analyze GPFS data. 
+% \end{itemize}
+% 
+% Timeline:
+% \begin{itemize}
+%     \item \textcolor{red}{SC abstracts due March 20, 2017}
+%     \item \textcolor{red}{SC full submissions due March 27, 2017}
+%     \item Time to get moving!
+% \end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{REFERENCES}
