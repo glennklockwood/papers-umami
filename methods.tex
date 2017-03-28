@@ -1,7 +1,13 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Instrumentation methods} \label{sec:methods}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \todo{We should shore up the description of all of this to the extent that we're presenting a framework with general components.
 Then we describe our specific implementations.}
+
+\todo{Some text to more clearly define who we are helping with this.
+An end-user can't use this without escalated privileges so it should target facilities.
+Also only enabling post-mortem analysis.}
 
 We identified the following categories of ongoing instrumentation as being
 critical to understanding both the I/O climate and I/O weather of a
@@ -24,19 +30,6 @@ Because of its lightweight design, Darshan can be deployed for all
 production applications on large-scale systems without perturbing
 performance.  Because it operates at the application level, it is also highly
 portable and can be deployed on nearly any major HPC platform.
-
-% PHC: does the modularity thing have an impact on the rest of the paper?
-%
-% Recently, Darshan's architecture has been modularized to allow new sources
-% of I/O data to be more easily integrated into its summaries \cite{snyder2016modular}.
-% This modification allows for data from distinct components within the deep
-% HPC I/O stack to be more easily correlated, providing a more comprehensive view
-% of application I/O behavior. For instance, data captured from higher-level I/O
-% libraries like HDF5 and MPI-IO can be correlated with data from the POSIX layer
-% to determine potential inefficiencies in an I/O workload. Also, this modularized
-% version of Darshan includes a Lustre module that can be correlated with data from
-% other modules to gain insight into how an I/O workload interacts with the
-% underlying file system.
 
 \subsection{Storage system traffic}
 
@@ -90,59 +83,9 @@ be accessed via a python API call Ni. The API allows pulling out a list of
 jobs for a given time range and running on a specific resource.
 \todo{We can also determine overlapping jobs' I/O behaviors by associating their darshan logs via Cobalt (and IOminer), but we didn't do this here.  worth mentioning?}
 
-\subsection{I/O performance regression tests} \label{sec:methods/tests}
-
-The passive instrumentation methods described above are essential for
-ongoing understanding production workloads, but they have an inherent
-drawback in that there is no fixed reference point: the workload
-and state of the system evolves over time.  We must therefore incorporate
-routine, formalized I/O performance regression tests in order establish baseline behavior.
-
-We developed the TOKIO Automated Benchmark Collection (TOKIO-ABC) to meet
-this need.  TOKIO-ABC consists of a collection of benchmarks, including
-both synthetic and application-derived workloads, that can be scaled in
-both the number of processes and data volume according to the constraints
-of the system on which it is deployed. Our two goals in choosing a scale
-for TOKIO-ABC deployment are a) to saturate the storage system and b)
-to limit core-hour consumption sufficiently for daily execution.  We use
-a collection of benchmarks because performance may not well-represented
-by a single benchmark result; each storage system has its own strengths
-and weaknesses for different workloads.  The collection of benchmarks is
-executed within a job script that can be scheduled nightly by a continuous
-integration system or cron job.  The script insures that no more than
-one TOKIO-ABC instance is active at a time, and all benchmark results
-and Darshan logs are archived for analysis at the conclusion of the job.
-The initial set of benchmarks included in TOKIO-ABC are as follows:
-
-\begin{itemize}
-\item \textbf{HACC} \assign{Shane}
-\item \textbf{VPIC} \assign{Suren} 
-Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
-interactions among trillions of plasma physics particles  \cite{Bowers2008}.
-VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
-simulation, where each MPI process writes 8M (i.e., $8 \times 1024 \times 1024$) particles. Each
-particle has eight properties (six floating point and two integer) and each
-property is a single dimension array. The total number of particles depends on
-the number of MPI ranks used. The kernel uses the H5Part API \cite{H5Part} to write
-the data to a single shared HDF5 file, and the execution of the I/O kernel includes
-creating and opening a file, writing data to the file, and closing the file.
-
-\item \textbf{BD-CATS} \assign{Suren} The BD-CATS clustering system~\cite{Patwary2015}  represents
-one of the analyses that is commonly performed on the output of VPIC's particle data files.
-For this study, we emulate the I/O workload of a clustering both particle
-positions and momenta in three dimensions using the BD-CATS-IO I/O kernel benchmark.  This amounts to 75\% of the data
-contained in the HDF5 file (generated by the VPIC-IO kernel) being read.
-
-\item \textbf{IOR} \assign{Shane} The IOR benchmark has been used extensively
-to characterize the performance characteristics of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}
-due to its extensive configurability.  For the purposes of this work, we applied
-IOR to determine each file system's performance variability under conditions
-where an application is performing I/O using the ideal parameters for each
-file system.
-
-\end{itemize}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Data integration}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \todo{PHC: fill this in.  Maybe it comes after experimental platforms?  At
 % any rate, say something, even if brief, about how we bring together all of
@@ -173,10 +116,16 @@ So it's not hard to ask readers to convert their existing instrumentation to a f
 
 Comment that not all systems have every metric
 
-\section{Experimental platforms} \label{sec:platforms}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Experimental Methods} \label{sec:platforms}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To demonstrate the generality of the TOKIO framework, we deployed it on two distinct computing platforms and ran the TOKIO-ABC tests detailed in Table \ref{tab:bench-config} on a daily basis for a month-long evaluation period.
-As described in \ref{sec:methods/tests}, the input configurations for each benchmark were optimized to balance achieving high I/O bandwidth against causing minimal disruption to the rest of the system queue given the daily repetition of these jobs.
+To demonstrate the utility and generality of the TOKIO framework, we deployed it on two distinct computing platforms.
+We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore the utility of TOKIO.  
+Over the course of a month-long evaluation period, we collected measurements from the data sources described in \ref{sec:methods} and used these data to contextualize the performance variability observed in the daily TOKIO-ABC tests.
+In this section, we describe the configuration of the TOKIO-ABC tests and the platforms on which TOKIO and TOKIO-ABC were deployed.
+
+\subsection{I/O performance regression tests} \label{sec:methods/tests}
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
@@ -194,6 +143,58 @@ HACC                                                   & \begin{tabular}[c]{@{}c
 \caption{TOKIO Automated Benchmarking Collection (TOKIO-ABC) benchmarking configurations}
 \label{tab:bench-config}
 \end{table*}
+
+The passive instrumentation methods described in Section \ref{sec:methods} are essential for ongoing understanding production workloads, but they do not provide any fixed reference point:
+the workload and state of the system evolves over time.
+We must therefore incorporate
+routine, formalized I/O performance regression tests in order establish baseline behavior.
+
+We developed the TOKIO Automated Benchmark Collection to meet
+this need.
+TOKIO-ABC consists of a collection of benchmarks, including
+both synthetic and application-derived workloads, that can be scaled in
+both the number of processes and data volume according to the constraints
+of the system on which it is deployed.
+Our two goals in choosing a scale for TOKIO-ABC deployment were
+a) to saturate the storage system and
+b) to limit core-hour consumption sufficiently for daily execution.
+We use
+a collection of benchmarks because performance is not well-represented
+by a single benchmark result; each storage system has its own strengths
+and weaknesses for different workloads.  The collection of benchmarks is
+executed within a job script that can be scheduled nightly by a continuous
+integration system or cron job.  The script insures that no more than
+one TOKIO-ABC instance is active at a time, and all benchmark results
+and Darshan logs are archived for analysis at the conclusion of the job.
+The initial set of benchmarks included in TOKIO-ABC are as follows:
+
+\begin{itemize}
+\item \textbf{HACC} \assign{Shane}
+\item \textbf{VPIC} 
+Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
+interactions among trillions of plasma physics particles  \cite{Bowers2008}.
+VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
+simulation, where each MPI process writes 8M (i.e., $8 \times 1024 \times 1024$) particles. Each
+particle has eight properties (six floating point and two integer) and each
+property is a single dimension array. The total number of particles depends on
+the number of MPI ranks used. The kernel uses the H5Part API \cite{H5Part} to write
+the data to a single shared HDF5 file, and the execution of the I/O kernel includes
+creating and opening a file, writing data to the file, and closing the file.
+
+\item \textbf{BD-CATS} The BD-CATS clustering system~\cite{Patwary2015}  represents
+one of the analyses that is commonly performed on the output of VPIC's particle data files.
+For this study, we emulate the I/O workload of a clustering both particle
+positions and momenta in three dimensions using the BD-CATS-IO I/O kernel benchmark.  This amounts to 75\% of the data
+contained in the HDF5 file (generated by the VPIC-IO kernel) being read.
+
+\item \textbf{IOR} The IOR benchmark has been used extensively
+to characterize the performance characteristics of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}
+due to its extensive configurability.  For the purposes of this work, we applied
+IOR to determine each file system's performance variability under conditions
+where an application is performing I/O using the ideal parameters for each
+file system.
+
+\end{itemize}
 
 %%% GKL - the following Edison description is very wordy.  Would this be better in a table?
 \subsection{NERSC Edison} \label{sec:platforms/edison}
