@@ -214,12 +214,25 @@ The TOKIO-ABC benchmark input configurations for Edison described in Table \ref{
 
 \subsection{ALCF Mira} \label{sec:platforms/mira}
 
-\assign{Phil} Mira is a Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) and is comprised of 49,152 compute nodes, each equipped with a 16-core PowerPC A2 processor and 16 GiB of DDR3 DRAM.
-It has two GPFS-based parallel file systems implemented in DDN SFA12Ke appliances, and the mira-fs1 file system was used in this work.
-This file system has 48 GPFS network shared disk (NSD) servers providing a total of 7 PB of storage, and it is capable of delivering an aggregate of 90 GB/sec peak performance.\todo{Phil/Shane/Kevin, can you embellish a little?}
+\assign{Phil} Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) and is comprised of 49,152 compute nodes, each equipped with a 16-core PowerPC A2 processor and 16 GiB of DDR3 DRAM. The 48K 
+compute nodes are connected to 384 I/O nodes for a ratio of 128 compute nodes
+to each I/O node. The I/O node is identical hardware to the compute node,
+except that it has a single Infiniband QDR link to the storage fabric.
+Mira has two primary GPFS-based parallel file systems using DDN SFA12Ke storage appliances.
+Both of these file systems, mira-fs0 and mira-fs1 share the same
+Infiniband QDR fabric. Although jobs running that use mira-fs0 may not compete
+for storage hardware resources, they will still compete for SAN resources.
+The allocation used for this project has space allocated on mira-fs1 so it 
+was the target of this study.
+The mira-fs1 file system has 48 network shared disk (NSD) servers with each of the
+servers managing 7 SATA RAID6 LUNs and 0 or 1 SSD RAID 10 LUNs. The GPFS metadata
+is placed on the SSD LUNs while data is placed on the SATA LUNs. The volume provides a total of 7 PB of storage, and it is capable of delivering an aggregate bandwidth of 90 GB/sec peak performance.
 
 % \subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
 
+For the selection of the job size for the test framework on Mira, we had to
+base our choice on the number of compute resources rather than the saturation of
+I/O subsystem.
 Mira's I/O architecture is fundamentally different from that of Edison in that it has fixed-size partitions of compute nodes connected to each I/O forwarding node.
 Saturating the I/O bandwidth of the underlying storage servers requires the
 use of many I/O nodes, meaning that peak storage bandwidth can only be
@@ -228,13 +241,12 @@ Running daily I/O benchmarks that span a large portion of Mira's compute
 nodes is impractical due to the lengthy queue times of capability jobs and
 the disruption this would have to job scheduling.
 
-For these reasons, we decided to use 1,024 Mira compute nodes (i.e., a single
+For these reasons, we decided to use 1,024 Mira compute nodes (a single
 rack), a partition size that was small enough to move quickly through
 scheduler queues but large enough to exercise an adequate portion of the
-storage system.  This job size corresponds to eight I/O nodes, each with a QDR4X InfiniBand link to the SAN. %, totalling an absolute peak of 25.6 GB/sec.
+storage system.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totalling an absolute peak of ~25 GB/sec.
 In practice, the TOKIO-ABC IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
 % highest IOR was 20351.604001 MiB/sec (or MB/sec?? what's the darshan-parser --perf unit?)
-\todo{can Phil/Shane/Kevin--confirm my math above? --gkl}
 
 %%% GKL - following is already stated in table
 % We use 16 processes per node, resulting in a total of 16,384
