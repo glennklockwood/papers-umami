@@ -24,10 +24,10 @@ def calc_gpfs_coverage(job):
 if __name__ == "__main__":
     pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
-    gpfs_df = pd.read_csv('mira-fs1_2-25_3-19_merged.dat')
+    gpfs_df = pd.read_csv('mira-fs1_2-25_3-28_merged.dat')
     gpfs_df = gpfs_df.set_index('SECONDS')
 
-    abc_df = pd.read_csv('../tokio-abc/alcf_2-9_3-19.dat', header=0)
+    abc_df = pd.read_csv('../tokio-abc/alcf_2-9_3-27.dat', header=0)
 
     abc_df = abc_df.join(abc_df.apply(calc_gpfs_coverage, axis=1))
     abc_df = abc_df.rename(columns={'BYTES_READ': 'ggio_bytes_read', \
@@ -35,4 +35,4 @@ if __name__ == "__main__":
         'CLOSE_COUNT': 'ggio_closes', 'READ_REQUESTS': 'ggio_read_reqs', \
         'WRITE_REQUESTS': 'ggio_write_reqs', 'READ_DIRECTORY': 'ggio_read_dirs', \
         'INODE_UPDATES': 'ggio_inoded_updates'})
-    abc_df.to_csv('alcf-abc-stats_2-25_3-19.dat')
+    abc_df.to_csv('alcf-abc-stats_2-25_3-27.dat')
