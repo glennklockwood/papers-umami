@@ -1,5 +1,7 @@
 \section{Results} \label{sec:results}
 
+\todo{Brief introductory text to explain what we are going to explain and provide structure to the following sections.}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Statistical Overview} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -8,8 +10,12 @@ We begin our analysis by evaluating the overall behavior of the TOKIO-ABC worklo
 on our example systems.
 Figure \ref{fig:perf-summary-boxplots-fs} illustrates the distribution of
 performance measured by all benchmarks normalized to the highest performance
-observed on each file system.  Each plot represents at least \todo{HOW MANY?}
-samples collected over a period of \todo{HOW MANY?} days.  Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.  By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).  Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
+observed on each file system.
+Each plot represents at least \todo{HOW MANY?}
+samples collected over a period of \todo{HOW MANY?} days.
+Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.
+By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
+Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
 
 \begin{figure}[t]
     \centering
@@ -125,9 +131,14 @@ Thus, high background IOPS can be a cause for performance loss, but their presen
 \subsection{Correlating Different Data Sources} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.  However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis. As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
+\todo{need to explicitly acknowledge the limitations, suitability, and extent of our confidence in the statistical methods employed here.}
 
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview} ) with a wide range of metric collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.  Although an exhaustive examination of all correlations is beyond the scope of this work, several key points can be gleaned by what these data do \emph{and do not} show.
+Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
+However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
+As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
+
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview} ) with a wide range of metric collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.
+Although an exhaustive examination of all correlations is beyond the scope of this work, several key points can be gleaned by what these data do \emph{and do not} show.
 
 \begin{figure}[t]
     \centering
@@ -216,6 +227,7 @@ differences between Mira and Edison results.
 Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).  Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
 
 The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.  In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.  For example, Figure \ref{fig:umami-deepdive} shows a "deep-dive" view of a particular VPIC run that showed a 3x performance loss.  By showing a server-side, time-resolved trace of write bandwidth on a per-OST basis, we see that there are no straggling writers as if often implicated in collective I/O.  Rather, the bubbles are likely due to a server-side blocking situation, such as journal flushing, which would arise from a high rate of small I/O transactions from another source filling the journal on one or more Lustre OSSes.
+\todo{show the good deepdive heatmap too}
 
 \begin{figure}[t]
     \centering

@@ -1,5 +1,8 @@
 \section{Instrumentation methods} \label{sec:methods}
 
+\todo{We should shore up the description of all of this to the extent that we're presenting a framework with general components.
+Then we describe our specific implementations.}
+
 We identified the following categories of ongoing instrumentation as being
 critical to understanding both the I/O climate and I/O weather of a
 production system.  \todo{overview diagram here?}
@@ -85,6 +88,7 @@ On the Edison system, this is accomplished by querying the Slurm job accounting 
 The job accounting data on Mira is uploaded by Cobalt into a database that can
 be accessed via a python API call Ni. The API allows pulling out a list of
 jobs for a given time range and running on a specific resource.
+\todo{We can also determine overlapping jobs' I/O behaviors by associating their darshan logs via Cobalt (and IOminer), but we didn't do this here.  worth mentioning?}
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
@@ -153,6 +157,22 @@ When transferring data between systems, all scalar measurements associated with 
 
 For the purposes of the analyses performed in this work, all TOKIO-ABC data was aggregated and indexed on system (Mira or Edison), application, I/O motif (as described below and in Table \ref{tab:bench-config}), and whether the application primarily read or wrote its data. \todo{Should we make mention of the artifacts appendix and the data formats therein?}
 
+\todo{everything below}
+
+What were the challenges in doing the data integration, and how did we solve them?
+
+\begin{itemize}
+    \item get time synchronized everywhere via NTP
+    \item add lustre topology to Darshan
+    \item standardize on 5-sec intervals
+\end{itemize}
+
+Writing scripts that wedge native data formats into a format ingestible by an analysis tool is easy; the hard part is developing the analysis tools (which we did).
+
+So it's not hard to ask readers to convert their existing instrumentation to a format which TOKIO can ingest.
+
+Comment that not all systems have every metric
+
 \section{Experimental platforms} \label{sec:platforms}
 
 To demonstrate the generality of the TOKIO framework, we deployed it on two distinct computing platforms and ran the TOKIO-ABC tests detailed in Table \ref{tab:bench-config} on a daily basis for a month-long evaluation period.
@@ -190,6 +210,7 @@ The scratch1 and scratch2 file systems each have nine LNET I/O nodes through whi
 As a result of this design, all of Edison's I/O traffic that is bound for one file system shares the same subset of LNET routers on Edison, but this also ensures that Lustre traffic for one file system does not contend for bandwidth with other file systems' I/O nodes.
 
 The TOKIO-ABC benchmark input configurations for Edison described in Table \ref{tab:bench-config} were sized to achieve a high fraction of peak I/O bandwidth for each file system, and indeed, the IOR benchmark configurations demonstrated peak performance at 90\% of the aforementioned file system maximum.
+\todo{Describe how many OSTs we used}
 
 \subsection{ALCF Mira} \label{sec:platforms/mira}
 
