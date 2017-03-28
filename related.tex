@@ -1,42 +1,58 @@
 \section{Related work} \label{sec:related}
 
-\assign{Phil} \todo{include SIOX} Let's cite Xiaosong Ma's work in server-side
-monitoring \cite{Liu2016}; her work uses server-side logs to make scheduling
-recommendations based on a knowledgebase of applications and their historic
-I/O requirements.  This work can improve the predictive ability of such systems
-by replacing the black-box weighting parameter, $w_{i}$, with a function that
-accurately captures the effects of different external interference sources for
-an application.
+Several recent studies have explored how to combine
+and analyze multiple sources of I/O monitoring information.
+Kunkel et al. developed the Scalable I/O for Extreme Performance
+(SIOX)~\cite{Kunkel:2014:SAC:2769884.2769901}, which aggregates
+information from multiple layers of the I/O stack into a global database
+with plugins for automatic optimization.  It relies on instrumented
+versions of application libraries to collect metrics.  Agelastos et al.
+developed the Lightweight Distributed Metric Service (LDMS)~\cite{7013000}
+for scalable collection of compute node metrics. The LDMS metrics include
+client-side I/O counters that could be integrated into TOKIO.  Liu et al. applied in-depth
+analysis to server-side I/O logs to deduce application-level I/O patterns
+and make scheduling recommendations~\cite{Liu2016}.
 
-Matthieu showed how to minimize I/O jitter~\cite{Dorier2012} (but I haven't read
-this paper yet...).  More recently, Yildiz et al~\cite{Yildiz2016} performed
-a systematic exploration of points of contention on an idealized system and
-exposed the sensitivity of 10 GbE to various forms of interference.
+Other recent studies have explored how to quantify and combat various
+types of I/O performance variance.  Lofstead et al. observed that
+variability can can be caused not only by external interference, but also
+internal interference within an application~\cite{lofstead2010managing}.
+They proposed an adaptive I/O strategy that coordinates I/O activity
+within an application.  Dorier et al. proposed a middleware mechanism
+for coordinating I/O activity across applications to manage external
+interference~\cite{dorier2014calciom}.  Yildiz et al. performed a
+systematic study of I/O interference in a controlled testbed environment,
+and found that variance often arose from poor flow control in the I/O
+path~\cite{Yildiz2016}.  Carns et al. reported I/O performance variability
+for seven frequently repeated production jobs during a two month study
+of the Intrepid Blue Gene/P system~\cite{carns2011understanding}.
+Their results suggested that some access patterns are more susceptable
+to variability that others, but the root cause of that variability was
+not identified.
 
-Lofstead et al wrote a paper on managing I/O variability in production~
-\cite{Lofstead2010} which characterized \emph{internal interference} and
-\emph{external interference} using purely client-side metrics.  They defined an
-\emph{imbalance factor}, the ratio of the slowest to fastest write times, as a
-means to infer the external interference, but we can precisely quantify it here
-with server-side metrics.
+Our work builds on these previous studies by introducing a framework that
+integrates data from existing best-in-class characterization tools for each
+component in a manner that can be rapidly adapted to different platforms.  We
+invision this as a way to rapidly provide feedback and contextual information to
+users as they execute their applications.
 
-Andrew Uselton's work on understanding I/O performance in terms of ensembles of
-bursts might be relevant\cite{Uselton2010}, but his method requires heavyweight
-I/O tracing to determine the statistical distribution of I/O bursts during an
-application execution and, as such, as better suited to characterizing the
-behavior of a specific file system as a one-time activity.
+% Andrew Uselton's work on understanding I/O performance in terms of ensembles of
+% bursts might be relevant\cite{Uselton2010}, but his method requires heavyweight
+% I/O tracing to determine the statistical distribution of I/O bursts during an
+% application execution and, as such, as better suited to characterizing the
+% behavior of a specific file system as a one-time activity.
 
-A long time ago, David Skinner and Bill Kramer wrote a paper that characterized
-sources of performance variation~\cite{Skinner2005}, but it didn't really talk
-about I/O in a very meaningful way.
+% A long time ago, David Skinner and Bill Kramer wrote a paper that characterized
+% sources of performance variation~\cite{Skinner2005}, but it didn't really talk
+% about I/O in a very meaningful way.
 
-More recently Xie et al also characterized I/O problems at Oak
-Ridge\cite{Xie2012} using IOR and quantified the effects of stripe counts,
-straggling writers, and shared-file I/O to target areas where middleware can
-optimize I/O for applications.
+% More recently Xie et al also characterized I/O problems at Oak
+% Ridge\cite{Xie2012} using IOR and quantified the effects of stripe counts,
+% straggling writers, and shared-file I/O to target areas where middleware can
+% optimize I/O for applications.
 
-Is any of the BeeGFS stuff (dynamically provisioning file systems) relevant to
-interference isolation?
+% Is any of the BeeGFS stuff (dynamically provisioning file systems) relevant to
+% interference isolation?
 
 \section{Conclusions} \label{sec:conclusions}
 
