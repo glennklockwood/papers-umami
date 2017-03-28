@@ -82,7 +82,9 @@ These data are then associated with job in which the collection was triggered.
 Job scheduling refers to the mix of concurrent application jobs that are running on the compute resources of a system at any given time.
 Since I/O contention is often the result of other jobs running concurrently with a job of interest, we record the total number of jobs that were in flight at any point during the execution time of each job.
 On the Edison system, this is accomplished by querying the Slurm job accounting logs for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
-\todo{describe how we pull concurrent job activity from Mira?}
+The job accounting data on Mira is uploaded by Cobalt into a database that can
+be accessed via a python API call Ni. The API allows pulling out a list of
+jobs for a given time range and running on a specific resource.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
