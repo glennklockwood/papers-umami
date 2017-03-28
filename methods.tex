@@ -79,8 +79,9 @@ These data are then associated with job in which the collection was triggered.
 
 \subsection{Job scheduling \assign{Glenn and Kevin}}
 
-Job scheduling refers to the mix of concurrent application jobs that are
-running on the compute resources of a system at any given time.  Since I/O contention is often the result of other jobs running concurrently with a job of interest, we record the total number of jobs that were in flight at any point during the execution time of each TOKIO-ABC job.  On the Edison system, this is accomplished by querying the Slurm job accounting logs for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
+Job scheduling refers to the mix of concurrent application jobs that are running on the compute resources of a system at any given time.
+Since I/O contention is often the result of other jobs running concurrently with a job of interest, we record the total number of jobs that were in flight at any point during the execution time of each job.
+On the Edison system, this is accomplished by querying the Slurm job accounting logs for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
 \todo{describe how we pull concurrent job activity from Mira?}
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
@@ -152,31 +153,8 @@ For the purposes of the analyses performed in this work, all TOKIO-ABC data was 
 
 \section{Experimental platforms} \label{sec:platforms}
 
-To demonstrate the generality of the TOKIO framework, we deployed it on two distinct platforms in this study.
-
-\begin{itemize}
-%%% GKL - the following Edison description is very wordy.  Would this be better in a table?
-\item \textbf{Edison}
-paragraph Edison is a Cray XC-30 system deployed at the National Energy Research Scientific Computing Center (NERSC) and is comprised of 5,586 compute nodes each with two 12-core Intel Xeon E5-2695 v2 processors and 64 GiB DDR3-1866 DRAM.
-It has three Lustre-based parallel file systems implemented in Cray Sonexion 1600 appliances.
-Two of the file systems, scratch1 and scratch2, are identically configured with 24 Lustre object storage servers (OSSes), each with a single declustered RAID object storage target (OST).
-The scratch1 and scratch2 file systems have a total capacity of 2.2 PB and are capable of 48 GB/sec, and users are evenly distributed across these two file systems.
-Edison's scratch3 file system, which has 36 OSSes, 36 OSTs, 3.3 PB of capacity, and 72 GB/sec of peak performance, is reserved for users who specifically require high parallel I/O performance.
-Thus, we expect the user diversity and workloads of scratch1 and scratch2 to be similar, whereas scratch3 should be biased towards larger, more coherent I/O traffic.
-
-\item \textbf{Mira} \assign{Phil}
-Mira is a Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) and is comprised of 50000000000 compute nodes and a really big GPFS file system.
-\end{itemize}
-
-\todo{Here or in evaluation, describe how we sized the jobs for each
-platform.  See mailing list discussion Jan27-Feb6.  Mira has fixed ratio of
-ions to compute nodes, Cori does not, leads to different characteristics.  In
-either case goal is to exercise file system as much as we can within job
-sizes that will get through queue in daily cadence.}
-
-The TOKIO automated benchmark collection described in Section \ref{sec:methods/tests} was deployed alongside the TOKIO framework on both of the aforementioned systems and configured to run all applications and I/O motifs enumerated in Table \ref{tab:bench-config} every day over a month-long period.
-
-\todo{do we combine the system descriptions (above) with the benchmarks (below)?  right now they show signs of overlap}
+To demonstrate the generality of the TOKIO framework, we deployed it on two distinct computing platforms and ran the TOKIO-ABC tests detailed in Table \ref{tab:bench-config} on a daily basis for a month-long evaluation period.
+As described in \ref{sec:methods/tests}, the input configurations for each benchmark were optimized to balance achieving high I/O bandwidth against causing minimal disruption to the rest of the system queue given the daily repetition of these jobs.
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
@@ -195,23 +173,47 @@ HACC                                                   & \begin{tabular}[c]{@{}c
 \label{tab:bench-config}
 \end{table*}
 
-\subsection{Edison benchmark configuration} \label{sec:platforms/mirabenchmarks}
+%%% GKL - the following Edison description is very wordy.  Would this be better in a table?
+\subsection{NERSC Edison} \label{sec:platforms/edison}
 
-\subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
+Edison is a Cray XC-30 system deployed at the National Energy Research Scientific Computing Center (NERSC) and is comprised of 5,586 compute nodes each with two 12-core Intel Xeon E5-2695 v2 processors and 64 GiB DDR3-1866 DRAM.
+It has three Lustre-based parallel file systems implemented in Cray Sonexion 1600 appliances; two of the file systems are identically configured with users given a scratch directory on one or the other, while the third is reserved for users with specific parallel I/O requirements.
 
-Mira's I/O architecture is fundamentally different from that of the Cray
-systems at NERSC, with fixed-size partitions of compute nodes connected to
-a single I/O node that forwards application I/O requests to the SAN.
+Edison's scratch1 and scratch2 file systems are identically configured with 24 Lustre object storage servers (OSSes), each with a single declustered RAID object storage target (OST).
+These two file systems each have a total capacity of 2.2 PB and are capable of 48 GB/sec, and users are evenly distributed across these two file systems such that user diversity and I/O workloads should be similar on both.
+However, Edison's scratch3 file system has 36 OSSes, 36 OSTs, 3.3 PB of capacity, and 72 GB/sec of peak performance, and users requiring high parallel bandwidth must specifically request access to receive an allocation on it.  Thus, the scratch3 file system should be biased towards larger, more coherent I/O traffic than the other two Edison file systems.
+
+The Edison architecture routes I/O traffic from the Cray Aries high-speed network to the InfiniBand storage fabric through LNET-based I/O nodes.
+The scratch1 and scratch2 file systems each have nine LNET I/O nodes through which all of their traffic is routed via Lustre fine-grained routing, and the scratch3 file system uses thirteen LNET routers.
+As a result of this design, all of Edison's I/O traffic that is bound for one file system shares the same subset of LNET routers on Edison, but this also ensures that Lustre traffic for one file system does not contend for bandwidth with other file systems' I/O nodes.
+
+The TOKIO-ABC benchmark input configurations for Edison described in Table \ref{tab:bench-config} were sized to achieve a high fraction of peak I/O bandwidth for each file system, and indeed, the IOR benchmark configurations demonstrated peak performance at 90\% of the aforementioned file system maximum.
+
+\subsection{ALCF Mira} \label{sec:platforms/mira}
+
+\assign{Phil} Mira is a Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) and is comprised of 49,152 compute nodes, each equipped with a 16-core PowerPC A2 processor and 16 GiB of DDR3 DRAM.
+It has two GPFS-based parallel file systems implemented in DDN SFA12Ke appliances, and the mira-fs1 file system was used in this work.
+This file system has 48 GPFS network shared disk (NSD) servers providing a total of 7 PB of storage, and it is capable of delivering an aggregate of 90 GB/sec peak performance.\todo{Phil/Shane/Kevin, can you embellish a little?}
+
+% \subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
+
+Mira's I/O architecture is fundamentally different from that of Edison in that it has fixed-size partitions of compute nodes connected to each I/O forwarding node.
 Saturating the I/O bandwidth of the underlying storage servers requires the
 use of many I/O nodes, meaning that peak storage bandwidth can only be
 attained using a large portion of the system's available compute nodes.
 Running daily I/O benchmarks that span a large portion of Mira's compute
 nodes is impractical due to the lengthy queue times of capability jobs and
-the obvious objection system administrators would have to this practice.
+the disruption this would have to job scheduling.
 
 For these reasons, we decided to use 1,024 Mira compute nodes (i.e., a single
-rack), a partition size that should be small enough to move quickly through
-scheduler queues, but large enough to exercise an adequate portion of the
-storage system. We use 16 processes per node, resulting in a total of 16,384
-processes executing each benchmark. The benchmark workloads were configured
-to use enough I/O volume to drive the storage system for 1--2 minutes.
+rack), a partition size that was small enough to move quickly through
+scheduler queues but large enough to exercise an adequate portion of the
+storage system.  This job size corresponds to eight I/O nodes, each with a QDR4X InfiniBand link to the SAN. %, totalling an absolute peak of 25.6 GB/sec.
+In practice, the TOKIO-ABC IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
+% highest IOR was 20351.604001 MiB/sec (or MB/sec?? what's the darshan-parser --perf unit?)
+\todo{can Phil/Shane/Kevin--confirm my math above? --gkl}
+
+%%% GKL - following is already stated in table
+% We use 16 processes per node, resulting in a total of 16,384
+% processes executing each benchmark. The benchmark workloads were configured
+% to use enough I/O volume to drive the storage system for 1--2 minutes.
