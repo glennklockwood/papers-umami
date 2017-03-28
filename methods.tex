@@ -152,19 +152,31 @@ For the purposes of the analyses performed in this work, all TOKIO-ABC data was 
 
 \section{Experimental platforms} \label{sec:platforms}
 
-We have deployed the TOKIO framework on two distinct platforms in this study.
+To demonstrate the generality of the TOKIO framework, we deployed it on two distinct platforms in this study.
 
 \begin{itemize}
-\item \textbf{Cori} \assign{Glenn}
+%%% GKL - the following Edison description is very wordy.  Would this be better in a table?
+\item \textbf{Edison}
+paragraph Edison is a Cray XC-30 system deployed at the National Energy Research Scientific Computing Center (NERSC) and is comprised of 5,586 compute nodes each with two 12-core Intel Xeon E5-2695 v2 processors and 64 GiB DDR3-1866 DRAM.
+It has three Lustre-based parallel file systems implemented in Cray Sonexion 1600 appliances.
+Two of the file systems, scratch1 and scratch2, are identically configured with 24 Lustre object storage servers (OSSes), each with a single declustered RAID object storage target (OST).
+The scratch1 and scratch2 file systems have a total capacity of 2.2 PB and are capable of 48 GB/sec, and users are evenly distributed across these two file systems.
+Edison's scratch3 file system, which has 36 OSSes, 36 OSTs, 3.3 PB of capacity, and 72 GB/sec of peak performance, is reserved for users who specifically require high parallel I/O performance.
+Thus, we expect the user diversity and workloads of scratch1 and scratch2 to be similar, whereas scratch3 should be biased towards larger, more coherent I/O traffic.
+
 \item \textbf{Mira} \assign{Phil}
+Mira is a Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) and is comprised of 50000000000 compute nodes and a really big GPFS file system.
 \end{itemize}
 
 \todo{Here or in evaluation, describe how we sized the jobs for each
 platform.  See mailing list discussion Jan27-Feb6.  Mira has fixed ratio of
 ions to compute nodes, Cori does not, leads to different characteristics.  In
 either case goal is to exercise file system as much as we can within job
-sizes that will get through queue in daily cadence.}  The specific details are
-described in Table \ref{tab:bench-config}.
+sizes that will get through queue in daily cadence.}
+
+The TOKIO automated benchmark collection described in Section \ref{sec:methods/tests} was deployed alongside the TOKIO framework on both of the aforementioned systems and configured to run all applications and I/O motifs enumerated in Table \ref{tab:bench-config} every day over a month-long period.
+
+\todo{do we combine the system descriptions (above) with the benchmarks (below)?  right now they show signs of overlap}
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
@@ -182,6 +194,8 @@ HACC                                                   & \begin{tabular}[c]{@{}c
 \caption{Formalized regression testing parameters}
 \label{tab:bench-config}
 \end{table*}
+
+\subsection{Edison benchmark configuration} \label{sec:platforms/mirabenchmarks}
 
 \subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
 
@@ -201,5 +215,3 @@ scheduler queues, but large enough to exercise an adequate portion of the
 storage system. We use 16 processes per node, resulting in a total of 16,384
 processes executing each benchmark. The benchmark workloads were configured
 to use enough I/O volume to drive the storage system for 1--2 minutes.
-Full benchmark configurations for Mira are given below in
-Table~\ref{tab:bench-config}.
