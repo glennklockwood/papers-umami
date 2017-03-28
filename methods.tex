@@ -59,7 +59,7 @@ client clusters.  These metrics are queried on five second intervals by a
 persistent monitoring daemon and stored in an IBM DB2 database.
 The metrics collected include bytes read and written,
 read and write operations, and number of inode updates \todo{(is this
-a proxy for metadata operation rates?)}.
+a proxy for metadata operation rates?)}. \todo{we should decide if we call it GPFS or IBM Spectrum Scale from here on out}
 
 \subsection{Health monitoring \assign{Glenn and Kevin}}
 \label{sec:methods/health}
@@ -169,7 +169,7 @@ IOR                                                    & \begin{tabular}[c]{@{}c
 HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
 \begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
 \end{tabular}
-\caption{Formalized regression testing parameters}
+\caption{TOKIO Automated Benchmarking Collection (TOKIO-ABC) benchmarking configurations}
 \label{tab:bench-config}
 \end{table*}
 
