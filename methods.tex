@@ -33,7 +33,7 @@ Because such monitoring happens on the storage servers rather than user compute 
 Because the tools used to monitor storage system traffic instrumentation are often specific to each file system implementation, we used two different system-specific tools to collect the data used in this study.
 
 \label{sec:methods/lmt}
-The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents them to external consumers via a MySQL database.
+The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
 In this work, we relied on the LMT service integrated into the Cray Sonexion Lustre platform \cite{Keopp2014} and built upon the pyLMT framework developed at NERSC \cite{Uselton2009} to archive these measurements.
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates on a per-server basis at five-second intervals.
 
@@ -50,7 +50,7 @@ storage system: what components are offline, failed-over, or another degraded st
 
 % lfs df
 % lctl dl -t
-To collect health monitoring data on Lustre file systems, we record the fullness of each Lustre OST every fifteen minutes.
+To collect health monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes.
 We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
 % mmlsdisk
 % mmdf
@@ -158,9 +158,9 @@ The initial set of benchmarks included in TOKIO-ABC are as follows:
 \item \textbf{HACC}
 The Hardware Accelerated Cosmology Code (HACC) framework~\cite{habib2012}
 is an N-body physics code for simulating the the evolution of the Universe
-from its early times to today and for understanding dark engery and dark matter.
-The HACC-IO kernel captures the main checkpoint I/O which is about
-96 MiB/process or 1.5TiB total using MPI-IO with a file per process. Each
+from its early times to today and for understanding dark energy and dark matter.
+The HACC-IO kernel captures HACC's main checkpoint I/O which is about
+96 MiB/process or 1.5 TiB total using MPI-IO with a file per process. Each
 file is written in 10 large chunks, one chunk for each variable.
 \item \textbf{VPIC} 
 Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
@@ -188,45 +188,45 @@ file system.
 
 \end{itemize}
 
-%%% GKL - the following Edison description is very wordy.  Would this be better in a table?
+%%% also used tablesgenerator.com to make this monstrosity
+\begin{table*}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{\begin{tabular}[c]{@{}c@{}}System\\ (Center)\end{tabular}}                 & \textbf{Configuration}                                                                                         & \textbf{\begin{tabular}[c]{@{}c@{}}File System\\ (Type)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}\# Servers\\ (LUNs)\end{tabular}} & \textbf{\# I/O Nodes}                                                   & \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Capacity\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Peak\\ Performance\end{tabular}} \\ \hline
+\multirow{3}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Edison\\ (NERSC)\end{tabular}}} & \multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Cray XC-305,586 CNs\\ 2x Xeon E5 v2 CPU\\ 64 GiB DDR3\end{tabular}} & scratch1 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
+                                                                                   &                                                                                                                & scratch2 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
+                                                                                   &                                                                                                                & scratch3 (Lustre)                                                     & 36 (36)                                                              & 13 (shared)                                                             & 3.3 PB                                                          & 72 GB/sec                                                           \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Mira\\ (ALCF)\end{tabular}}                     & \begin{tabular}[c]{@{}c@{}}IBM Blue Gene/Q\\ 49,152 CNs\\ 1x PowerPC A2 CPU\\ 16 GiB DDR3 DRAM\end{tabular}    & mira-fs1 (GPFS)                                                       & 48 (336)                                                             & \begin{tabular}[c]{@{}c@{}}384 (dedicated)\\ 1 per 128 CNs\end{tabular} & 7.0 PB                                                          & 90 GB/sec                                                           \\ \hline
+\end{tabular}
+\caption{Test platforms for TOKIO and TOKIO-ABC}
+\label{tab:system-config}
+\end{table*}
+
 \subsection{NERSC Edison} \label{sec:platforms/edison}
 
-Edison is a Cray XC-30 system deployed at the National Energy Research Scientific Computing Center (NERSC) and is comprised of 5,586 compute nodes each with two 12-core Intel Xeon E5-2695 v2 processors and 64 GiB DDR3-1866 DRAM.
-It has three Lustre-based parallel file systems implemented in Cray Sonexion 1600 appliances; two of the file systems are identically configured with users given a scratch directory on one or the other, while the third is reserved for users with specific parallel I/O requirements.
+Edison is a Cray XC-30 system deployed at the National Energy Research Scientific Computing Center (NERSC) whose architecture is described in Table \ref{tab:system-config}.
+Its scratch1 and scratch2 file systems are identically configured, and users are evenly distributed across both such that the two file systems should have similar levels of I/O traffic.
+However, access to Edison's scratch3 file system is only granted to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
 
-Edison's scratch1 and scratch2 file systems are identically configured with 24 Lustre object storage servers (OSSes), each with a single declustered RAID object storage target (OST).
-These two file systems each have a total capacity of 2.2 PB and are capable of 48 GB/sec, and users are evenly distributed across these two file systems such that user diversity and I/O workloads should be similar on both.
-However, Edison's scratch3 file system has 36 OSSes, 36 OSTs, 3.3 PB of capacity, and 72 GB/sec of peak performance, and users requiring high parallel bandwidth must specifically request access to receive an allocation on it.  Thus, the scratch3 file system should be biased towards larger, more coherent I/O traffic than the other two Edison file systems.
+The Edison architecture routes I/O traffic from the Cray Aries high-speed network to the FDR InfiniBand-based SAN fabric through LNET I/O nodes.
+As a result of this design and the use of Lustre fine-grained routing, all jobs on Edison that utilize one file system share the same set of I/O nodes.
+This ensures that each file system's traffic is isolated as it transits I/O nodes.
 
-The Edison architecture routes I/O traffic from the Cray Aries high-speed network to the InfiniBand storage fabric through LNET-based I/O nodes.
-The scratch1 and scratch2 file systems each have nine LNET I/O nodes through which all of their traffic is routed via Lustre fine-grained routing, and the scratch3 file system uses thirteen LNET routers.
-As a result of this design, all of Edison's I/O traffic that is bound for one file system shares the same subset of LNET routers on Edison, but this also ensures that Lustre traffic for one file system does not contend for bandwidth with other file systems' I/O nodes.
-
-The TOKIO-ABC benchmark input configurations for Edison described in Table \ref{tab:bench-config} were sized to achieve a high fraction of peak I/O bandwidth for each file system, and indeed, the IOR benchmark configurations demonstrated peak performance at 90\% of the aforementioned file system maximum.
-\todo{Describe how many OSTs we used}
+The TOKIO-ABC benchmark input configurations for the Edison file systems are described in Table \ref{tab:bench-config}.
+In all cases, data was striped over all of the OSTs in the file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen specifically to saturate each file system's bandwidth.
+As such, the IOR benchmark configurations demonstrated peak performance at 90\% of the theoretical peaks listed in Table \ref{tab:system-config}.
 
 \subsection{ALCF Mira} \label{sec:platforms/mira}
 
-\assign{Phil} Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) and is comprised of 49,152 compute nodes, each equipped with a 16-core PowerPC A2 processor and 16 GiB of DDR3 DRAM. The 48K 
-compute nodes are connected to 384 I/O nodes for a ratio of 128 compute nodes
-to each I/O node. The I/O node is identical hardware to the compute node,
-except that it has a single Infiniband QDR link to the storage fabric.
-Mira has two primary GPFS-based parallel file systems using DDN SFA12Ke storage appliances.
-Both of these file systems, mira-fs0 and mira-fs1, share the same
-Infiniband QDR fabric. Although jobs running that use mira-fs0 may not compete
-for storage hardware resources, they will still compete for SAN resources.
-The allocation used for this project has space allocated on mira-fs1 so it 
-was the target of this study.
-The mira-fs1 file system has 48 network shared disk (NSD) servers with each of the
-servers managing 7 SATA RAID6 LUNs and 0 or 1 SSD RAID10 LUNs. The GPFS metadata
-is placed on the SSD LUNs while data is placed on the SATA LUNs. The volume provides a total of 7 PB of storage, and it is capable of delivering an aggregate bandwidth of 90 GB/sec peak performance.
+Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) whose architecture is detailed in Table \ref{tab:system-config}.  In addition to the servers and LUNs listed, six of the network shared disk (NSD) servers also have an SSD-based LUN on which metadata is stored.  Furthermore, 
+Mira has has another primary file system not used in this study, mira-fs0, which shares the same QDR InfiniBand-based SAN fabric as mira-fs1.
+Although these file systems have independent NSD servers and devices, I/O can still contend for resources on this storage network.
 
-% \subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
-
-For the selection of the job size for the test framework on Mira, we had to
+For the selection of the job size for TOKIO-ABC on Mira, we had to
 base our choice on the number of compute resources rather than the saturation of
 I/O subsystem.
-Mira's I/O architecture is fundamentally different from that of Edison in that it has fixed-size partitions of compute nodes connected to each I/O forwarding node.
+Unlike Edison, Mira's I/O architecture has fixed-size partitions of compute nodes connected to each I/O forwarding node.
 Saturating the I/O bandwidth of the underlying storage servers requires the
 use of many I/O nodes, meaning that peak storage bandwidth can only be
 attained using a large portion of the system's available compute nodes.
@@ -234,14 +234,8 @@ Running daily I/O benchmarks that span a large portion of Mira's compute
 nodes is impractical due to the lengthy queue times of capability jobs and
 the disruption this would have to job scheduling.
 
-For these reasons, we decided to use 1,024 Mira compute nodes (single
+For these reasons, we used 1,024 Mira compute nodes (single
 rack), a partition size that was small enough to move quickly through
 scheduler queues but large enough to exercise an adequate portion of the
-storage system.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totalling an absolute peak of ~25 GB/sec.
+storage system.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
 In practice, the TOKIO-ABC IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
-% highest IOR was 20351.604001 MiB/sec (or MB/sec?? what's the darshan-parser --perf unit?)
-
-%%% GKL - following is already stated in table
-% We use 16 processes per node, resulting in a total of 16,384
-% processes executing each benchmark. The benchmark workloads were configured
-% to use enough I/O volume to drive the storage system for 1--2 minutes.
