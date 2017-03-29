@@ -951,7 +951,7 @@ for plot_variable in performance_key, performance_key.replace('_by_', '_by_fs_')
             ax.set_xticklabels(new_labels,
                                fontsize=boxplot_settings['fontsize'])
 
-        ax.yaxis.set_ticks([0.0, 1.0])
+        ax.yaxis.set_ticks( np.linspace(0.0, 1.0, 3) )
         ax.set_ylim([-0.1, 1.1])
         for ytick in ax.yaxis.get_major_ticks():
             ytick.label.set_fontsize(boxplot_settings['fontsize'])
