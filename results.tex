@@ -76,7 +76,7 @@ In practice, it is possible to observe $CF > 1.0$
 if (1) server-side monitoring (e.g., LMT or ggiostat)
 did not capture data from all servers during a polling interval, or (2) clock skew exists between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
 To eliminate the most erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
-\todo{We should probably mention what % of data this covers. It will be a likely question.}
+\todo{We should probably mention what \% of data this covers. It will be a likely question.}
 
 The distribution of coverage factors across all experiments run are shown in
 Figure~\ref{fig:cdfs}a which reveals that the majority of tests
