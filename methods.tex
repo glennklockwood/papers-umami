@@ -176,7 +176,13 @@ and Darshan logs are archived for analysis at the conclusion of the job.
 The initial set of benchmarks included in TOKIO-ABC are as follows:
 
 \begin{itemize}
-\item \textbf{HACC} \assign{Shane}
+\item \textbf{HACC}
+The Hardware Accelerated Cosmology Code (HACC) framework~\cite{habib2012}
+is an N-body physics code for simulating the the evolution of the Universe
+from its early times to today and for understanding dark engery and dark matter.
+The HACC-IO kernel captures the main checkpoint I/O which is about
+96 MiB/process or 1.5TiB total using MPI-IO with a file per process. Each
+file is written in 10 large chunks, one chunk for each variable.
 \item \textbf{VPIC} 
 Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
 interactions among trillions of plasma physics particles  \cite{Bowers2008}.
