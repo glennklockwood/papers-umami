@@ -55,8 +55,8 @@ To collect health monitoring data on Lustre file systems, we record the fullness
 We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
 % mmlsdisk
 % mmdf
-For GPFS, we record the fullness of each disk LUN that contains data and the failure status of each LUN when each job is submitted.
-The NSD server to NSD mapping is also collected on the login node, allowing us to identify if a server has failed its NSDs are being handled by a secondary server.
+For GPFS, we record the fullness of each disk LUN that contains data and the failure status of each server when each job is submitted.
+The NSD server to NSD mapping collected on the login node allows us to identify if a server has failed and its NSDs are being handled by a secondary server.
 In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
 
 \subsection{Job scheduling}
@@ -65,7 +65,7 @@ Job scheduling refers to the mix of concurrent application jobs that are running
 Because job scheduling is most useful in the context of a particular job of interest, we represent this data as a single scalar value that represents the number of other jobs running concurrently with our job of interest.
 
 On the Edison system, this is accomplished by querying the Slurm job accounting database for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
-Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API call Ni.
+Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API called Ni.
 The API allows pulling out a list of jobs for a given time range and running on a specific resource.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,7 +108,7 @@ Comment that not all systems have every metric
 
 To demonstrate the utility and generality of the TOKIO framework, we deployed it on two distinct computing platforms.
 We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore the utility of TOKIO.  
-Over the course of a month-long evaluation period, we collected measurements from the data sources described in \ref{sec:methods} and used these data to contextualize the performance variability observed in the daily TOKIO-ABC tests.
+Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to contextualize the performance variability observed in the daily TOKIO-ABC tests.
 In this section, we describe the configuration of the TOKIO-ABC tests and the platforms on which TOKIO and TOKIO-ABC were deployed.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
@@ -212,13 +212,13 @@ compute nodes are connected to 384 I/O nodes for a ratio of 128 compute nodes
 to each I/O node. The I/O node is identical hardware to the compute node,
 except that it has a single Infiniband QDR link to the storage fabric.
 Mira has two primary GPFS-based parallel file systems using DDN SFA12Ke storage appliances.
-Both of these file systems, mira-fs0 and mira-fs1 share the same
+Both of these file systems, mira-fs0 and mira-fs1, share the same
 Infiniband QDR fabric. Although jobs running that use mira-fs0 may not compete
 for storage hardware resources, they will still compete for SAN resources.
 The allocation used for this project has space allocated on mira-fs1 so it 
 was the target of this study.
 The mira-fs1 file system has 48 network shared disk (NSD) servers with each of the
-servers managing 7 SATA RAID6 LUNs and 0 or 1 SSD RAID 10 LUNs. The GPFS metadata
+servers managing 7 SATA RAID6 LUNs and 0 or 1 SSD RAID10 LUNs. The GPFS metadata
 is placed on the SSD LUNs while data is placed on the SATA LUNs. The volume provides a total of 7 PB of storage, and it is capable of delivering an aggregate bandwidth of 90 GB/sec peak performance.
 
 % \subsection{Mira benchmark configuration} \label{sec:platforms/mirabenchmarks}
@@ -234,7 +234,7 @@ Running daily I/O benchmarks that span a large portion of Mira's compute
 nodes is impractical due to the lengthy queue times of capability jobs and
 the disruption this would have to job scheduling.
 
-For these reasons, we decided to use 1,024 Mira compute nodes (a single
+For these reasons, we decided to use 1,024 Mira compute nodes (single
 rack), a partition size that was small enough to move quickly through
 scheduler queues but large enough to exercise an adequate portion of the
 storage system.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totalling an absolute peak of ~25 GB/sec.

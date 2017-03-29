@@ -7,7 +7,7 @@
 % \item increasing number of interoperating components (in this case, additional
 % BB and DVS and so forth)
 
-The stratification performance and capacity in storage technology is motivating the design of increasingly complex parallel storage systems architectures.
+The stratification of performance and capacity in storage technology is motivating the design of increasingly complex parallel storage systems architectures.
 For example, leadership-class computing systems are now being deployed with flash-based, on-fabric burst buffer tiers~\cite{Henseler2016} that provide even higher performance than traditional disk-based scratch file systems~\cite{Bhimji2016}.
 Although designed to provide optimal performance and capacity on an economic basis, this increasing number of interoperating components also complicates the task of understanding I/O performance.
 
@@ -33,7 +33,7 @@ To address this need, we have developed a framework for the holistic instrumenta
 TOKIO combines data from file system servers, application-level profiling, and other system-level sources into a uniform and normalized format in a way that is generalizable to different system architectures.
 With this framework, we are then able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
-Complementary to the I/O climate, the \emph{I/O weather} is determined by momentary job scheduler load, contention, and short-term failure events.
+Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, contention, and short-term failure events.
 
 By running a month-long experiment using formalized I/O regression benchmarking, we then show how the TOKIO framework can contextualize performance variation with these concepts of I/O climate and weather.
 We demonstrate a universal metrics and measurements interface (TOKIO-UMAMI) that quickly classifies a job's I/O performance as being within the expected variation of the file system climate, or if it can be attributed to an extreme file system weather event. 

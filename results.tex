@@ -13,9 +13,9 @@ performance measured by all benchmarks normalized to the highest performance
 observed on each file system.
 Each plot represents at least \todo{HOW MANY?}
 samples collected over a period of \todo{HOW MANY?} days.
-Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of that file system's peak performance.
+Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of the peak performance.
 By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
-Although the source of this disparity in variation between Mira and Edison is not clear from \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
+Although the source of this disparity in variation between Mira and Edison is not clear from Figure \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
 
 \begin{figure}[t]
     \centering
@@ -33,11 +33,11 @@ To focus solely on the variation caused by factors \emph{extrinsic} to each appl
 For example, the fraction peak performance for a HACC write test is only normalized to the maximum performance of all other HACC write tests.
 References to fraction peak performance are hereafter defined this way.
 
-This fraction peak performance distribution, shown in Figure \ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.
+This fraction of peak performance distribution, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.
 For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite
-that file system's overall lower variation shown in \ref{fig:perf-summary-boxplots-fs}.
+that file system's overall lower variation shown in Figure~\ref{fig:perf-summary-boxplots-fs}.
 Similarly, all Edison file systems show a long tail of performance loss for the IOR/shared file read workload.
-Edison's scratch3 also demonstrates very broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application VPIC on all other file systems.
+Edison's scratch3 also demonstrates very broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application on all other file systems.
 
 \begin{figure}[t]
     \centering
@@ -76,6 +76,7 @@ In practice, it is possible to observe $CF > 1.0$
 if (1) server-side monitoring (e.g., LMT or ggiostat)
 did not capture data from all servers during a polling interval, or (2) clock skew exists between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
 To eliminate the most erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
+\todo{We should probably mention what % of data this covers. It will be a likely question.}
 
 The distribution of coverage factors across all experiments run are shown in
 Figure~\ref{fig:cdfs}a which reveals that the majority of tests
@@ -137,7 +138,7 @@ Our choice to define our correlation parameter according to application performa
 However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
 As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
 
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview} ) with a wide range of metric collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview} ) with a wide range of metrics collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.
 Although an exhaustive examination of all correlations is beyond the scope of this work, several key points can be gleaned by what these data do \emph{and do not} show.
 
 \begin{figure}[t]
@@ -226,7 +227,7 @@ differences between Mira and Edison results.
 
 Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).  Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
 
-The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.  In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.  For example, Figure \ref{fig:umami-deepdive} shows a "deep-dive" view of a particular VPIC run that showed a 3x performance loss.  By showing a server-side, time-resolved trace of write bandwidth on a per-OST basis, we see that there are no straggling writers as if often implicated in collective I/O.  Rather, the bubbles are likely due to a server-side blocking situation, such as journal flushing, which would arise from a high rate of small I/O transactions from another source filling the journal on one or more Lustre OSSes.
+The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.  In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.  For example, Figure \ref{fig:umami-deepdive} shows a "deep-dive" view of a particular VPIC run that showed a 3x performance loss.  By showing a server-side, time-resolved trace of write bandwidth on a per-OST basis, we see that there are no straggling writers as is often implicated in collective I/O.  Rather, the bubbles are likely due to a server-side blocking situation, such as journal flushing, which would arise from a high rate of small I/O transactions from another source filling the journal on one or more Lustre OSSes.
 \todo{show the good deepdive heatmap too}
 
 \begin{figure}[t]
