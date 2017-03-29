@@ -2,17 +2,13 @@
 \section{TOKIO Framework} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\todo{We should shore up the description of all of this to the extent that we're presenting a framework with general components.
-Then we describe our specific implementations.}
+TOKIO is a framework that connects different sources of performance instrumentation that is already often collected by HPC facilities to present a holistic view of the I/O subsystem.
+TOKIO, schematically depicted in \ref{fig:tokio-schematic}, integrates a combination of scalar and time-series data from sources available throughout the I/O subsystem and indexes them by time and job identifiers.
+This data integration, detailed further in Section \ref{sec:data-integration}, enables systems staff to explore the overall climate of the I/O system over a past time range of interest.
+Furthermore, users can retrospectively examine the weather of the I/O system during their job and relate this information to the historic I/O system climate if TOKIO is deployed in an environment where users can access the required component-level monitoring data through a database or API.
 
-An end-user can't use this without escalated privileges so it should target facilities.
-It is designed to facilitate post-mortem analysis.
-
-The TOKIO framework is comprised of modular components 
-
-We identified the following categories of ongoing instrumentation as being
-critical to understanding both the I/O climate and I/O weather of a
-production system.
+The following components of the I/O subsystem are critical to understanding both the I/O climate and I/O weather of a production system.
+Thus, they should be continuously instrumented to get the most insight out of the TOKIO framework, and we describe the pertinent data and exemplar tools for achieving this continuous monitoring in an unobtrusive, lightweight fashion.
 
 \begin{figure}[t]
     \centering
@@ -23,93 +19,72 @@ production system.
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
-Application behavior refers to the I/O pattern of a job as expressed from
-the perspective of the application itself (i.e., the I/O pattern of the
-application itself before any system-level optimizations are applied).
-We rely on the Darshan I/O characterization tool~\cite{carns200924}
-to capture this information.  Darshan transparently records concise,
-bounded statistics about an application, such as the amount of time it
-spent performing I/O, the distribution of access sizes, and what files
-were accessed.  Reduction, compression, and storage of these statistics
-is deferred until the application exits in order to minimize overhead.
-Darshan has two notable properties that are desirable for use in TOKIO.
-Because of its lightweight design, Darshan can be deployed for all
-production applications on large-scale systems without perturbing
-performance.  Because it operates at the application level, it is also highly
-portable and can be deployed on nearly any major HPC platform.
+Application behavior refers to the I/O pattern of a job as expressed from the perspective of the application itself before any system-level optimizations are applied).  To ensure minimal overhead from data collection, tracking application behavior generally involves tabulating reduced scalar data over the entirety of a job including the time spent performing I/O, the distribution of access sizes, aggregate data and read/write operation counts, and what files were accessed.
+
+To capture application behavior in this work, we relied on the Darshan I/O characterization tool~\cite{carns200924} which transparently records concise, bounded statistics about an application's I/O behavior.
+Reduction, compression, and storage of these statistics is deferred until the application exits in order to minimize overhead, allowing it be deployed for all production applications on large-scale systems without perturbing performance.
+Darshan also operates at the application level, making it a highly portable and general tool that can be deployed on nearly any major HPC platform.
 
 \subsection{Storage system traffic}
 
-Storage system traffic refers to the aggregate system-wide I/O workload
-observed by the primary storage system.  On most modern-day HPC systems this
-is reflected in the aggregate traffic that reaches the parallel file
-system, and is most easily represented with ongoing time-series metrics.
+Storage system traffic refers to the aggregate system-wide I/O workload observed by the storage system.
+On most modern-day HPC systems this is reflected in the aggregate traffic that reaches the parallel file system in terms of bytes read and written, I/O operations processed, and system-specific counters.
+Because such monitoring happens on the storage servers rather than user compute nodes, these data can be generated as time-series metrics with minimal impact to client performance.
+Because the tools used to monitor storage system traffic instrumentation are often specific to each file system implementation, we used two different system-specific tools to collect the data used in this study.
 
 \label{sec:methods/lmt}
-The Lustre Monitoring Tool (LMT) is a widely used tool for Lustre file systems that collects Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents them to external consumers via a MySQL database.
-NERSC Edison implements LMT
-as a part of the Cray Sonexion Lustre platform \cite{Keopp2014}, and we built
-upon the pyLMT framework developed at NERSC \cite{Uselton2009} to preserve
-server-side metrics during benchmark runs across all file systems evaluated.
-These metrics include bytes read and written, CPU load averages, and metadata
-operation rates on a per-server basis at five-second intervals.
+The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre OSS and MDS and presents them to external consumers via a MySQL database.
+In this work, we relied on the LMT service integrated into the Cray Sonexion Lustre platform \cite{Keopp2014} and built upon the pyLMT framework developed at NERSC \cite{Uselton2009} to archive these measurements.
+LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates on a per-server basis at five-second intervals.
 
 \label{sec:methods/ggiostat}
-We developed the \emph{ggiostat} tool in order to collect analogous data from
-IBM Spectrum Scale (GPFS) file systems.  \assign{Zach}  It uses the
-\texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and
-client clusters.  These metrics are queried on five second intervals by a
-persistent monitoring daemon and stored in a database.
-The metrics collected include bytes read and written,
-read and write request counts, open and close request counts, and the
-number of readdir requests. \todo{(I suggest we leave out inode updates as we don't understand what that entirely means)}. 
+To collect analogous data from IBM Spectrum Scale (GPFS) file systems, we developed the \emph{ggiostat} tool.
+It uses the \texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and client clusters.
+These metrics are queried on five second intervals by a persistent monitoring daemon and stored in a database.
+The metrics collected include bytes read and written, read and write request counts, and metadata operation counts on a per-cluster basis.
 
 \subsection{Health monitoring \assign{Glenn and Kevin}}
 \label{sec:methods/health}
 
 Health monitoring refers to the current fault status and capacity of the
-storage system: what components are offline, and how much storage space
-remains on the available components.
+storage system: what components are offline, failed-over, or another degraded state, and how much storage space remains on the available devices.
 
 % lfs df
 % lctl dl -t
+To collect health monitoring data on Lustre file systems, we record the fullness of each Lustre OST every fifteen minutes.
+We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
 % mmlsdisk
 % mmdf
-For Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes and associate the last measurement to precede the start of a job with that job.
-We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that are the recipient of failed-over OSTs.
-On GPFS, we record the fullness of each disk LUN that contains data and the failure status of each LUN at the start of each job. The NSD server to NSD mapping
-is also collected on the login node. This mapping can identify if a server
-has failed and NSDs are being handled by a secondary server. This data is
-collected at the start of the job submission, so there is the queue delay
-between collection and job start. This data can then be associated with a
-set of benchmark data.
+For GPFS, we record the fullness of each disk LUN that contains data and the failure status of each LUN when each job is submitted.
+The NSD server to NSD mapping is also collected on the login node, allowing us to identify if a server has failed its NSDs are being handled by a secondary server.
+In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
 
-\subsection{Job scheduling \assign{Glenn and Kevin}}
+\subsection{Job scheduling}
 
-Job scheduling refers to the mix of concurrent application jobs that are running on the compute resources of a system at any given time.
-Since I/O contention is often the result of other jobs running concurrently with a job of interest, we record the total number of jobs that were in flight at any point during the execution time of each job.
-On the Edison system, this is accomplished by querying the Slurm job accounting logs for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
-The job accounting data on Mira is uploaded by Cobalt into a database that can
-be accessed via a python API call Ni. The API allows pulling out a list of
-jobs for a given time range and running on a specific resource.
-\todo{We can also determine overlapping jobs' I/O behaviors by associating their darshan logs via Cobalt (and IOminer), but we didn't do this here.  worth mentioning?}
+Job scheduling refers to the mix of concurrent application jobs that are running on the compute resources of a system to identify cases where I/O contention results from other jobs.
+Because job scheduling is most useful in the context of a particular job of interest, we represent this data as a single scalar value that represents the number of other jobs running concurrently with our job of interest.
+
+On the Edison system, this is accomplished by querying the Slurm job accounting database for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
+Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API call Ni.
+The API allows pulling out a list of jobs for a given time range and running on a specific resource.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Data integration}
+\subsection{Data integration} \label{sec:data-integration}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% \todo{PHC: fill this in.  Maybe it comes after experimental platforms?  At
-% any rate, say something, even if brief, about how we bring together all of
-% the instrumentation sources we listed into a coherent data set.}
+The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and job a unique job identifier provided by the system scheduler.
 
-The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source discussed in Section \label{sec:methods} by time.
-Starting with a job's Darshan log, which contains a job start and end time, scalar measurements such as concurrent job count and file system fullness are joined directly to the Darshan counters.
-Timeseries data such as that provided by LMT and ggiostat are both reduced into scalar values (for example, as minimum, maximum, average) as well as retained as time-resolved slices which are indexed using the job identifier stored in the Darshan log file.
+A given job's application behavior record is a logical starting point since it contains critical information including an estimate of I/O performance based on bytes moved and time spent in I/O.  It also contains job start time, end time, and its unique identifier, forming common indices with which storage system traffic, health monitoring, and job scheduling data can be aligned.
 
-This data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
-When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and timeseries data can be encoded in a portable binary format such as HDF5.
+In practice, our implementation of the TOKIO framework used in this study  extracts scalar summary information from a job's Darshan log and attaches job scheduling data based on the job id.
+Health monitoring data is also joined to these scalar data by identifying the last recorded health record before the job launched and attaching these data as scalar measurements.
+Storage system traffic data such as that provided by LMT and ggiostat are also reduced into scalar values (for example, as minimum, maximum, average bytes read and written per second).
+However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are indexed then using the job identifier stored in the Darshan log file.
 
-For the purposes of the analyses performed in this work, all TOKIO-ABC data was aggregated and indexed on system (Mira or Edison), application, I/O motif (as described below and in Table \ref{tab:bench-config}), and whether the application primarily read or wrote its data. \todo{Should we make mention of the artifacts appendix and the data formats therein?}
+The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
+When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and time series data can be encoded in a portable binary format such as HDF5.
+Furthermore, because our implementation of TOKIO builds upon community software including Python and pandas, it can interact directly with a variety of data interfaces.
+Thus, TOKIO can natively draw from data located in relational databases (including MySQL, PostgreSQL, and SQLite) and serialize data to text and binary formats (including CSV, HDF5, and Excel spreadsheets).
 
 \todo{everything below}
 
