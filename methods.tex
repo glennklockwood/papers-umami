@@ -56,13 +56,13 @@ operation rates on a per-server basis at five-second intervals.
 
 \label{sec:methods/ggiostat}
 We developed the \emph{ggiostat} tool in order to collect analogous data from
-IBM Spectrum Scale (GPFS) file systems.  \assign{Zach}  It relies upon the
-\texttt{mmpmon} monitoring system in GPFS to retrieve metrics from server and
+IBM Spectrum Scale (GPFS) file systems.  \assign{Zach}  It uses the
+\texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and
 client clusters.  These metrics are queried on five second intervals by a
-persistent monitoring daemon and stored in an IBM DB2 database.
+persistent monitoring daemon and stored in a database.
 The metrics collected include bytes read and written,
-read and write operations, and number of inode updates \todo{(is this
-a proxy for metadata operation rates?)}. \todo{we should decide if we call it GPFS or IBM Spectrum Scale from here on out}
+read and write request counts, open and close request counts, and the
+number of readdir requests. \todo{(I suggest we leave out inode updates as we don't understand what that entirely means)}. 
 
 \subsection{Health monitoring \assign{Glenn and Kevin}}
 \label{sec:methods/health}
