@@ -74,7 +74,8 @@ In addition, network traffic on both compute and storage fabrics is often availa
 More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which TOKIO can draw measurements.
 
 In this study, the job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database and the Cray service database.
-On Mira, job layout information is recorded in the Darshan logs through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.
+The association between jobs and Lustre OSTs was also recorded in each job's Darshan log through the Darshan Lustre module.
+Similarly, job layout information on Mira was recorded in the Darshan logs through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Data integration} \label{sec:data-integration}
@@ -91,24 +92,15 @@ However, all of the time series data recorded between a job's start and end time
 
 The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
 When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and time series data can be encoded in a portable binary format such as HDF5.
-Furthermore, because our implementation of TOKIO builds upon community software including Python and pandas, it can interact directly with a variety of data interfaces.
-Thus, TOKIO can natively draw from data located in relational databases (including MySQL, PostgreSQL, and SQLite) and serialize data to text and binary formats (including CSV, HDF5, and Excel spreadsheets).
+Because our implementation of TOKIO builds upon community software including Python and pandas, it can interact directly with a variety of data interfaces and
+natively supports indexing data located in relational databases (including MySQL, PostgreSQL, and SQLite) and serializing data to text and binary formats (including CSV, HDF5, and Excel spreadsheets).  Ultimately, every system will have a different set of component-level monitoring tools in place, and TOKIO is designed to be sufficiently general to accept any scalar or time-series data available with only minor modification to its format or representation.
 
+% What were the challenges in doing the data integration, and how did we solve them?
+In deploying the TOKIO framework and integrating data from multiple sources, we did encounter several noteworthy challenges.
+The most critical issue was ensuring that all components' clocks were synchronized to the same NTP servers to ensure that TOKIO's time-based indexing resulted in consistent data.
+Similarly, standardizing the frequency of time series data simplifies integration and data analysis; although we chose 5-second sampling intervals for LMT and ggiostat, the health monitoring data was collected at very low frequency.
+To align such low-frequency data with scalar job data, we chose to treat health monitoring data as scalar data, and the sample that most recently preceded each job was associated that job.
 \todo{everything below}
-
-What were the challenges in doing the data integration, and how did we solve them?
-
-\begin{itemize}
-    \item get time synchronized everywhere via NTP
-    \item add lustre topology to Darshan
-    \item standardize on 5-sec intervals
-\end{itemize}
-
-Writing scripts that wedge native data formats into a format ingestible by an analysis tool is easy; the hard part is developing the analysis tools (which we did).
-
-So it's not hard to ask readers to convert their existing instrumentation to a format which TOKIO can ingest.
-
-Comment that not all systems have every metric
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Experimental Methods} \label{sec:platforms}
