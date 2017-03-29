@@ -2,6 +2,18 @@
 
 \todo{Brief introductory text to explain what we are going to explain and provide structure to the following sections.}
 
+\textbf{Statistical Overview} - We begin our analysis by evaluating the overall behavior of the TOKIO-ABC workloads on our example systems.
+
+\textbf{Combining Application and Server-side Telemetry} - To obtain a better understanding of how performance variation is caused by factors extrinsic to the application, we then combine what we know from application-level analysis provided by Darshan with file system-level analysis provided by LMT (on Edison) and ggiostat (on Mira).
+
+\textbf{Correlating Different Data Sources} - As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
+
+\textbf{Unified Measurements and Metrics Interface} - By establishing an understanding of the baseline distribution of performance for each I/O motif and file system and identifying how different measurements and metrics correlate with performance, we now have a foundation from which we can describe stuff
+
+\textbf{Discussion} - This section will discuss \emph{why} we saw the behavior that we did by aligning and correlating data sources, then make broader conclusions about the differences between Mira and Edison results.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Statistical Overview} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -221,10 +233,6 @@ Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write wo
 \subsection{Discussion} \label{sec:results/discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This section will discuss \emph{why} we saw the behavior that we did by
-aligning and correlating data sources, then make broader conclusions about the
-differences between Mira and Edison results.
-
 Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).  Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
 
 The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.  In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.  For example, Figure \ref{fig:umami-deepdive} shows a "deep-dive" view of a particular VPIC run that showed a 3x performance loss.  By showing a server-side, time-resolved trace of write bandwidth on a per-OST basis, we see that there are no straggling writers as is often implicated in collective I/O.  Rather, the bubbles are likely due to a server-side blocking situation, such as journal flushing, which would arise from a high rate of small I/O transactions from another source filling the journal on one or more Lustre OSSes.
@@ -246,43 +254,17 @@ The TOKIO framework was also able to identify longer-term performance issues whi
     \label{fig:umami-scratch3-hacc-write-long-term}
 \end{figure}
 
-Qualitatively, the highly variable I/O workload and "I/O weather" conditions across the Edison file systems obfuscate a straightforward analysis of all of the sources of performance variation on its file systems.  Over the course of this study, we found that the TOKIO framework often exposed variation resulting from the confluence of several factors that only correlate weakly with performance when examined independently.  Thus, TOKIO requires some amount of expert knowledge to confidently determine the root cause of I/O problems on file systems that are subject to large amounts of incoherent or otherwise noisy I/O.  That said, presenting the historic correlations between performance and each variable through UMAMI does dramatically reduce the exploration space in this effort.
+Qualitatively, the highly variable I/O workload and "I/O weather" conditions across the Edison file systems obfuscate a straightforward analysis of all of the sources of performance variation on its file systems.
+Over the course of this study, we found that the TOKIO framework often exposed variation resulting from the confluence of several factors that only correlate weakly with performance when examined independently.
+Thus, TOKIO requires some amount of expert knowledge to confidently determine the root cause of I/O problems on file systems that are subject to large amounts of incoherent or otherwise noisy I/O.
+That said, presenting the historic correlations between performance and each variable through UMAMI does dramatically reduce the exploration space in this effort.
 
-Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.  Alternatively, UMAMI can be seeded with data from baseline performance tests, as was done in this study, provided that the user's I/O motif is sufficiently similar to one of the baseline tests' motifs.  This can be automated to a large degree though; the simplest approach is to scan Darshan logs for similar I/O transaction size distributions as seeds.  Recently, Liu et al
-have also demonstrated combining resource manager logs and
-server-side I/O logs to identify a series of I/O bursts with specific jobs using a density-based clustering method~\cite{Liu2016}.  We believe that adapting this clustering-based classification approach with TOKIO-UMAMI should be a straightforward approach to building an I/O climate record for any arbitrary job.
+Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.
+Alternatively, UMAMI can be seeded with data from baseline performance tests, as was done in this study, provided that the user's I/O motif is sufficiently similar to one of the baseline tests' motifs.
+This can be automated to a large degree though; the simplest approach is to scan Darshan logs for similar I/O transaction size distributions as seeds.
+Recently, Liu et al have also demonstrated combining resource manager logs and server-side I/O logs to identify a series of I/O bursts with specific jobs using a density-based clustering method~\cite{Liu2016}.
+We believe that adapting this clustering-based classification approach with TOKIO-UMAMI should be a straightforward approach to building an I/O climate record for any arbitrary job.
 
-Finally, although we applied TOKIO and UMAMI to build I/O climate histories specific to applications based on Darshan logs, it is equally possible to group historic data around similar periods of server-side traffic.  For example, TOKIO can be used to identify collections of applications that, when run together,
-result in an uncommonly adversarial I/O load or, conversely, surprisingly
-good performance.  From this, it is easy to envision an opportunity to inform job scheduling
-to avoid I/O contention between two frequently conflicting applications.
-
-% \begin{itemize}
-% \item Sometimes metadata operations are slow (e.g., file-per-process I/O)
-%     \begin{itemize}
-%     \item Show Darshan logs showing high metadata time
-%     \item Show LMT MDT logs showing high background metadata or CPU rate
-%     \item Show GPFS NSD metadata loads?  Can we do this?
-%     \end{itemize}
-% \item Sometimes hardware goes bad
-%     \begin{itemize}
-%     \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
-%     application's fault)
-%     \item Show Lustre OSTs that stall out
-%     \item Show slow Lustre OSTs due to failover/oversubscription (a la Darshan 3 paper)
-%     \item Show poorly performing GPFS NSDs
-%     \end{itemize}
-% \item Sometimes there is interference from other applications
-%     \begin{itemize}
-%     \item Show Darshan logs showing bad performance at the POSIX layer (i.e., not the
-%     application's fault)
-%     \item Show jobs with and without background LMT load
-%     \item Show jobs with and without background mmpmon load
-%     \end{itemize}
-% \item Sometimes tuning strategies differ across platforms
-%     \begin{itemize}
-%     \item contrast which benchmark performs best on each platform
-%     \item dig into why
-%   \item See example of how we might show this in Figure~\ref{fig:example-bar-var}
-%     \end{itemize}
-% \end{itemize}
+Finally, although we applied TOKIO and UMAMI to build I/O climate histories specific to applications based on Darshan logs, it is equally possible to group historic data around similar periods of server-side traffic.
+For example, TOKIO can be used to identify collections of applications that, when run together, result in an uncommonly adversarial I/O load or, conversely, surprisingly good performance.
+From this, it is easy to envision an opportunity to inform job scheduling to avoid I/O contention between two frequently conflicting applications.

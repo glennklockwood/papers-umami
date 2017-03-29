@@ -77,9 +77,7 @@ In this study, the job layouts on the Edison system were recorded for each job b
 The association between jobs and Lustre OSTs was also recorded in each job's Darshan log through the Darshan Lustre module.
 Similarly, job layout information on Mira was recorded in the Darshan logs through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Data integration} \label{sec:data-integration}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and job a unique job identifier provided by the system scheduler.
 
@@ -107,8 +105,8 @@ To align such low-frequency data with scalar job data, we chose to treat health 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To demonstrate the utility and generality of the TOKIO framework, we deployed it on two distinct computing platforms.
-We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore the utility of TOKIO.  
-Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to contextualize the performance variability observed in the daily TOKIO-ABC tests.
+We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore how TOKIO's holistic view of I/O can provide insight into the overall I/O climate for facilities staff and contextualize the I/O behavior of specific jobs for end-users.  
+Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to characterize the performance variability observed in the daily TOKIO-ABC tests.
 In this section, we describe the configuration of the TOKIO-ABC tests and the platforms on which TOKIO and TOKIO-ABC were deployed.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
