@@ -25,7 +25,7 @@ To capture application behavior in this work, we relied on the Darshan I/O chara
 Reduction, compression, and storage of these statistics is deferred until the application exits in order to minimize overhead, allowing it be deployed for all production applications on large-scale systems without perturbing performance.
 Darshan also operates at the application level, making it a highly portable and general tool that can be deployed on nearly any major HPC platform.
 
-\subsection{Storage system traffic}
+\subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
 Storage system traffic refers to the aggregate system-wide I/O workload observed by the storage system.
 On most modern-day HPC systems this is reflected in the aggregate traffic that reaches the parallel file system in terms of bytes read and written, I/O operations processed, and system-specific counters.
@@ -43,8 +43,7 @@ It uses the \texttt{mmpmon} monitoring system built into GPFS to retrieve metric
 These metrics are queried on five second intervals by a persistent monitoring daemon and stored in a database.
 The metrics collected include bytes read and written, read and write request counts, and metadata operation counts on a per-cluster basis.
 
-\subsection{Health monitoring \assign{Glenn and Kevin}}
-\label{sec:methods/health}
+\subsection{Health monitoring} \label{sec:methods/health}
 
 Health monitoring refers to the current fault status and capacity of the
 storage system: what components are offline, failed-over, or another degraded state, and how much storage space remains on the available devices.
@@ -59,7 +58,7 @@ For GPFS, we record the fullness of each disk LUN that contains data and the fai
 The NSD server to NSD mapping collected on the login node allows us to identify if a server has failed and its NSDs are being handled by a secondary server.
 In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
 
-\subsection{Job scheduling}
+\subsection{Job scheduling} \label{sec:methods/scheduling}
 
 Job scheduling refers to the mix of concurrent application jobs that are running on the compute resources of a system to identify cases where I/O contention results from other jobs.
 Because job scheduling is most useful in the context of a particular job of interest, we represent this data as a single scalar value that represents the number of other jobs running concurrently with our job of interest.
@@ -67,6 +66,15 @@ Because job scheduling is most useful in the context of a particular job of inte
 On the Edison system, this is accomplished by querying the Slurm job accounting database for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
 Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API called Ni.
 The API allows pulling out a list of jobs for a given time range and running on a specific resource.
+
+\subsection{Other components} \label{sec:methods/other}
+
+There are a number of other general and system-specific components that may affect I/O performance.  For example, a job's layout and locality to I/O forwarding nodes can be calculated based on its node list and a topology map.
+In addition, network traffic on both compute and storage fabrics is often available through SNMP or vendor-specific monitoring tools.
+More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which TOKIO can draw measurements.
+
+In this study, the job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database and the Cray service database.
+On Mira, job layout information is recorded in the Darshan logs through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Data integration} \label{sec:data-integration}
