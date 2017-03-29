@@ -77,8 +77,12 @@ remains on the available components.
 % mmdf
 For Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes and associate the last measurement to precede the start of a job with that job.
 We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that are the recipient of failed-over OSTs.
-On GPFS, we record the fullness of each disk LUN that contains data and the failure status of each LUN at the start of each job.
-These data are then associated with job in which the collection was triggered.
+On GPFS, we record the fullness of each disk LUN that contains data and the failure status of each LUN at the start of each job. The NSD server to NSD mapping
+is also collected on the login node. This mapping can identify if a server
+has failed and NSDs are being handled by a secondary server. This data is
+collected at the start of the job submission, so there is the queue delay
+between collection and job start. This data can then be associated with a
+set of benchmark data.
 
 \subsection{Job scheduling \assign{Glenn and Kevin}}
 
