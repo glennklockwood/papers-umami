@@ -41,9 +41,40 @@ import bisect
 import warnings
 import textwrap
 
+### black magic necessary for processing Mira log files :(
+try:
+    import pytz
+    _USE_TZ = True
+except ImportError:
+    _USE_TZ = False
+
 def wrap(text, width=15):
     """wrapper for the wrapper"""
     return '\n'.join(textwrap.wrap(text=text,width=width))
+
+
+
+def utc_timestamp_to_argonne( timestamp ):
+    """
+    This is a batty function that allows us to compare the UTC-based
+    timestamps from Darshan logs (start_time and end_time) to the
+    Chicago-based YYYY-MM-DD dates used to index the mmdf data.
+    """
+    if _USE_TZ:
+        ### we know that these logs are from Chicago
+        tz = pytz.timezone("America/Chicago")
+        
+        ### Darshan log's start time in UTC, so turn it into a datetime with UTC on it
+        darshan_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(timestamp))
+        
+        ### Then convert this UTC start time into a local start time so
+        ### we can compare it to the local mmdf timestamp
+        darshan_time_at_argonne = darshan_time.astimezone(tz)
+        return darshan_time_at_argonne
+    else:
+        ### we assume that this script is running on Argonne time; it's the best we can do
+        warnings.warn("pytz is not available so mmdf data might be misaligned by a day!")
+        return datetime.datetime.fromtimestamp(timestamp)
 
 
 
@@ -56,49 +87,66 @@ counter_labels = json.load(open(os.path.join(_REPO_BASE_DIR, 'scripts', 'counter
 ### For consistency, always plot file systems in the same order
 _FILE_SYSTEM_ORDER = [ 'scratch1', 'scratch2', 'scratch3', 'mira-fs1' ]
 
+_INPUT_EDISON_DATA_CSV = os.path.join(_REPO_BASE_DIR,
+                                      'data',
+                                      'dat',
+                                      'tokio-lustre',
+                                      'edison-abc-stats_2-14_3-28.csv')
+_INPUT_MIRA_DATA_CSV = os.path.join(_REPO_BASE_DIR,
+                                    'data',
+                                    'dat',
+                                    'tokio-gpfs',
+                                    'alcf-abc-stats_2-25_3-27.dat')
+_INPUT_MIRA_MMDF_CSV = os.path.join(_REPO_BASE_DIR,
+                                    'data',
+                                    'dat',
+                                    'tokio-gpfs',
+                                    'mira_mmdf_1-25_3-27.csv')
+
+_COVERAGE_FACTOR_CUTOFF = 1.2
+
+_MIRA_JOBS_BLACKLIST = [ 1039807 ]
 
 
-def plot_corr(df,size=20):
-    """
-    Function plots a graphical correlation matrix for each pair
-    of columns in the dataframe.  From
-    
-    http://stackoverflow.com/questions/29432629/correlation-matrix-using-pandas
 
-    Input:
-        df: pandas DataFrame
-        size: vertical and horizontal size of the plot
-    """
-    matplotlib.rc('xtick', labelsize=20)
-    matplotlib.rc('ytick', labelsize=20)
-    corr = df.corr()
-    fig, ax = plt.subplots(figsize=(size, size))
-    ax.matshow(corr, cmap=plt.get_cmap('seismic'),
-                    norm=matplotlib.colors.Normalize(vmin=-1.,vmax=1.) )
-    plt.xticks(range(len(corr.columns)), corr.columns, rotation='vertical')
-    plt.yticks(range(len(corr.columns)), corr.columns)
-    return corr
+### This is a time range that encompasses data collected on both Edison and Mira
+
+# start time is inclusive
+_START_TIME = datetime.datetime(2017, 2, 24, 0, 0, 0)
+# end time is exclusive
+_END_TIME   = datetime.datetime(2017, 3, 26, 0, 0, 0)
+# _START_TIME = _END_TIME = None
+
+
+
+### All time
+
+# start time is inclusive
+_START_TIME = datetime.datetime(2016, 2, 24, 0, 0, 0)
+# end time is exclusive
+_END_TIME   = datetime.datetime(2017, 3, 26, 0, 0, 0)
+# _START_TIME = _END_TIME = None
 
 
 # ## Load data
+# 
+# We've been storing most of the per-job summary data in a single CSV per system.  We
+# 
+# 1. Load the CSV directly into a dataframe
+# 2. Drop any rows containing NANs, because if any of the core data is missing (e.g., application name), the whole record is useless.  Hopefully I haven't overlooked anything important in this assumption.
+# 3. Synthesize a few new columns (we call these "metrics" in the paper) to facilitate downstream analysis
 
 
 ### Edison
-df_edison = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
-                                                   'data',
-                                                   'dat',
-                                                   'tokio-lustre',
-                                                   'edison-abc-stats_2-14_3-23.csv')).dropna()
+df_edison = pandas.DataFrame.from_csv(_INPUT_EDISON_DATA_CSV).dropna()
 df_edison['darshan_rw'] = [ 'write' if x == 1 else 'read' for x in df_edison['darshan_write_mode?'] ]
 df_edison['darshan_file_mode'] = [ 'shared' if x in ['H5Part','MPIIO'] else 'fpp' for x in df_edison['darshan_api'] ]
 df_edison.rename(columns={'lmt_bytes_covered': 'coverage_factor'}, inplace=True)
+df_edison['system'] = "edison"
+df_edison['iops_coverage_factor'] = -1.0
 
 ### Mira
-df_mira = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
-                                                'data',
-                                                'dat',
-                                                'tokio-gpfs',
-                                                'alcf-abc-stats_2-25_3-19.dat')).dropna()
+df_mira = pandas.DataFrame.from_csv(_INPUT_MIRA_DATA_CSV).dropna()
 rename_dict = { '# platform': "system" }
 for key in df_mira.keys():
     if key == 'file_sys':
@@ -108,10 +156,103 @@ for key in df_mira.keys():
 df_mira.rename(columns=rename_dict, inplace=True)
 df_mira['darshan_file_mode'] = [ 'shared' if x in ['H5Part','MPIIO'] else 'fpp' for x in df_mira['darshan_api'] ]
 df_mira['coverage_factor'] = df_mira['darshan_total_bytes'] / (df_mira['ggio_bytes_read'] + df_mira['ggio_bytes_written'])
-df_mira = df_mira[df_mira['coverage_factor'] < 1.2]
+df_mira['iops_coverage_factor'] = (df_mira['darshan_total_rws'] / (df_mira['ggio_read_reqs'] + df_mira['ggio_write_reqs']))
 
-### Both
+
+# Because I'm lazy, load the `mmdf` data separately and attach it to `df_mira`.  The mmdf CSV is generated by
+# 
+# 1. retrieving all of the `df_fs1_*.txt` files from `mira:/projects/radix-io/automated/runs/gpfs-logs/`
+# 2. running `tokio-cron-benchmarks:utils/parse_mmdf.py` script against `df_fs1_*.txt` (note that although `parse_mmdf.py` can distinguish between different file systems, this script currently doesn't filter for the correct `file_system` column
+
+
+df_mmdf = pandas.DataFrame.from_csv(_INPUT_MIRA_MMDF_CSV, index_col=['file_system', 'date'])
+df_mmdf['free_kib'] = df_mmdf['free_kib_blocks'] + df_mmdf['free_kib_frags']
+df_mmdf['free_pct'] = df_mmdf['free_kib'] / df_mmdf['disk_size']
+
+
+# Walk the master dataframe and attach mmdf data.  Note that we're injecting NAs for missing mmdf data because missing mmdf data should not exclude the entire day from our analysis.
+
+
+### I really hope iterrows behaves deterministically and preserves order...
+new_data = {
+    'mmdf_avg_fullness_pct': [],
+    'mmdf_max_fullness_pct': [],
+}
+
+### iterate over each row of the master Mira dataframe
+no_data = set([])
+for row in df_mira.itertuples():
+    fs_key = row.darshan_file_system
+    mmdf_key = utc_timestamp_to_argonne( row.darshan_start_time ).strftime("%Y-%m-%d")
+    if mmdf_key in df_mmdf.loc[fs_key].index:
+        ### only look at today's data
+        df = df_mmdf.loc[fs_key].loc[mmdf_key]
+        
+        data_cols = [ True if x else False for x in df['data?'] ]
+
+        ### calculate a percent fullness - don't bother saving the id of this fullest server though
+        new_data['mmdf_max_fullness_pct'].append( 1.0 - df[ data_cols ]['free_pct'].min() )
+        new_data['mmdf_avg_fullness_pct'].append( 1.0 - df[ data_cols ]['free_pct'].mean() )
+    else:
+        no_data.add( datetime.datetime.fromtimestamp(row.darshan_start_time).strftime("%Y-%m-%d") )
+        new_data['mmdf_max_fullness_pct'].append( np.nan )
+        new_data['mmdf_avg_fullness_pct'].append( np.nan )
+
+warnings.warn("No MMDF data found for the following dates:\n" + '\n'.join(no_data))
+        
+for new_col_name, new_col_data in new_data.iteritems():
+    df_mira[new_col_name] = new_col_data
+
+
+# Now merge both DataFrames so we can look at all the data if we really want to.  This DataFrame will have a bunch of NANs for data that is only applicable to Mira or Edison.
+
+
 df_concat = pandas.concat( (df_mira, df_edison) )
+
+
+# ## Filter Data
+# 
+# Two notable filters are applied:
+# 
+# 1. All jobs where the bytes coverage factor and ops coverage factor are greater than 1.2 are discarded because they reflect severely misaligned or gappy data.
+# 
+# 2. Mira job 1039807 is excluded because ggiostat returned highly abnormal results starting that day.  See e-mail from Shane and Phil on March 23 about this.
+# 
+# 3. All Edison jobs from March 12 were discarded because LMT broke as a result of daylight saving time rolling over.  This filter was applied _before_ the input CSV files loaded above were generated, so it does not need to be applied here.
+
+
+for df in df_mira, df_edison, df_concat:
+    print '+'.join( df['system'].unique() )
+    print ''.join([ '=' * 50])
+    
+    count = len(df)
+    df.drop(df.index[df['coverage_factor'] > _COVERAGE_FACTOR_CUTOFF], inplace=True)
+    print "Dropped %d records due to coverage factor > %.1f" % (count - len(df), _COVERAGE_FACTOR_CUTOFF)
+    
+    count = len(df)
+    for blacklisted_job in _MIRA_JOBS_BLACKLIST:
+        df.drop(df.index[(df['system'] == 'mira') & (df['darshan_jobid'] == blacklisted_job)], inplace=True)
+    print "Dropped %d records due to Mira job #1039807" % (count - len(df))
+
+    count = len(df)
+    if _END_TIME is not None and _START_TIME is not None:
+        filter_time = [ datetime.datetime.fromtimestamp(df['darshan_start_time'][x]) < _START_TIME                    
+                        or
+                        datetime.datetime.fromtimestamp(df['darshan_start_time'][x]) > _END_TIME
+                        for x in df.index ]
+        df.drop(df.index[filter_time], inplace=True)
+    print "Dropped %d records outside of time range %s - %s" % (count - len(df), _START_TIME, _END_TIME)
+    print "Total measurements to be analyzed:", len(df)
+    print
+
+
+
+for df in df_mira, df_edison, df_concat:
+    print '+'.join( df['system'].unique() )
+    print ''.join([ '=' * 50])
+    print "Earliest timestamp now", datetime.datetime.fromtimestamp(df['darshan_start_time'].min())
+    print "Latest timestamp now", datetime.datetime.fromtimestamp(df['darshan_start_time'].max())
+    print
 
 
 # ## Normalize Performance
@@ -178,40 +319,142 @@ for df in df_edison, df_mira, df_concat:
 performance_key = 'darshan_normalized_perf_by_max'
 
 
-# ### Pearson Correlation Analysis
-# Pearson analysis assumes that each variable is normally distributed.  It is easier to understand, but it is not technically correct for variables that are _not_ normally distributed, which include performance.  The Spearman coefficient would be better.
-# 
-# At any rate, this correlation matrix is not of interest to this paper so don't bother generating it here.
-
-
-### make a pretty plot to flag highlights
-if False:
-    corr_edison = plot_corr(df_edison[
-        (df_edison['darshan_file_system'] == 'scratch1') 
-        | (df_edison['darshan_file_system'] == 'scratch2') 
-        | (df_edison['darshan_file_system'] == 'scratch3')
-    ], 10)
-    corr_mira = plot_corr(df[df['darshan_file_system'] == 'mira-fs1'], 10)
-
-
 # ### Numerical Correlation Analysis
-# Now we repeat this correlation analysis, but this time use `scipy.stats` instead of `pandas` so that we can calculate p-values associated with each correlation.
+# 
+# Pearson analysis assumes that each variable is normally distributed.  It is easier to understand, but it is not technically correct for variables that are _not_ normally distributed, which include performance.  The Spearman coefficient would be better and can be enabled below.
+# 
+# We use `scipy.stats` to calculate p-values associated with each correlation.  The ultimate artifact of this process is a table of interesting correlations, their correlation coefficients, and color coding to indicate the confidence of those coefficients based on p-values.
 
 
-def correlation_calculation(df, analysis_func=stats.pearsonr, only_print_key=performance_key, ignore_cols=[]):
+ignore_cols = [
+    'lmt_tot_zeros',
+    'lmt_frac_zeros',
+    'lmt_frac_missing',
+    'ost_avg_kib',
+    'ost_min_pct',
+    'ost_min_kib',
+    'ost_max_kib',
+    'ost_count',
+#   'ost_bad_ost_count',
+    'ost_bad_ost_pct',
+    'ost_failures_lead_secs',
+    'ost_fullness_lead_secs',
+    'lmt_tot_missing',
+    'ost_avg_bad_ost_per_oss',
+    'ost_avg_bad_overload_factor',
+    'ost_bad_oss_count',
+    'ost_min_id',
+    'ost_max_id',
+    'job_min_radius',
+    'job_avg_radius',
+### second pass
+    'lmt_ops_getattrs',
+    'lmt_ops_getxattrs',
+    'lmt_ops_rmdirs',
+    'lmt_ops_unlinks',
+    'lmt_ops_renames',
+    'lmt_ops_setattrs',
+    'lmt_ops_mkdirs',
+    'ggio_inoded_updates',
+### third pass
+    "lmt_mds_ave",
+    "lmt_oss_ave",
+]
+
+### if one key has the same logical meaning as another, this will remap those
+### keys so they line up in the DataFrame
+equivalent_keys = {
+    'ggio_closes':     'lmt_ops_closes',
+    'ggio_opens': 'lmt_ops_opens',
+    'ggio_bytes_read': 'lmt_tot_bytes_read',
+    'ggio_bytes_written': 'lmt_tot_bytes_write',
+    'mmdf_max_fullness_pct': 'ost_max_pct',
+    'mmdf_avg_fullness_pct': 'ost_avg_pct',
+}
+
+### Specific names for the table
+counter_labels_table = {
+    'coverage_factor': "Coverage Factor (Bandwidth)",
+    "ost_avg_pct": "Avg LUN Fullness",
+    "ost_max_pct": "Fullness on Fullest LUN",
+    "lmt_oss_max": "Max CPU Load, Data Server",
+    "ost_bad_pct": "% Servers Failed Over",
+    "ost_bad_ost_count": "Failed-over Servers",
+    "lmt_ops_closes": "close(2) Calls",
+    "lmt_ops_opens": "open(2) Calls",
+    "lmt_tot_bytes_write": "Bytes Written",
+    "lmt_tot_bytes_read": "Bytes Read",
+    "lmt_mds_max": "Max CPU Load, Metadata Server",
+    "lmt_mds_ave": "Avg CPU Load, Metadata Server",
+    "job_concurrent_jobs": "# Concurrent Jobs",
+    "lmt_oss_ave": "Avg CPU Load, Data Server",
+    "job_max_radius": "Job Diameter",
+    "iops_coverage_factor": "Coverage Factor (IOPS)",
+    "ggio_write_reqs": "Write Ops",
+    "ggio_read_reqs": "Read Ops",
+    "ggio_read_dirs": "readdir(3) Calls",
+}
+
+### Order in which table is to be printed
+print_order = [
+    'coverage_factor',
+    "iops_coverage_factor",
+    "lmt_ops_closes",
+    "lmt_ops_opens",
+    "ggio_read_dirs",
+    "lmt_tot_bytes_write",
+    "lmt_tot_bytes_read",
+    "ggio_write_reqs",
+    "ggio_read_reqs",
+    "ost_max_pct",
+    "ost_avg_pct",
+    "lmt_mds_max",
+    "lmt_oss_max",
+    "ost_bad_ost_count",
+    "job_concurrent_jobs",
+    "job_max_radius",
+]
+
+
+
+def correlation_calculation(df,
+                            analysis_func=stats.pearsonr,
+                            only_print_key=performance_key,
+                            ignore_cols=[],
+                            max_pval=1.01):
     """
     Calculate the Pearson correlation coefficient and the associated
-    p-value for every permutation of counter pairs
+    p-value for various counter pairs.  If only_print_key is None,
+    every possible combination of columns in df is attempted; otherwise,
+    the column identified by only_print_key is compared against all other
+    columns.
     """
     num_cols = len(df.keys())
     results = []
-    for i in range(num_cols - 1):
+    
+    if only_print_key is None:
+        i_range = range(num_cols - 1)
+    else:
+        i_range = [ list(df.columns).index(only_print_key) ]
+
+    for i in i_range:
         i_col = df.columns[i]
-        for j in range(i, num_cols):
+        if only_print_key is None:
+            j_range = range(i, num_cols)
+        else:
+            j_range = range(len(df.columns))
+            j_range.remove(i_range[0]) # degenerate case
+        for j in j_range:
             j_col = df.columns[j]
             try:
-                coeff, pval = analysis_func(df[i_col],
-                                            df[j_col])
+                ### The Scipy stats package barfs if x or y contain any
+                ### NANs, but we don't want to drop all records that
+                ### contain any nans.  So, we wait until the very last
+                ### minute to drop only those columns that contain nans
+                ### that we would otherwise try to correlate.
+                df_corr = df[[i_col, j_col]].dropna()
+                coeff, pval = analysis_func(df_corr[i_col],
+                                            df_corr[j_col])
             except TypeError: # non-numeric column
                 continue
             results.append((i_col,
@@ -219,6 +462,7 @@ def correlation_calculation(df, analysis_func=stats.pearsonr, only_print_key=per
                             coeff,
                             pval))
 
+    ### now start dropping correlations that we don't want/need
     sorted_results = sorted(results, key=lambda x: x[3])
     ret_results = []
     for col_name1, col_name2, coeff, pval in sorted_results:
@@ -226,31 +470,202 @@ def correlation_calculation(df, analysis_func=stats.pearsonr, only_print_key=per
         if pval == 0 or pval == 1:
             continue
         ### don't print relationships with very high p-values
-#       if pval > 0.05:
-#           continue
+        if pval > max_pval:
+            continue
         ### don't correlate data from the same source since much of it is degenerate
         if col_name1.split('_',1)[0] == col_name2.split('_',1)[0]:
             continue
         ### don't print anything except for the key of interest (if provided)
         if only_print_key is not None         and col_name1 != only_print_key         and col_name2 != only_print_key:
             continue
-        print "%10.4f %10.4g %30s : %-15s" % (coeff, pval, col_name1, col_name2)
+        if col_name1 in ignore_cols or col_name2 in ignore_cols:
+            continue
+#       print "%10.4f %10.4g %30s : %-15s" % (coeff, pval, col_name1, col_name2)
         
         ### sort the output key orders
         if col_name1 == only_print_key:
-            ret_results.append((col_name1,col_name2))
+            ret_results.append([col_name1,col_name2,coeff,pval])
         elif col_name2 == only_print_key:
-            ret_results.append((col_name2,col_name1))
+            ret_results.append([col_name2,col_name1,coeff,pval])
         else:
-            ret_results.append((col_name1,col_name2) if col_name2 > col_name1 else (col_name2,col_name1))
+            if col_name2 > col_name1:
+                ret_results.append([col_name1,col_name2,coeff,pval])
+            else:
+                ret_results.append([col_name2,col_name1,coeff,pval])
     return ret_results
 
 
 
-print "===== Edison ====="
-correlations_edison = correlation_calculation(df_edison)
-print "====== Mira ======"
-correlations_mira = correlation_calculation(df_mira)
+def correlation_dict_to_dataframe(correlations):
+    ### to_df: dict we will use to store arrays -> pd.Series
+    to_df = {}
+
+    ### common_key: needed to figure out which key is the independent variable
+    common_key = None
+
+    ### list that will become dataframe index
+    key_index = []
+
+    ### loop over all systems, all correlations, all pairs of variables
+    for system, records in correlations.iteritems():
+        for row in records:
+            ### try to figure out which of the two keys is not repeated
+            if common_key is None:
+                common_key = row[0]
+            if row[0] != common_key:
+                common_key = row[1]
+                unique_key = row[0]
+            else:
+                unique_key = row[1]
+
+            ### convert compatible key names from ggio_ to lmt_
+            if unique_key in equivalent_keys:
+                unique_key = equivalent_keys[unique_key]
+
+            ### build up a list of keys that will be our Index
+            if unique_key not in key_index:
+                key_index.append(unique_key)
+
+            ### fill out the dict 
+            counterkey = "counter_%s" % system
+            corrkey = 'correlation_%s' % system
+            pvalkey = 'p-value_%s' % system
+            if counterkey not in to_df: to_df[counterkey] = []
+            if corrkey not in to_df: to_df[corrkey] = []
+            if pvalkey not in to_df: to_df[pvalkey] = []
+            to_df[counterkey].append(unique_key)
+            to_df[corrkey].append(row[2])
+            to_df[pvalkey].append(row[3])
+
+    ### Make an empty but indexed data frame
+    df = pandas.DataFrame(index=key_index)
+    for system in correlations.keys():
+        counterkey = "counter_%s" % system
+        corrkey = 'correlation_%s' % system
+        pvalkey = 'p-value_%s' % system
+
+        df[corrkey] = pandas.Series(to_df[corrkey], index=to_df[counterkey])
+        df[pvalkey] = pandas.Series(to_df[pvalkey], index=to_df[counterkey])
+
+    return df
+
+
+
+### Calculate unconstrainted correlation table just for our edification
+### Calculate correlations between performance and everything else
+correlations = {}
+
+correlations['edison'] = correlation_calculation(df_edison)
+correlations['mira'] = correlation_calculation(df_mira)
+
+correlation_dict_to_dataframe( correlations )
+
+
+
+### Calculate correlations between a subset of interesting measurements
+### so we can generate the correlation table
+correlations = {}
+
+correlations['edison'] = correlation_calculation(df_edison, ignore_cols=ignore_cols)
+correlations['mira'] = correlation_calculation(df_mira, ignore_cols=ignore_cols)
+
+df = correlation_dict_to_dataframe( correlations )
+df
+
+
+
+fig = plt.figure(figsize=(4,8))
+ax = fig.add_subplot(111)
+
+column_headers = {
+    "correlation_edison": "Coefficient\n(Edison)",
+    "correlation_mira": "Coefficient\n(Mira)",
+    "p-value_edison": "P-value (Edison)",
+    "p-value_mira": "P-value (Mira)",
+}
+
+coefficient_keys = [x for x in df.columns if x.startswith('correlation_')]
+
+### the index is column -1
+table = pandas.tools.plotting.table(ax,
+                            df[coefficient_keys].reindex(print_order),
+                            loc='upper right',
+                            colWidths=[0.8,0.8,3.8],
+                            bbox=[0, 0, 1, 1])
+table.set_fontsize(14)
+ax.axis('tight')
+ax.axis('off')
+
+### Rewrite the contents of the table that Pandas gave us
+cells_dict = table.get_celld()
+remap_values = {}
+for cell_pos, cell_obj in cells_dict.iteritems():
+    i, j = cell_pos
+    value = cell_obj.get_text().get_text()
+    height_scale = 1.0
+    if i == 0:    # column headers
+        remap_values[cell_pos] = column_headers.get(value, value)
+        height_scale = 2.0
+    elif j == -1: # index cell
+        remap_values[cell_pos] = counter_labels_table.get(value, value)
+        cell_obj._loc = 'right'
+    else:         # coefficient cell
+        index = cells_dict[(i,-1)].get_text().get_text()
+        column = cells_dict[(0,j)].get_text().get_text()
+        cell_obj._loc = 'center'
+        
+        ### need a special handler for ost_bad_ost_count because Pearson
+        ### will correlate against it even though it is invariant :(
+        ### TODO: fix it so that we don't try to correlate against constants
+        if index == 'ost_bad_ost_count':
+            remap_values[cell_pos] = "N/A"
+            cell_obj.set_color('white')
+#           cell_obj._loc = 'center'
+        elif value == "nan":
+            cell_obj.set_color('grey')
+            remap_values[cell_pos] = ""
+            cell_obj.set_alpha(0.25)
+#           cell_obj._loc = 'center'
+        else:
+            coeff = float(value)
+            pval = df.loc[index][column.replace('correlation','p-value')]
+
+            ### make moderate correlations **bold**
+            if abs(coeff) >= 0.30:
+                cell_obj.get_text().set_fontweight('bold')
+            elif abs(coeff) < 0.10:
+                cell_obj.get_text().set_fontstyle('italic')
+
+            ### color code cells based on p-value
+            if pval < 0.01:
+                set_color = 'blue'
+            elif pval < 0.05:
+                set_color = 'green'
+            else:
+                set_color = 'red'
+            
+            ### for debugging, since the resulting figure doesn't contain any p-values
+            print "%30s pval=%10.4f; setting color to %s" % (
+                index, pval, set_color
+            )
+            cell_obj.set_color(set_color)
+            cell_obj.set_alpha(0.25)
+#           cell_obj._loc = 'center'
+            remap_values[cell_pos] = "%+.4f" % coeff
+    cell_obj.set_height(height_scale * cell_obj.get_height())
+    cell_obj.set_edgecolor('black')
+
+### Actually rewrite the cells now
+for cell_pos, new_value in remap_values.iteritems():
+    cells_dict[cell_pos].get_text().set_text(new_value)
+    
+output_file = "correlation_table.pdf"
+fig.savefig(output_file, bbox_inches="tight")
+print "Saved %s" % output_file
+
+
+
+
 
 
 # ### Scatter Plots
@@ -259,7 +674,7 @@ correlations_mira = correlation_calculation(df_mira)
 
 scatterplots = [ 
     (performance_key, 'coverage_factor'),
-    (performance_key, 'lmt_oss_ave'),
+    (performance_key, 'lmt_oss_max'),
     (performance_key, 'job_concurrent_jobs'),
     (performance_key, 'ost_avg_pct'),
     (performance_key, 'ost_max_kib'),
@@ -299,19 +714,31 @@ for scatterplot in scatterplots:
     x_label = counter_labels.get(x_key, x_key)
     y = df_plot[y_key].values
     y_label = counter_labels.get(y_key, y_key)
-#   ax.hexbin(x, y, gridsize=25, cmap='PuRd')
-    ax.plot(x, y, 'o', alpha=0.5)
+### tmp
+    cutoff_time = datetime.datetime(2017, 3, 13, 0, 0, 0)
+    df_plot['tmp'] = [datetime.datetime.fromtimestamp(df_plot['darshan_start_time'][i]) for i in df_plot.index]
+    x1 = df_plot[df_plot['tmp'] < cutoff_time][x_key].values
+    y1 = df_plot[df_plot['tmp'] < cutoff_time][y_key].values
+    x2 = df_plot[df_plot['tmp'] >= cutoff_time][x_key].values
+    y2 = df_plot[df_plot['tmp'] >= cutoff_time][y_key].values
+### /tmp
+    
+    points_old = ax.plot(x1, y1, 'o', alpha=0.5)
+    points_new = ax.plot(x2, y2, 'o', alpha=0.5)
 
     ### attempt a linear fit to generate a visual aid
+    m, b = np.polyfit(x1, y1, 1)
+    ax.plot(x, m*x+b, "-", color=points_old[0].get_color())
+    
     m, b = np.polyfit(x, y, 1)
-    ax.plot(x, m*x+b, "-")
+    ax.plot(x, m*x+b, "-", color=points_new[0].get_color())
     
     ### add window dressing to plots
 #   fig.suptitle('Correlation between %s and %s' 
 #                 % (x_label.split('(',1)[0].strip(),
 #                    y_label.split('(',1)[0].strip()))
     ax.set_title("Coefficient=%.4f, P-value=%.2g (%s)" 
-                    % sum((stats.pearsonr(x, y), (system,)), ()), fontsize=14 )
+                    % sum((stats.pearsonr(x1, y1), (system,)), ()), fontsize=14 )
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     plt.grid(True)
@@ -320,7 +747,7 @@ for scatterplot in scatterplots:
     print "Saved %s" % output_file
 
 
-# Combine all of the interesting Mira correlations into a single plot:
+# Mira also has both server-side and client side IOPS.  Let's look at those specifically:
 
 
 fig = plt.figure(figsize=(8,4))
@@ -328,50 +755,24 @@ ax = fig.add_subplot(111)
 
 df = df_mira.sort_values(performance_key).copy()
 
-### Job 1039807 had extremely high read ops registered for all of its benchmarks
-# df = df_mira[df_mira['darshan_jobid'] != 1039807].sort_values(performance_key).copy()
-
-# for scatterplot in correlations_mira:
-for scatterplot in [
-#                   (performance_key, 'ggio_bytes_written'),
-#                   (performance_key, 'ggio_bytes_read'),
-                    (performance_key, 'ggio_write_reqs'),
-                    (performance_key, 'ggio_read_reqs'),
-                   ]:
-    x_key = scatterplot[0]
-    y_key = scatterplot[1]
-    if x_key in blacklist or y_key in blacklist:
-        continue
-    system = "Mira"
-    
+for x_key, y_key in [(performance_key, 'ggio_write_reqs'),
+                    (performance_key, 'ggio_read_reqs')]:
     x = df[x_key].values
     y = df[y_key].values / df[y_key].max()
     corr = stats.pearsonr(x, y)
     print counter_labels.get(y_key, y_key), corr[0], corr[1]
-    if corr[1] < 0.05:
-        points = ax.plot(x, y,
-                         'o',
-                         alpha=0.4,
-                         markersize=6.0,
-                         label="%s" % (counter_labels.get(y_key, y_key))
-                        )
-    else:
-        points = ax.plot(x, y,
-                         'x',
-                         alpha=1.0,
-                         markersize=8.0,
-                         markeredgewidth=2.0,
-                         label="%s" % (counter_labels.get(y_key, y_key))
-                        )
-
-
+    points = ax.plot(x, y,
+                     'o',
+                     alpha=0.4,
+                     markersize=6.0,
+                     label="%s" % (counter_labels.get(y_key, y_key))
+                    )
         
-    if corr[1] < 0.05:
-        ### attempt a linear fit to generate a visual aid
-        m, b = np.polyfit(x, y, 1)
-        ax.plot(x, m*x+b,
-                "-",
-               color=points[0].get_color())
+    ### attempt a linear fit to generate a visual aid
+    m, b = np.polyfit(x, y, 1)
+    ax.plot(x, m*x+b,
+            "-",
+           color=points[0].get_color())
     
 ax.set_xlabel(counter_labels.get(x_key, x_key))
 ax.set_ylabel("Fraction Peak Ops")
@@ -383,11 +784,36 @@ print "Saved %s" % output_file
 
 
 
-for key in 'ggio_bytes_written', 'ggio_bytes_read', 'ggio_write_reqs', 'ggio_read_reqs':
-    if key.endswith('_reqs'):
-        print "%10d Kops %s" % (df_plot[key].max() / 10.0**3, key, )
-    else:
-        print "%10d GiB  %s" % (df_plot[key].max() / 2.0**30, key, )
+fig = plt.figure(figsize=(8,4))
+ax = fig.add_subplot(111)
+
+df = df_mira.sort_values(performance_key).copy()
+
+for x_key, y_key in [('coverage_factor', 'iops_coverage_factor')]:
+    x = df[x_key].values
+    y = df[y_key].values / df[y_key].max()
+    corr = stats.pearsonr(x, y)
+    print counter_labels.get(y_key, y_key), corr[0], corr[1]
+    points = ax.plot(x, y,
+                     'o',
+                     alpha=0.4,
+                     markersize=6.0,
+                     label="%s" % (counter_labels.get(y_key, y_key))
+                    )
+        
+    ### attempt a linear fit to generate a visual aid
+    m, b = np.polyfit(x, y, 1)
+    ax.plot(x, m*x+b,
+            "-",
+           color=points[0].get_color())
+    
+ax.set_xlabel(counter_labels.get(x_key, x_key))
+ax.set_ylabel("Fraction Peak Ops")
+ax.legend()
+plt.grid(True)
+output_file = "scatter_mira_ops.pdf"
+fig.savefig(output_file, bbox_inches="tight")
+print "Saved %s" % output_file
 
 
 # Plot the correlation between coverage factor and performance for each file system separately
@@ -438,172 +864,6 @@ for idx, fs in enumerate(_FILE_SYSTEM_ORDER):
     df_save = pandas.DataFrame({"Performance Relative to Mean": x,
                                 "Coverage Factor": y}).to_csv(output_file.replace('pdf', 'csv'))
     print "Saved", output_file.replace('pdf', 'csv')
-
-
-# ### Strategic Scatter Plots
-# 
-# Now instead of just generating a bunch of scatter plots that show interesting correlations, let's plot some to illustrate specific relationships.
-# 
-# First build a dataframe with normalized data so that we can fairly compare Mira and Edison if desired:
-
-
-### Juggle these for the purposes of correlating performance
-old_performance_key = performance_key
-performance_key = 'darshan_normalized_perf_by_max'
-
-
-
-df_plot_e = df_edison[['darshan_file_system', 'darshan_app', 'darshan_rw', performance_key]].copy()
-df_plot_e['opens'] = df_edison['lmt_ops_opens']
-df_plot_e['closes'] = df_edison['lmt_ops_closes']
-df_plot_e['opens+closes'] = df_plot_e['opens'] + df_plot_e['closes']
-df_plot_e['opens+closes_normalized'] = df_plot_e['opens+closes'] / df_plot_e['opens+closes'].max()
-
-df_plot_m = df_mira[['darshan_file_system', 'darshan_app', 'darshan_rw', performance_key]].copy()
-df_plot_m['opens'] = df_mira['ggio_opens']
-df_plot_m['closes'] = df_mira['ggio_closes']
-df_plot_m['opens+closes'] = df_plot_m['opens'] + df_plot_m['closes']
-df_plot_m['opens+closes_normalized'] = df_plot_m['opens+closes'] / df_plot_m['opens+closes'].max()
-df_plot_m['readops'] = df_mira['ggio_read_reqs']
-df_plot_m['writeops'] = df_mira['ggio_write_reqs']
-df_plot_m['iops'] = df_plot_m['readops'] + df_plot_m['writeops']
-df_plot_m['iops_normalized'] = df_plot_m['iops'] / df_plot_m['iops'].max()
-
-df_plot = pandas.concat([df_plot_e, df_plot_m], axis=0)
-
-
-# Plot the relationship between performance and open+close rates.  Our expectation is that Mira is more sensitive to this since metadata and data are serviced by the same GPFS servers; by comparison, Edison's Lustre file systems have discrete MDSes which should decouple data performance from metadata performance.
-# 
-# That said, there is a non-causational relationship between metadata rates and data rates on Edison by virtue of the fact that lots of metadata implies that a lot of I/O (perhaps small transactions) is also happening on those file systems.  Because we aren't capturing IOPS rates on Lustre, we have no way to tell what the combined bandwidth and IOPS loads on Lustre are.
-
-
-_USE_LOG = False
-fig = plt.figure(figsize=(8,6))
-ax = fig.add_subplot(111)
-
-criteria = {
-    'Edison': df_plot['darshan_file_system'] == 'scratch1', # != 'mira-fs1',
-    'Mira': df_plot['darshan_file_system'] == 'mira-fs1',
-}
-for label, criterion in criteria.iteritems():
-    x = df_plot[criterion]         .sort_values(performance_key)[performance_key].values
-
-    ### normalize to only the data we're looking at on Edison
-    y = df_plot[criterion]         .sort_values(performance_key)['opens+closes']         / df_plot[criterion]['opens+closes'].max()
-
-    if label == 'Edison':
-        markersize=2.0
-        alpha=0.75
-    else:
-        markersize=8.0
-        alpha=0.50
-    ax.plot(x, y, ls="", marker='o', alpha=alpha, label=label, markersize=markersize)
-    
-    if not _USE_LOG:
-        ### attempt a linear fit to generate a visual aid
-        m, b = np.polyfit(x, y, 1)
-        ax.plot(x, m*x+b, "-", label=label, linewidth=4.0)
-    print "Coefficient=%.4f, P-value=%.2g (%s)" % sum((stats.pearsonr(x, y), (label,)), ())
-
-ax.set_xlabel(wrap("Fraction Peak Performance (Application)", 30))
-ax.set_ylabel(wrap("Fraction Peak Opens+Closes (Server)", 30))
-if _USE_LOG:
-    ax.set_yscale("log")
-ax.legend()
-ax.grid()
-del _USE_LOG
-
-
-# On Mira, is application performance related to IOPS or bandwidth load?
-
-
-_USE_LOG = False
-fig = plt.figure(figsize=(8,6))
-ax = fig.add_subplot(111)
-
-criteria = {
-#    'Edison': df_plot['darshan_file_system'] == 'scratch3', # != 'mira-fs1',
-    'Mira read': ((df_plot['darshan_file_system'] == 'mira-fs1') & (df_plot['darshan_rw'] == 'read')),
-    'Mira write': ((df_plot['darshan_file_system'] == 'mira-fs1') & (df_plot['darshan_rw'] == 'write')),
-}
-for label, criterion in criteria.iteritems():
-    x = df_plot[criterion].sort_values(performance_key)[performance_key].values
-    y = df_plot[criterion].sort_values(performance_key)['iops_normalized']
-    if label == 'Edison':
-        markersize=2.0
-        alpha=0.75
-    else:
-        markersize=8.0
-        alpha=0.50
-    ax.plot(x, y, ls="", marker='o', alpha=alpha, label=label, markersize=markersize)
-    
-    if not _USE_LOG:
-        ### attempt a linear fit to generate a visual aid
-        m, b = np.polyfit(x, y, 1)
-        ax.plot(x, m*x+b, "-", label=label, linewidth=4.0)
-    print "Coefficient=%.4f, P-value=%.2g (%s)" % sum((stats.pearsonr(x, y), (label,)), ())
-
-ax.set_xlabel(wrap("Fraction Peak Performance (Application)", 30))
-ax.set_ylabel(wrap("Fraction Peak IOPS (Server)", 30))
-if _USE_LOG:
-    ax.set_yscale("log")
-ax.legend()
-ax.grid()
-ax.set_title(wrap("No compelling relationship between IOPS and bandwidth on GPFS", 30),
-             fontsize=14,
-             position=(0.05, 0.4),
-             horizontalalignment='left',
-             backgroundcolor='white',
-            )
-del _USE_LOG
-
-
-# What about everything else on Mira?  What is affecting Mira's performance?
-
-
-_USE_LOG = False
-fig = plt.figure(figsize=(8,6))
-ax = fig.add_subplot(111)
-
-criteria = {
-#    'Edison': df_plot['darshan_file_system'] == 'scratch3', # != 'mira-fs1',
-    'Mira read': ((df_plot['darshan_file_system'] == 'mira-fs1') & (df_plot['darshan_rw'] == 'read')),
-    'Mira write': ((df_plot['darshan_file_system'] == 'mira-fs1') & (df_plot['darshan_rw'] == 'write')),
-}
-for label, criterion in criteria.iteritems():
-    x = df_plot[criterion].sort_values(performance_key)[performance_key].values
-    y = df_plot[criterion].sort_values(performance_key)['iops_normalized']
-    if label == 'Edison':
-        markersize=2.0
-        alpha=0.75
-    else:
-        markersize=8.0
-        alpha=0.50
-    ax.plot(x, y, ls="", marker='o', alpha=alpha, label=label, markersize=markersize)
-    
-    if not _USE_LOG:
-        ### attempt a linear fit to generate a visual aid
-        m, b = np.polyfit(x, y, 1)
-        ax.plot(x, m*x+b, "-", label=label, linewidth=4.0)
-    print "Coefficient=%.4f, P-value=%.2g (%s)" % sum((stats.pearsonr(x, y), (label,)), ())
-
-ax.set_xlabel(wrap("Fraction Peak Performance (Application)", 30))
-ax.set_ylabel(wrap("Fraction Peak IOPS (Server)", 30))
-if _USE_LOG:
-    ax.set_yscale("log")
-ax.legend()
-ax.grid()
-ax.set_title(wrap("No compelling relationship between IOPS and bandwidth on GPFS", 30),
-             fontsize=14,
-             position=(0.05, 0.4),
-             horizontalalignment='left',
-             backgroundcolor='white',
-            )
-del _USE_LOG
-
-
-
-performance_key = old_performance_key
 
 
 # ## Distribution of each benchmark type
@@ -841,8 +1101,8 @@ for fs in _FILE_SYSTEM_ORDER:
             cdfs[cdf_key] = {}
         cdf = calculate_cdf(df_fs[cdf_key])
         cdfs[cdf_key][fs] = {
-            'dependent_variable': cdf.values,
-            'probability': cdf.index,
+            'dependent_variable':  cdf.index,
+            'probability': cdf.values,
         }
 
 
@@ -880,17 +1140,19 @@ for fs in _FILE_SYSTEM_ORDER:
             tick.label.set_fontsize(16) 
         for tick in axes[idx].yaxis.get_major_ticks():
             tick.label.set_fontsize(16)
-            
 axes[1].xaxis.get_major_ticks()[0].set_visible(False)
 axes[0].set_title('(a)', position=(0.90,0.0), fontsize=24)
 axes[1].set_title('(b)', position=(0.90,0.0), fontsize=24)
-fig.legend( *(axes[0].get_legend_handles_labels()),
-    fontsize=14,
-               ncol=4,
-               mode="expand",
-               bbox_to_anchor=(0.11, 0.0, 0.79, 1.0),
-               loc="upper left",
-              borderaxespad=0.0)
+#fig.legend(
+axes[0].legend(
+    *(axes[0].get_legend_handles_labels()),
+    fontsize=16
+#   ncol=4,
+#   mode="expand",
+#   bbox_to_anchor=(0.11, 0.0, 0.79, 1.0),
+#   loc="upper left",
+#   borderaxespad=0.0
+          )
 axes[0].set_ylabel("Cumulative Probability", fontsize=14)
 for i in 0, 1:
     axes[i].set_ylim([0.0, 1.0])
@@ -906,6 +1168,95 @@ fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
 
 
+# ## IOPS Coverage Factor
 
 
+df = df_mira.copy()
+df['iops_coverage_factor'] = (df_mira['darshan_total_rws'] / (df_mira['ggio_read_reqs'] + df_mira['ggio_write_reqs']))
+
+
+
+fig = plt.figure()
+ax = fig.add_subplot('111')
+x_counter = 'coverage_factor'
+x_counter = 'darshan_normalized_perf_by_max'
+y_counter = 'iops_coverage_factor'
+ax.plot(df[x_counter],
+        df[y_counter],
+        marker='o',
+        alpha=1.0,
+        linewidth=0.0,
+       )
+result = ax.hexbin( df[x_counter],
+            df[y_counter],
+            gridsize=15,
+            cmap='hot_r'
+       )
+
+ax.set_xlabel(x_counter)
+ax.set_ylabel(y_counter)
+ax.grid()
+print """
+When performance is high, iops coverage factor is high (so application has exclusive access to iops)
+When performance is low, iops coverage factor is low
+"""
+
+
+
+### CDF
+fig = plt.figure()
+fig.set_size_inches(8,5)
+ax = fig.add_subplot("111")
+ax.plot(calculate_cdf( df_mira['iops_coverage_factor'] ), label='IOPS', lw=2.0)
+ax.plot(calculate_cdf( df_mira['coverage_factor'] ), label='Bandwidth', lw=2.0)
+ax.set_xlabel("Coverage Factor")
+ax.set_ylabel("Cumulative Probability")
+ax.legend()
+ax.grid()
+output_file = "cdf-cf-bw-and-ops.pdf"
+fig.savefig(output_file, bbox_inches="tight")
+print "Saved %s" % output_file
+
+
+### Also try bar plots
+fig = plt.figure()
+fig.set_size_inches(8,5)
+ax = fig.add_subplot("111")
+y1 = df_mira['iops_coverage_factor']
+y2 = df_mira['coverage_factor']
+common_opts = {
+                "width": 1.0/15.0,
+                "bins": np.linspace(0.0, 1.0, 15),
+                'alpha': 0.75,
+                'lw': 3.0,
+#                 'zorder': 9,
+              }
+
+# ax.hist( [ y1, y2 ], label=["IOPS", "Bandwidth"], **common_opts)
+for y, label in [ 
+                 (y1, 'IOPS'),
+                 (y2, 'Bandwidth'),
+
+                ]:
+    ax.hist( y, label=label, **common_opts)
+
+ax.set_xlabel("Coverage Factor")
+ax.set_ylabel("Frequency")
+ax.legend()
+ax.yaxis.grid()
+output_file = "hist-cf-bw-and-ops.pdf"
+fig.savefig(output_file, bbox_inches="tight")
+print "Saved %s" % output_file
+
+
+# ## Identifying Statistical Distribution of Problem Sources
+# 
+# The idea here is that we look at the bottom quartile of performance across all apps and see if there are any common threads of correlation.  For example, some by-hand poking at Mira data revealed that readdirs were usually high when performance was low.  PCA would be a better way to do this, but who has time to do that?
+
+
+worst_runs_index = {}
+for system in 'edison', 'mira':
+    sys_index = df_concat[df_concat['system'] == system].index
+    perf_index = (df_concat.loc[sys_index] < np.percentile(df_concat.loc[sys_index], 25)).index
+    worst_runs_index[system] = perf_index
 

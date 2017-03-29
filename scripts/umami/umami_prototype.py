@@ -21,6 +21,7 @@ import json
 import datetime
 import time
 import textwrap
+import warnings
 
 
 # ## Load and refine data
@@ -34,17 +35,50 @@ counter_labels = json.load(open(os.path.join(_REPO_BASE_DIR, 'scripts', 'counter
 
 
 
+### black magic necessary for processing Mira log files :(
+try:
+    import pytz
+    _USE_TZ = True
+except ImportError:
+    _USE_TZ = False
+
+def utc_timestamp_to_YYYYMMDD( timestamp ):
+    """
+    This is a batty function that allows us to compare the UTC-based
+    timestamps from Darshan logs (start_time and end_time) to the
+    Chicago-based YYYY-MM-DD dates used to index the mmdf data.
+    """
+    if _USE_TZ:
+        ### we know that these logs are from Chicago
+        tz = pytz.timezone("America/Chicago")
+        
+        ### Darshan log's start time in UTC, so turn it into a datetime with UTC on it
+        darshan_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(timestamp))
+        
+        ### Then convert this UTC start time into a local start time so
+        ### we can compare it to the local mmdf timestamp
+        darshan_time_at_argonne = darshan_time.astimezone(tz)
+        return darshan_time_at_argonne
+    else:
+        ### we assume that this script is running on Argonne time; it's the best we can do
+        warnings.warn("pytz is not available so mmdf data might be misaligned by a day!")
+        return datetime.datetime.fromtimestamp(timestamp)
+
+
+
+### Edison
 df_edison = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
                                                    'data',
                                                    'dat',
                                                    'tokio-lustre',
                                                    'edison-abc-stats_2-14_3-23.csv')).dropna()
-df_edison['system'] = "edison"
 df_edison['darshan_rw'] = [ 'write' if x == 1 else 'read' for x in df_edison['darshan_write_mode?'] ]
 df_edison['darshan_file_mode'] = [ 'shared' if x in ['H5Part','MPIIO'] else 'fpp' for x in df_edison['darshan_api'] ]
 df_edison.rename(columns={'lmt_bytes_covered': 'coverage_factor'}, inplace=True)
+df_edison['system'] = "edison"
+df_edison['iops_coverage_factor'] = -1.0
 
-
+### Mira
 df_mira = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
                                                 'data',
                                                 'dat',
@@ -59,55 +93,65 @@ for key in df_mira.keys():
 df_mira.rename(columns=rename_dict, inplace=True)
 df_mira['darshan_file_mode'] = [ 'shared' if x in ['H5Part','MPIIO'] else 'fpp' for x in df_mira['darshan_api'] ]
 df_mira['coverage_factor'] = df_mira['darshan_total_bytes'] / (df_mira['ggio_bytes_read'] + df_mira['ggio_bytes_written'])
+df_mira['iops_coverage_factor'] = (df_mira['darshan_total_rws'] / (df_mira['ggio_read_reqs'] + df_mira['ggio_write_reqs']))
 
-df = pandas.concat([df_edison, df_mira])
 
-### Drop all records that are simply missing data
-df.drop(df.index[df['darshan_app'] == 'UNKNOWN'], inplace=True)
 
-### Drop data with obviously faulty coverage factors
+df_mmdf = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
+                                                'data',
+                                                'dat',
+                                                'tokio-gpfs',
+                                                'mira_mmdf_1-25_3-23.csv'),
+                                        index_col=['file_system', 'date'])
+df_mmdf['free_kib'] = df_mmdf['free_kib_blocks'] + df_mmdf['free_kib_frags']
+df_mmdf['free_pct'] = df_mmdf['free_kib'] / df_mmdf['disk_size']
+
+
+
+### I really hope iterrows behaves deterministically and preserves order...
+new_data = {
+    'mmdf_avg_fullness_pct': [],
+    'mmdf_max_fullness_pct': [],
+}
+
+### iterate over each row of the master Mira dataframe
+for row in df_mira.itertuples():
+    fs_key = row.darshan_file_system
+    mmdf_key = utc_timestamp_to_YYYYMMDD( row.darshan_start_time ).strftime("%Y-%m-%d")
+    if mmdf_key in df_mmdf.loc[fs_key].index:
+        ### only look at today's data
+        df = df_mmdf.loc[fs_key].loc[mmdf_key]
+        
+        data_cols = [ True if x else False for x in df['data?'] ]
+
+        ### calculate a percent fullness - don't bother saving the id of this fullest server though
+        new_data['mmdf_max_fullness_pct'].append( 1.0 - df[ data_cols ]['free_pct'].min() )
+        new_data['mmdf_avg_fullness_pct'].append( 1.0 - df[ data_cols ]['free_pct'].mean() )
+    else:
+        new_data['mmdf_max_fullness_pct'].append( np.nan )
+        new_data['mmdf_avg_fullness_pct'].append( np.nan )
+
+for new_col_name, new_col_data in new_data.iteritems():
+    df_mira[new_col_name] = new_col_data
+
+
+
+df = pandas.concat( (df_mira, df_edison) )
+
+
+# ## Filter Data
+
+
 df.drop(df.index[df['coverage_factor'] > 1.2], inplace=True)
+# df.drop(df.index[df['iops_coverage_factor'] > 1.2], inplace=True)
+df.drop(df.index[(df['system'] == 'mira') & (df['darshan_jobid'] == 1039807)], inplace=True)
+df.keys()
 
 
 # ## Define the dashboard view
 # 
 # Decide what to display on the dashboard by subselecting a specific view from the loaded data via `df_plot` and then populating the `row_plots` list with only those variables we want to display.
 
-
-### Specify the type of job we're going to track on the dashboard
-filter_list = [ (df['darshan_app'] == "VPIC-IO"),
-                (df["darshan_write_mode?"] == 1),
-                (df['darshan_file_system'] == "scratch3"),
-#               (df['darshan_end_time'] > time.mktime(datetime.date(2017, 3, 3).timetuple())),
-                (df['darshan_end_time'] <= time.mktime(datetime.date(2017, 2, 25).timetuple())),
-            ]
-
-net_filter = [ True for i in range(len(df.index))]
-for idx, condition in enumerate(filter_list):
-    ct = len( [ x for x in net_filter if x ] )
-    net_filter &= condition
-    print "Dropped %d rows after filter #%d" % ((ct - len( [ x for x in net_filter if x ] )), idx)
-    
-df_plot = df[net_filter].copy()
-print "%d rows will be included in UMAMI" % len(df_plot.index)
-
-
-
-### Then specify the variables which wish to display on the
-### dashboard.  Keyed by variables to display, and the values
-### indicate if a high value is good
-row_plots = [
-    ('darshan_agg_perf_by_slowest',      True),
-    ('darshan_agg_perf_by_slowest_gibs', True),
-    ('coverage_factor',                  True),
-    ('lmt_mds_ave',                      False),
-    ('lmt_ops_opencloses',               False),
-    ('lmt_oss_ave',                      False),
-    ('ost_avg_pct',                      False),
-    ('ost_bad_pct',                      False),
-    ('job_max_radius',                   False),
-    ('job_concurrent_jobs',              False),
-]
 
 ### Some rendering parameters for the dashboard itself
 _DASHBOARD_FONT_SIZE = 12
@@ -116,15 +160,156 @@ _DASHBOARD_HIGHLIGHT_COLORS = [ '#DA0017', '#FD6A07', '#40A43A', '#2C69A9' ]
 _DASHBOARD_LINE_COLOR = '#853692'
 
 
+
+### Variables which we wish to display on the UMAMI
+### dashboard.  Keyed by variables to display, and the values
+### indicate if a high value is good
+row_plots = None
+row_plots_master = { 
+    'edison': [
+        ('darshan_agg_perf_by_slowest_gibs', True),
+        ('coverage_factor',                  True),
+        ('lmt_mds_ave',                      False),
+        ('lmt_ops_opencloses',               False),
+        ('lmt_oss_max',                      False),
+        ('ost_avg_pct',                      False),
+        ('ost_bad_pct',                      False),
+        ('job_max_radius',                   False),
+        ('job_concurrent_jobs',              False),
+    ],
+    'mira': [
+        ('darshan_agg_perf_by_slowest_gibs', True),
+        ('coverage_factor',                  True),
+        ('iops_coverage_factor',             True),
+        ('ggio_ops_opencloses',              False),
+        ('ggio_ops_rw',                      False),
+        ('ggio_read_dirs',                   False),
+    ],
+}
+
+
+
+def umami_filter(df, file_system, app, rw, other_filters=None):
+    """
+    Translates a few basic logical input parameters into a filtered dataframe
+    """
+    filter_list = []
+    if file_system is not None:
+        filter_list.append((df['darshan_file_system'] == file_system))
+    if app is not None:
+        filter_list.append((df['darshan_app'] == app))
+    if rw is not None:
+        filter_list.append((df["darshan_rw"] == rw))
+
+    if other_filters is not None:
+        filter_list = filter_list + other_filters
+    ### Apply filters to cut down on the data we're going to present
+    num_rows = len(df)
+    print "Start with %d rows before filtering" % num_rows
+    net_filter = [ True for i in range(len(df.index))]
+    for idx, condition in enumerate(filter_list):
+        ct = len( [ x for x in net_filter if x ] )
+        net_filter &= condition
+        num_drops = (ct - len( [ x for x in net_filter if x ] ))
+        print "Dropped %d rows after filter #%d (%d left)" % (num_drops, idx, ct-num_drops)
+
+    print "%d rows will be included in UMAMI" % len(df[net_filter].index)
+    assert len(df[net_filter].index) > 0
+    
+    return df[net_filter].copy()
+
+
+# ## Define what we want UMAMI to show us
+
+
+### For generating the Edison UMAMI figure in the paper
+TARGET_FILE_SYSTEM = 'scratch2'
+TARGET_APP = 'HACC-IO'
+TARGET_RW = 'write'
+OUTPUT_SUFFIX = None
+other_filters = [
+     (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 25,  0,  0,  0).timetuple())),
+     (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  3, 12,  0,  0).timetuple())),
+]
+
+
+
+### For generating the Mira UMAMI figure in the paper
+TARGET_FILE_SYSTEM = 'mira-fs1'
+TARGET_APP = 'VPIC-IO'
+TARGET_RW = 'write'
+OUTPUT_SUFFIX = None
+other_filters = [
+     (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  3,  1,  0,  0,  0).timetuple())),
+     (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3, 12,  0,  0,  0).timetuple())),
+]
+
+
+
+### Exploratory Umami - IOR requires an extra filter
+TARGET_FILE_SYSTEM = 'mira-fs1'
+TARGET_APP = 'IOR'
+TARGET_RW = 'write'
+OUTPUT_SUFFIX = '-shared-all'
+other_filters = [
+    (df['darshan_file_mode'] == "shared"),
+#    (df['darshan_end_time'] >= time.mktime(datetime.datetime(2016,  3,  4, 12,  0,  0).timetuple())),
+#    (df['darshan_end_time'] <= time.mktime(datetime.datetime(2018,  3,  7,  0,  0,  0).timetuple())),
+]
+
+
+
+### An interesting long-term behavior where an OSS's CPU was maxing out
+TARGET_FILE_SYSTEM = 'scratch3'
+TARGET_APP = 'HACC-IO'
+TARGET_RW = 'write'
+OUTPUT_SUFFIX = '-long-term'
+other_filters = [
+     (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 21,  0,  0,  0).timetuple())),
+     (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3, 14,  0,  0,  0).timetuple())),
+]
+row_plots = [
+        ('darshan_agg_perf_by_slowest_gibs', True),
+        ('lmt_oss_max',                      False),
+        ('coverage_factor',                  True),
+    ]
+
+
+
+### An interesting long-term behavior where an OSS's CPU was maxing out
+TARGET_FILE_SYSTEM = 'scratch3'
+TARGET_APP = 'HACC-IO'
+TARGET_RW = 'write'
+OUTPUT_SUFFIX = '-long-term'
+other_filters = [
+#   (df['darshan_file_mode'] == "fpp"),
+    (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 21,  0,  0,  0).timetuple())),
+    (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3, 15,  0,  0,  0).timetuple())),
+]
+row_plots = [
+        ('darshan_agg_perf_by_slowest_gibs', True),
+        ('lmt_oss_max',                      False),
+        ('ost_max_pct',                      False),
+        ('coverage_factor',                  True),
+    ]
+
+
+# ## Build a DataFrame based on UMAMI inputs
+
+
+### Apply the filters we defined above to get a dataframe suitable for UMAMI
+df_plot = umami_filter(df, TARGET_FILE_SYSTEM, TARGET_APP, TARGET_RW, other_filters)
+if row_plots is None:
+    row_plots = row_plots_master['mira' if 'mira' in TARGET_FILE_SYSTEM else 'edison']
+
+
 # Once the correct input view and outputs are defined, make a copy of the data that we manipulate to get the data into a plottable form.
 
 
 df_plot['darshan_agg_perf_by_slowest_gibs'] = df_plot['darshan_agg_perf_by_slowest'] / 1024.0
-# df_plot['darshan_end_time_dt'] = [ datetime.datetime.fromtimestamp(x) for x in df_plot['darshan_end_time'].values ]
-# df_plot['darshan_start_time_dt'] = [ datetime.datetime.fromtimestamp(x) for x in df_plot['darshan_start_time'].values ]
-
-### we need to make this more portable across LMT and GGIOSTAT :(
 df_plot['lmt_ops_opencloses'] = df_plot['lmt_ops_opens'] + df_plot['lmt_ops_closes']
+df_plot['ggio_ops_opencloses'] = df_plot['ggio_opens'] + df_plot['ggio_closes']
+df_plot['ggio_ops_rw'] = df_plot['ggio_read_reqs'] + df_plot['ggio_write_reqs']
 
 
 
@@ -139,12 +324,14 @@ for i in df_plot.keys():
             df_plot['lmt_ops_total'] += df_plot[i]
         else:
             df_plot['lmt_ops_total'] = df_plot[i]
-counter_labels['lmt_ops_total'] = "Total metadata ops on MDS"
-counter_labels['lmt_ops_opencloses'] = "Total open+close ops on MDS"
+counter_labels['lmt_ops_total'] = "Server Metadata Ops"
+counter_labels['lmt_ops_opencloses'] = "Server Open/Close Ops"
+counter_labels['ggio_ops_opencloses'] = "Server Open/Close/Creat Ops"
+counter_labels['ggio_ops_rw'] = "Server Read/Write Ops"
 
 ### Scale op counts to make them plottable:
 for i in df_plot.keys():
-    if "_ops_" in i:
+    if "_ops_" in i or i == "ggio_read_dirs":
         max_val = df_plot[i].max()
         if max_val > 2e9:
             df_plot[i] = df_plot[i] / 1e9
@@ -161,7 +348,7 @@ for i in df_plot.keys():
 
 
 fig = plt.figure()
-fig.set_size_inches(6,12)
+fig.set_size_inches(6, len(row_plots) * 12 / 9)
 
 ### Required to adjust the column widths of our figure (width_ratios)
 gridspec = matplotlib.gridspec.GridSpec(len(row_plots), 2, width_ratios=[4,1])
@@ -267,9 +454,17 @@ fig.subplots_adjust(hspace=0.0, wspace=0.0)
 fig.autofmt_xdate()
 last_ax_ts.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%b %d'))
 
-output_file = "umami.pdf"
+output_file = "umami-%s-%s-%s%s.pdf" % ( TARGET_FILE_SYSTEM, TARGET_APP.replace('-IO', '').lower(), TARGET_RW, OUTPUT_SUFFIX if OUTPUT_SUFFIX is not None else "" )
 fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
+
+
+
+
+
+
+
+
 
 
 
