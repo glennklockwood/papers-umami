@@ -1,20 +1,27 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Instrumentation methods} \label{sec:methods}
+\section{TOKIO Framework} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \todo{We should shore up the description of all of this to the extent that we're presenting a framework with general components.
 Then we describe our specific implementations.}
 
-\todo{Some text to more clearly define who we are helping with this.
 An end-user can't use this without escalated privileges so it should target facilities.
-Also only enabling post-mortem analysis.}
+It is designed to facilitate post-mortem analysis.
+
+The TOKIO framework is comprised of modular components 
 
 We identified the following categories of ongoing instrumentation as being
 critical to understanding both the I/O climate and I/O weather of a
-production system.  \todo{overview diagram here?}
+production system.
 
-\subsection{Application behavior}
-\label{sec:methods/darshan}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{figs/tokio-schematic.pdf}
+    \caption{Overview of the TOKIO framework.  Data is collected from sources throughout the I/O subsystem, indexed and normalized, and then presented through an interface that relates I/O conditions during a specific job of interest to the overall climate of the I/O subsystem.}
+    \label{fig:tokio-schematic}
+\end{figure}
+
+\subsection{Application behavior} \label{sec:methods/darshan}
 
 Application behavior refers to the I/O pattern of a job as expressed from
 the perspective of the application itself (i.e., the I/O pattern of the
