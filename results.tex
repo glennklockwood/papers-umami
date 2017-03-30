@@ -114,61 +114,53 @@ This finding is consistent with the work of Uselton and Wright\cite{Uselton2013}
 \end{figure}
 
 To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.
-If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution.
+If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution. \todo{$\leftarrow$ weak sauce}
 However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a preponderance of high values.
 From this, we can conclude that many tests on Mira achieved high performance \emph{despite} other I/O loads concurrently generating commensurate IOP loads.
 Thus, while high background IOPS loads can be a cause for performance loss, their presence does not necessarily preclude high performance.
-
-% We should point out that the coverage factor for IOPS is more ambiguous than
-% the coverage factor for bandwidth because file system clients are able to
-% coalesce many small transactions into a single large transaction.  Although
-% we don't see this happen on IOR, HACC, or VPIC, the BDCATS-IO benchmark
-% issues a TON of small (512-byte) transactions (per Darshan) that do not
-% appear on the server side.
-
-%%% GKL - RESUME WORK HERE 3/29/2017 @ 17:38 PDT
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Correlating Performance Metrics} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\todo{need to explicitly acknowledge the limitations, suitability, and extent of our confidence in the statistical methods employed here.}
-
 Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
 However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
-As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
+As such, we can attempt to correlate a wide variety of measurements with job I/O performance to determine which measurements are likely culprits when looking for sources of poor performance.
 
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview}) with a wide range of metrics collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.
-While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric.
-In this sense, they are a suitable indicator of general strengths and confidences in correlation.
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview}) with a wide range of metrics collected on Edison and Mira.
+While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric we analyzed.
+In this sense, we find that this correlation coefficient is a suitable indicator of general trends and confidences in correlation.
 
-The data generated in this study is extensive, and a comprehensive statistical analysis will be presented in future work.
-Nevertheless, we can highlight several interesting findings based on the summary data shown in Figure \ref{fig:correlation-table}:
+An extensive amount of data was generated in this study, and a comprehensive statistical analysis will be presented in future work.
+Nevertheless, we summarize some of the interesting correlations (and lack of correlations) in Figure \ref{fig:correlation-table} and highlight several interesting findings:
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figs/correlation_table.pdf}
-    \caption{Correlation coefficients between fraction of peak performance measured for each I/O motif and a variety of server-side measurements and metrics.  Box color indicates confidence; correlations with p-values $< 0.01$ are blue; p-values $< 0.05$ are green, and p-values $>= 0.05$ are red (and signify lack of correlation).  Similarly, bolded values signify moderate correlation ($|r| > 0.30$), and italicized values signify weak correlation ($|r| < 0.10$).  Although the "\% Servers Failed Over" measurement were tracked on both Mira and Edison, no changes in the
-    failover states of servers were ever observed over the course of this study.
+    \caption{Correlation coefficients between fraction of peak performance measured for each I/O motif and a variety of server-side measurements and metrics.
+    Box color indicates confidence; correlations with p-values $< 0.01$ are blue; p-values $< 0.05$ are green, and p-values $>= 0.05$ are red (and signify lack of correlation).
+    Similarly, \textbf{bolded} values signify moderate correlation ($|r| > 0.30$), and \textit{italicized} values signify weak correlation ($|r| < 0.10$).
+    Although the "\% Servers Failed Over" measurement were tracked on both Mira and Edison, no changes in the failover states of servers were ever observed over the course of this study.
     }
     \label{fig:correlation-table}
 \end{figure}
 
 \begin{itemize}
 
-\item As assumed in the previous sections, the coverage factors correlate most strongly with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
+\item As assumed in the previous sections, the coverage factors correlate with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
+The strength of this correlation on Mira was lower than Edison because the absolute performance of our tests on Mira were bound by the bandwidth of the exclusively allocated I/O nodes, leaving bandwidth headroom on the NSD servers for other jobs.
 Mira's file system also demonstrated moderate sensitivity to contention for IOPs; unfortunately, Lustre IOPs were not collected for this study, so no comparison can be made to Edison.
 
 \item Mira's performance correlates negatively with higher rates of \texttt{open(2)}/\texttt{close(2)} calls than Lustre.
-Given that Mira's file system encodes metadata in the same physical servers as data blocks, this relationship is reasonable.
+Given that Mira's file system serves metadata from the same physical servers as data, this relationship is reasonable.
 By comparison, Edison's file systems each have their own discrete metadata servers are specifically designed to decoupled bulk data transfer performance from metadata operations.
 
 \item The fullness of each storage device (LUN on Mira and OST on Edison) has markedly different behavior between Edison and Mira.
 While Mira's performance is uncorrelated with device capacity, Edison performance degrades as free space on OSTs is depleted.
 This is a documented behavior of Lustre file systems.
 
-\item Perhaps contrary to historic intuition, I/O performance shows no meaningful correlation with the number of other jobs running concurrently.
-The lack of correlation with concurrent job count is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of impacting our tests' coverage factors.
+\item Perhaps contrary to historic intuition, I/O performance shows minimal correlation with the number of other jobs running concurrently.
+The lack of correlation with concurrent job count is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
 
 \item Similarly, the job diameter (a measurement of how spread out a job is across the compute fabric) has no discernible correlation with I/O performance on Edison.
 Given the fact that the low-diameter dragonfly topology of Edison is designed to reduce the performance impact of job topology, this is consistent with expectation.
@@ -180,17 +172,11 @@ However it is important to underscore the fact that this demonstration was not i
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Job-Level Analysis} \label{sec:results/umami}
-% \subsection{Unified Measurements and Metrics Interface} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We envision TOKIO not only as a mechanism to understand broad system
-behavior as illustrated in Section~\ref{sec:results}, but also to 
-understand the factors that contribute to the performance of individual
-application executions.  In this context, our goal is to produce rapid,
-actionable information that helps facilities support staff and power
-users make more effective use of their time.
-The system-level analysis can be integrated with ongoing I/O instrumentation
-to describe:
+We envision TOKIO not only as a mechanism to understand broad system behavior as illustrated in Section~\ref{sec:results}, but also to understand the factors that contribute to the performance of individual application executions.
+In this context, our goal is to produce rapid, actionable information that helps facilities support staff and power users make more effective use of their time.
+The system-level analysis can be integrated with ongoing I/O instrumentation to describe:
 
 \begin{enumerate}
 \item where on the spectrum of normalcy a specific job's I/O behavior fell relative to other jobs with a similar I/O motif, and
