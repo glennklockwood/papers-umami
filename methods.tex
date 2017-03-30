@@ -2,7 +2,7 @@
 \section{TOKIO Framework} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-TOKIO is a framework that connects different sources of performance instrumentation that is already often collected by HPC facilities to present a holistic view of the I/O subsystem.
+TOKIO is a framework that connects different sources of performance instrumentation that are already often collected by HPC facilities to present a holistic view of the I/O subsystem.
 TOKIO, schematically depicted in \ref{fig:tokio-schematic}, integrates a combination of scalar and time-series data from sources available throughout the I/O subsystem and indexes them by time and job identifiers.
 This data integration, detailed further in Section \ref{sec:data-integration}, enables systems staff to explore the overall climate of the I/O system over a past time range of interest.
 Furthermore, users can retrospectively examine the weather of the I/O system during their job and relate this information to the historic I/O system climate if TOKIO is deployed in an environment where users can access the required component-level monitoring data through a database or API.
@@ -112,23 +112,6 @@ In this section, we detail the configuration of the TOKIO-ABC tests and the plat
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
-% abandon all hope ye who try to edit this stupid table by hand.  I used
-% http://www.tablesgenerator.com to make it.
-\begin{table*}[h]
-\centering
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
-\hline
-\multirow{2}{*}{\textbf{Benchmark}}                    & \multirow{2}{*}{\textbf{I/O Motif}}                           & \multicolumn{3}{c|}{\textbf{Mira}}                        & \multicolumn{3}{c|}{\textbf{Edison}}                      \\ \cline{3-8} 
-                                                       &                                                               & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} \\ \hline
-IOR                                                    & \begin{tabular}[c]{@{}c@{}}MPI-IO\\ shared file\end{tabular}  & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 0.5 TiB           \\ \hline
-IOR                                                    & \begin{tabular}[c]{@{}c@{}}POSIX\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
-HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
-\begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
-\end{tabular}
-\caption{TOKIO Automated Benchmarking Collection (TOKIO-ABC) benchmarking configurations}
-\label{tab:bench-config}
-\end{table*}
-
 The passive instrumentation methods described in Section \ref{sec:methods} are essential for ongoing understanding production workloads, but they do not provide any fixed reference point:
 the workload and state of the system evolves over time.
 We must therefore incorporate
@@ -200,6 +183,23 @@ file system.
 \end{tabular}
 \caption{Test platforms for TOKIO and TOKIO-ABC}
 \label{tab:system-config}
+\end{table*}
+
+% abandon all hope ye who try to edit this stupid table by hand.  I used
+% http://www.tablesgenerator.com to make it.
+\begin{table*}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{\textbf{Benchmark}}                    & \multirow{2}{*}{\textbf{I/O Motif}}                           & \multicolumn{3}{c|}{\textbf{Mira}}                        & \multicolumn{3}{c|}{\textbf{Edison}}                      \\ \cline{3-8} 
+                                                       &                                                               & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} \\ \hline
+IOR                                                    & \begin{tabular}[c]{@{}c@{}}MPI-IO\\ shared file\end{tabular}  & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 0.5 TiB           \\ \hline
+IOR                                                    & \begin{tabular}[c]{@{}c@{}}POSIX\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+\begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+\end{tabular}
+\caption{TOKIO Automated Benchmarking Collection (TOKIO-ABC) benchmarking configurations}
+\label{tab:bench-config}
 \end{table*}
 
 \subsection{NERSC Edison} \label{sec:platforms/edison}
