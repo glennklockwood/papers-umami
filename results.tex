@@ -1,13 +1,21 @@
-\section{Results} \label{sec:results}
+\section{System-Level Analysis} \label{sec:results}
 
-To demonstrate the utility of TOKIO, we have applied it to develop an understanding of I/O performance variability, which we refer to as the I/O climate, specific to two different file systems and four different application workloads that typify common I/O motifs.
-In Section \ref{sec:results/overview} we demonstrate the baseline performance variation of all these conditions, and then go on to disentangle the variation effected by the applications' I/O patterns from the
-% note above: I mean effected, not affected
-variation caused by external factors in Section \ref{sec:results/combining}.
+We begin our analysis by using TOKIO and TOKIO-ABC to perform a broad
+study of the overall behavior of each system.  The goals of this analysis
+are to a) formally quantify the relationships between I/O components
+and b) establish baseline expectations for performance and variability.
+These two factors are critical to interpreting I/O performance, but the
+past they have been documented and communicated primarily in informal
+anecdotes and institutional expert knowledge.
 
-With this clarification of intrinsic and extrinsic factors affecting I/O performance, we then correlate application-level performance to the metrics tracked by TOKIO in Section \ref{sec:results/correlating} to build an understanding the degrees to which each metric and component impacts performance.
-With this understanding, we then present a holistic view of the I/O climate in Section \ref{sec:results/umami} and show how I/O performance can be understood by comparing I/O weather to this I/O climate.
-Finally, in Section \ref{sec:results/discussion} we generalize our observations of I/O climate on Mira and Edison and discuss recurring sources of performance degradation observed throughout this evaluation.
+% To demonstrate the utility of TOKIO, we have applied it to develop an understanding of I/O performance variability, which we refer to as the I/O climate, specific to two different file systems and four different application workloads that typify common I/O motifs.
+% In Section \ref{sec:results/overview} we demonstrate the baseline performance variation of all these conditions, and then go on to disentangle the variation effected by the applications' I/O patterns from the
+% % note above: I mean effected, not affected
+% variation caused by external factors in Section \ref{sec:results/combining}.
+
+% With this clarification of intrinsic and extrinsic factors affecting I/O performance, we then correlate application-level performance to the metrics tracked by TOKIO in Section \ref{sec:results/correlating} to build an understanding the degrees to which each metric and component impacts performance.
+% With this understanding, we then present a holistic view of the I/O climate in Section \ref{sec:results/umami} and show how I/O performance can be understood by comparing I/O weather to this I/O climate.
+% Finally, in Section \ref{sec:results/discussion} we generalize our observations of I/O climate on Mira and Edison and discuss recurring sources of performance degradation observed throughout this evaluation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Statistical Overview} \label{sec:results/overview}
@@ -120,7 +128,7 @@ Thus, while high background IOPS loads can be a cause for performance loss, thei
 %%% GKL - RESUME WORK HERE 3/29/2017 @ 17:38 PDT
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Correlating Different Data Sources} \label{sec:results/correlating}
+\subsection{Correlating Performance Metrics} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \todo{need to explicitly acknowledge the limitations, suitability, and extent of our confidence in the statistical methods employed here.}
@@ -166,10 +174,18 @@ In addition to the measurements and metrics presented in Figure \ref{fig:correla
 However it is important to underscore the fact that this demonstration was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that all three Edison file systems, each with unique users, workloads, and governance policies, were combined for this analysis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Unified Measurements and Metrics Interface} \label{sec:results/umami}
+\section{Job-Level Analysis} \label{sec:results/umami}
+% \subsection{Unified Measurements and Metrics Interface} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-By establishing an understanding of the baseline distribution of performance for each I/O motif and file system in Sections \ref{sec:results/overview} and \ref{sec:results/combining} and identifying how different measurements and metrics correlate with performance in \ref{sec:results/correlating}, we now have a foundation from which we can describe
+We envision TOKIO not only as a mechanism to understand broad system
+behavior as illustrated in Section~\ref{sec:results}, but also to 
+understand the factors that contribute to the performance of individual
+application executions.  In this context, our goal is to produce rapid,
+actionable information that helps facilities support staff and power
+users make more effective use of their time.
+The system-level analysis can be integrated with ongoing I/O instrumentation
+to describe:
 
 \begin{enumerate}
 \item where on the spectrum of normalcy a specific job's I/O behavior fell relative to other jobs with a similar I/O motif, and
@@ -185,7 +201,15 @@ By establishing an understanding of the baseline distribution of performance for
     \label{fig:umami-scratch2-hacc-write}
 \end{figure}
 
-To concisely visualize all of this information, we present the TOKIO Unified Measurements and Metrics Interface (UMAMI), shown in Figure \ref{fig:umami-scratch2-hacc-write}, with the goal of enabling end-users to quickly see how their application's performance compares to similar I/O workloads in the past.
+To concisely visualize all of this information, we present the TOKIO Unified Measurements and Metrics Interface (UMAMI)
+% , shown in Figure \ref{fig:umami-scratch2-hacc-write}, 
+with the goal of enabling end-users to quickly see how their application's
+performance compares to similar I/O workloads in the past.  We illustrate the
+how TOKIO-UMAMI can be applied to the problem of individual job diagnosis in
+the following three case studies.
+
+\subsection{Case Study: I/O Contention}
+
 TOKIO-UMAMI presents historic measurements from the components monitored by TOKIO, composing what we refer to as the \emph{I/O subsystem climate}, and summarizes each metric's distribution in a box plot to the right of each metric's time series plot.
 These time series plots terminate with the measurements taken for the job in question, describing the \emph{I/O subsystem weather} at the time that job ran.
 By overlaying this weather on the climate box plots in the form of dashed lines, TOKIO-UMAMI provides a quick visualization of how each metric's weather compared to the statistical distribution of past weather conditions.
@@ -197,7 +221,19 @@ This abnormally poor job performance was accompanied by an unusually low coverag
 The metrics corresponding to blue dashed lines fell into the uppermost quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, have no history of correlation with performance.
 Thus, we can quickly attribute the poor performance of this HACC job to an I/O extrinsic to this HACC job which was competing for both bandwidth on the data servers and metadata resources on the metadata server.
 
-Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload that showed poor performance on Mira.  However, its coverage factor is within normal parameters (the orange lines in each metric's box plot signifies a value in the second quartile) indicating a general lack of bandwidth contention.  Although the IOPS coverage factor is also abnormally low, previous conditions have been worse despite a lack of dramatic performance loss (e.g., on March 7).  The only metric that shows a unique, undesirable value is the number of \emph{readdir(3)} operations handled by the file system.  This is indicative of an expansive file system traversal and was demonstrated to correlate moderately negatively with performance in Figure \ref{fig:correlation-table}.
+\subsection{Case Study: Namespace contention}
+
+Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload
+that showed poor performance on Mira.  However, its coverage factor is within
+normal parameters (the orange lines in each metric's box plot signifies a
+value in the second quartile) indicating a general lack of bandwidth
+contention.  Although the IOPS coverage factor is also abnormally low,
+previous conditions have been worse despite a lack of dramatic performance
+loss (e.g., on March 7).  The only metric that shows a unique, undesirable
+value is the number of \emph{readdir(3)} operations handled by the file
+system.  This is indicative of an expansive file system traversal that was
+being performed at the same time as the job execution.  The \emph{readdir(3)}
+metric was demonstrated to correlate moderately negatively with performance in Figure \ref{fig:correlation-table}.
 
 \begin{figure}[t]
     \centering
@@ -209,36 +245,38 @@ Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write wo
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Discussion} \label{sec:results/discussion}
+%\subsection{Discussion} \label{sec:results/discussion}
+\subsection{Case Study: Storage Capacity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).
-Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
+% Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).
+% Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
 
-The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.
-In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.
-For example, Figure \ref{fig:umami-deepdive} shows server-side, time-resolved traces of write bandwidth on a per-OST basis for two particular VPIC jobs from Edison.
-Straggling OSTs, often implicated in poor collective I/O performance, would be indicated by horizontal bands of traffic in these traces.
-However, despite no indication of any straggling OSTs in Figure \ref{fig:umami-deepdive-bad}, there is a 3x performance slowdown relative to Figure \ref{fig:umami-deepdive-good}.
-Rather, the bubbles in Figure \ref{fig:umami-deepdive-bad} are likely due to server-side I/O blocking, such as would happen if the write journal had to be flushed.  
-This can arise from a high rate of small I/O transactions from another source filling the 100 GB journal LUN on one or more OSSes.
+% The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.
+% In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.
+% For example, Figure \ref{fig:umami-deepdive} shows server-side, time-resolved traces of write bandwidth on a per-OST basis for two particular VPIC jobs from Edison.
+% Straggling OSTs, often implicated in poor collective I/O performance, would be indicated by horizontal bands of traffic in these traces.
+% However, despite no indication of any straggling OSTs in Figure \ref{fig:umami-deepdive-bad}, there is a 3x performance slowdown relative to Figure \ref{fig:umami-deepdive-good}.
+% Rather, the bubbles in Figure \ref{fig:umami-deepdive-bad} are likely due to server-side I/O blocking, such as would happen if the write journal had to be flushed.  
+% This can arise from a high rate of small I/O transactions from another source filling the 100 GB journal LUN on one or more OSSes.
 
-\begin{figure}[t]
-	\centering
-    \subfigure[Normal I/O trace]{
-        \includegraphics[width=1.0\columnwidth]{figs/deepdive-scratch3-vpic-write_mar15.pdf}
-        \label{fig:umami-deepdive-good}
-    }
-    \subfigure[Abnormal I/O trace]{
-        \includegraphics[width=\columnwidth]{figs/deepdive-scratch3-vpic-write_feb24.pdf}
-        \label{fig:umami-deepdive-bad}
-    }
-	\caption{TOKIO-UMAMI time resolved view of a VPIC job performing \subref{fig:umami-deepdive-good} within expected performance and \subref{fig:umami-deepdive-bad} abnormally slowly.  Each row in the heat map corresponds to an OST, and the line graph represents the sum over all OSTs at each time step.  Each I/O vertical band corresponds to a single VPIC variable being written out (see Section \ref{sec:methods/tests}).}
-	\label{fig:umami-deepdive}
-\end{figure}
+% \begin{figure}[t]
+% 	\centering
+%    \subfigure[Normal I/O trace]{
+%          \includegraphics[width=1.0\columnwidth]{figs/deepdive-scratch3-vpic-write_mar15.pdf}
+%         \label{fig:umami-deepdive-good}
+%    }
+%    \subfigure[Abnormal I/O trace]{
+%        \includegraphics[width=\columnwidth]{figs/deepdive-scratch3-vpic-write_feb24.pdf}
+%        \label{fig:umami-deepdive-bad}
+%    }
+%  	\caption{TOKIO-UMAMI time resolved view of a VPIC job performing \subref{fig:umami-deepdive-good} within expected performance and \subref{fig:umami-deepdive-bad} abnormally slowly.  Each row in the heat map corresponds to an OST, and the line graph represents the sum over all OSTs at each time step.  Each I/O vertical band corresponds to a single VPIC variable being written out (see Section \ref{sec:methods/tests}).}
+% 	\label{fig:umami-deepdive}
+% \end{figure}
+% 
 
 The TOKIO framework was also able to identify longer-term performance issues which progressively degraded write performance. Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing 2x slowdown over the normal 50 GiB/sec.  The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.  Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades with increasing OST fullness.
-
+ 
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-scratch3-hacc-write-long-term.pdf}
@@ -246,17 +284,23 @@ The TOKIO framework was also able to identify longer-term performance issues whi
     \label{fig:umami-scratch3-hacc-write-long-term}
 \end{figure}
 
-Qualitatively, the highly variable I/O workload and "I/O weather" conditions across the Edison file systems obfuscate a straightforward analysis of all of the sources of performance variation on its file systems.
-Over the course of this study, we found that the TOKIO framework often exposed variation resulting from the confluence of several factors that only correlate weakly with performance when examined independently.
-Thus, TOKIO requires some amount of expert knowledge to confidently determine the root cause of I/O problems on file systems that are subject to large amounts of incoherent or otherwise noisy I/O.
-That said, presenting the historic correlations between performance and each variable through UMAMI does dramatically reduce the exploration space in this effort.
+% 
+% Qualitatively, the highly variable I/O workload and "I/O weather" conditions across the Edison file systems obfuscate a straightforward analysis of all of the sources of performance variation on its file systems.
+% 
+% Over the course of this study, we found that the TOKIO framework often exposed variation resulting from the confluence of several factors that only correlate weakly with performance when examined independently.
+% 
+% Thus, TOKIO requires some amount of expert knowledge to confidently determine the root cause of I/O problems on file systems that are subject to large amounts of incoherent or otherwise noisy I/O.
+% 
+% That said, presenting the historic correlations between performance and each variable through UMAMI does dramatically reduce the exploration space in this effort.
 
-Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.
-Alternatively, UMAMI can be seeded with data from baseline performance tests, as was done in this study, provided that the user's I/O motif is sufficiently similar to one of the baseline tests' motifs.
-This can be automated to a large degree though; the simplest approach is to scan Darshan logs for similar I/O transaction size distributions as seeds.
-Recently, Liu et al have also demonstrated combining resource manager logs and server-side I/O logs to identify a series of I/O bursts with specific jobs using a density-based clustering method~\cite{Liu2016}.
-We believe that adapting this clustering-based classification approach with TOKIO-UMAMI should be a straightforward approach to building an I/O climate record for any arbitrary job.
-
-Finally, although we applied TOKIO and UMAMI to build I/O climate histories specific to applications based on Darshan logs, it is equally possible to group historic data around similar periods of server-side traffic.
-For example, TOKIO can be used to identify collections of applications that, when run together, result in an uncommonly adversarial I/O load or, conversely, surprisingly good performance.
-From this, it is easy to envision an opportunity to inform job scheduling to avoid I/O contention between two frequently conflicting applications.
+% Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.
+% Alternatively, UMAMI can be seeded with data from baseline performance tests, as was done in this study, provided that the user's I/O motif is sufficiently similar to one of the baseline tests' motifs.
+% This can be automated to a large degree though; the simplest approach is to scan Darshan logs for similar I/O transaction size distributions as seeds.
+% Recently, Liu et al have also demonstrated combining resource manager logs and server-side I/O logs to identify a series of I/O bursts with specific jobs using a density-based clustering method~\cite{Liu2016}.
+% We believe that adapting this clustering-based classification approach with TOKIO-UMAMI should be a straightforward approach to building an I/O climate record for any arbitrary job.
+% 
+% Finally, although we applied TOKIO and UMAMI to build I/O climate histories specific to applications based on Darshan logs, it is equally possible to group historic data around similar periods of server-side traffic.
+% For example, TOKIO can be used to identify collections of applications that, when run together, result in an uncommonly adversarial I/O load or, conversely, surprisingly good performance.
+% From this, it is easy to envision an opportunity to inform job scheduling to avoid I/O contention between two frequently conflicting applications.
+% 
+ 
