@@ -2,8 +2,9 @@
 
 We begin our analysis by using TOKIO and TOKIO-ABC to perform a broad
 study of the overall behavior of each system.  The goals of this analysis
-are to a) formally quantify the relationships between I/O components
-and b) establish baseline expectations for performance and variability.
+are to a) establish baseline expectations for performance and variability
+and b) 
+formally quantify the relationships between I/O components.
 These two factors are critical to interpreting I/O performance, but the
 past they have been documented and communicated primarily in informal
 anecdotes and institutional expert knowledge.
@@ -80,8 +81,8 @@ The time interval over which the job ran ($\mathit{time}$) and the servers to wh
 The coverage factor is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
 $CF = 1.0$ when all of the server-side I/O was caused by job $j$, while $CF = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
 In practice, it is possible to observe $CF > 1.0$ if
-(1) storage system traffic monitoring (e.g., LMT or ggiostat) did not capture data from all servers during a polling interval, or
-(2) clock skew existed between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
+a) storage system traffic monitoring (e.g., LMT or ggiostat) did not capture data from all servers during a polling interval, or
+b) clock skew existed between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
 To eliminate obviously erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
 % \todo{We should probably mention what \% of data this covers. It will be a likely question.}
 %%% GKL: I don't want to admit to this unless a reviewer specifically asks.  The ratio is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this  filter criterion
