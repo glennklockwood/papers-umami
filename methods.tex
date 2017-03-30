@@ -98,16 +98,17 @@ In deploying the TOKIO framework and integrating data from multiple sources, we 
 The most critical issue was ensuring that all components' clocks were synchronized to the same NTP servers to ensure that TOKIO's time-based indexing resulted in consistent data.
 Similarly, standardizing the frequency of time series data simplifies integration and data analysis; although we chose 5-second sampling intervals for LMT and ggiostat, the health monitoring data was collected at very low frequency.
 To align such low-frequency data with scalar job data, we chose to treat health monitoring data as scalar data, and the sample that most recently preceded each job was associated that job.
-\todo{everything below}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Experimental Methods} \label{sec:platforms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To demonstrate the utility and generality of the TOKIO framework, we deployed it on two distinct computing platforms.
-We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore how TOKIO's holistic view of I/O can provide insight into the overall I/O climate for facilities staff and contextualize the I/O behavior of specific jobs for end-users.  
+To demonstrate the utility and generality of the TOKIO framework, we deployed it on two distinct computing platforms detailed in Section \ref{sec:platforms}: Edison, a Cray XC-30 system at NERSC, and Mira, a Blue Gene/Q system at ALCF.
+We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore how TOKIO's holistic view of I/O can provide insight into the overall I/O climate and contextualize the I/O behavior of specific jobs.
+
 Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to characterize the performance variability observed in the daily TOKIO-ABC tests.
-In this section, we describe the configuration of the TOKIO-ABC tests and the platforms on which TOKIO and TOKIO-ABC were deployed.
+These measurements were taken from a total of 118 (Mira) and 1,014 (Edison) runs over a period of 29 days (Mira) and 39 days (Edison).
+In this section, we detail the configuration of the TOKIO-ABC tests and the platforms on which TOKIO and TOKIO-ABC were deployed.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 

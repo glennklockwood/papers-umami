@@ -7,43 +7,34 @@ variation caused by external factors in Section \ref{sec:results/combining}.
 
 With this clarification of intrinsic and extrinsic factors affecting I/O performance, we then correlate application-level performance to the metrics tracked by TOKIO in Section \ref{sec:results/correlating} to build an understanding the degrees to which each metric and component impacts performance.
 With this understanding, we then present a holistic view of the I/O climate in Section \ref{sec:results/umami} and show how I/O performance can be understood by comparing I/O weather to this I/O climate.
-
 Finally, in Section \ref{sec:results/discussion} we generalize our observations of I/O climate on Mira and Edison and discuss recurring sources of performance degradation observed throughout this evaluation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Statistical Overview} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We begin our analysis by evaluating the overall behavior of the TOKIO-ABC workloads
-on our example systems.
-Figure \ref{fig:perf-summary-boxplots-fs} illustrates the distribution of
-performance measured by all benchmarks normalized to the highest performance
-observed on each file system.
-Each plot represents at least \todo{HOW MANY?}
-samples collected over a period of \todo{HOW MANY?} days.
+To first establish a baseline of expected application performance from which we can gauge variation, we evaluate the overall behavior of the TOKIO-ABC workloads on all of the test systems.
+Figure \ref{fig:perf-summary-boxplots-fs} shows the distribution of performance measured by all TOKIO-ABC workloads normalized to the highest performance observed on each file system.
 Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of the peak performance.
-By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems (scratch1-scratch3) is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
+By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
 Although the source of this disparity in variation between Mira and Edison is not clear from Figure \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.pdf}
-    \caption{TOKIO-ABC I/O performance for Edison (\texttt{scratch1},
-    \texttt{scratch2}, \texttt{scratch3}) and Mira (\texttt{mira-fs1}) normalized to
-    the mean of all tests performed on each file system.  Each box reflects the
-    distribution of all four application workloads and both read and write
-    performance. Whiskers represent the 5th and 95th percentiles.}
+    \caption{TOKIO-ABC I/O performance for Edison (scratch1, scratch2, scratch3) and Mira (mira-fs1), normalized to the maximum performance of all tests performed on each file system.
+    Each box reflects the distribution of all four application workloads and both read and write performance.
+    Whiskers extend to the 5th and 95th percentiles.}
     \label{fig:perf-summary-boxplots-fs}
 \end{figure}
 
-Such variation in peak file system performance caused by suboptimal I/O access patterns is well documented\cite{Lofstead2010,Uselton2010,Xie2012}.
+Such variation in peak file system performance caused by different I/O access patterns is well documented\cite{Lofstead2010,Uselton2010,Xie2012}.
 To focus solely on the variation caused by factors \emph{extrinsic} to each application, we then define the \emph{fraction of peak performance} as the performance of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
-For example, the fraction peak performance for a HACC write test is only normalized to the maximum performance of all other HACC write tests.
+For example, the fraction peak performance for a HACC write test is only normalized to the maximum performance of all other HACC write tests on the same file system.
 References to fraction peak performance are hereafter defined this way.
 
-This fraction of peak performance distribution, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.
-For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite
-that file system's overall lower variation shown in Figure~\ref{fig:perf-summary-boxplots-fs}.
+This fraction peak performance distribution, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.
+For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite that file system's overall lower variation shown in Figure~\ref{fig:perf-summary-boxplots-fs}.
 Similarly, all Edison file systems show a long tail of performance loss for the IOR/shared file read workload.
 Edison's scratch3 also demonstrates very broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application on all other file systems.
 
@@ -56,17 +47,18 @@ Edison's scratch3 also demonstrates very broad performance variation for the VPI
     \label{fig:perf-summary-boxplots-motif}
 \end{figure}
 
-\textbf{Thus, Figure \ref{fig:perf-summary-boxplots-motif} demonstrates that the
-performance variability results from factors intrinsic to the application (e.g., I/O motif) \emph{and} factors intrinsic to the file system}, and
+\textbf{Thus, Figure \ref{fig:perf-summary-boxplots-motif} demonstrates that 
+performance variability is the result of factors intrinsic to the application (e.g., I/O motif) \emph{and} factors intrinsic to the file system}, and
 different I/O motifs result in different levels of performance \emph{and} variability.
-Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, and yet there is a marked difference in variability between scratch1/scratch and scratch3 shown in Figure~\ref{fig:perf-summary-boxplots-motif}.
+Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, yet there is a marked difference in variability between scratch1/scratch and scratch3 shown in Figure~\ref{fig:perf-summary-boxplots-motif}.
 Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Combining Application and Server-side Telemetry} \label{sec:results/combining}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To obtain a better understanding of how performance variation is caused by factors extrinsic to the application, we then combine what we know from application-level analysis provided by Darshan with file system-level analysis provided by LMT (on Edison) and ggiostat (on Mira).  An intuitive source of performance loss would be from other jobs that are also consuming file system bandwidth, so to explore the effects of competing I/O traffic, we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$:
+To obtain a better understanding of how performance variation is caused by factors extrinsic to the application, we then combine data from application-level analysis provided by Darshan with storage system traffic analysis provided by LMT (Edison) and ggiostat (Mira).
+An intuitive source of performance loss would be from other jobs that are also consuming file system bandwidth, so to explore the effects of competing I/O traffic, we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$:
 
 \begin{equation} \label{eq:cf}
     \mathit{CF}(j) = \frac{N_{\textup{bytes}}^{\textup{Darshan}}(j)}
@@ -77,57 +69,46 @@ To obtain a better understanding of how performance variation is caused by facto
 where $N_{\textup{bytes}}^{\textup{Darshan}}$ is the number of bytes read and written by job $j$ according to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ is the number of bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
 The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are both taken from the job's Darshan log~\cite{snyder2016modular}.
 
-The coverage factor is a direct reflection of how much I/O traffic a job
-competed against in the underlying file systems.  $CF = 1.0$ when
-all of the server-side I/O was caused by job $j$, while $CF = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
-In practice, it is possible to observe $CF > 1.0$ 
-if (1) server-side monitoring (e.g., LMT or ggiostat)
-did not capture data from all servers during a polling interval, or (2) clock skew exists between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
-To eliminate the most erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
-\todo{We should probably mention what \% of data this covers. It will be a likely question.}
+The coverage factor is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
+$CF = 1.0$ when all of the server-side I/O was caused by job $j$, while $CF = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
+In practice, it is possible to observe $CF > 1.0$ if
+(1) storage system traffic monitoring (e.g., LMT or ggiostat) did not capture data from all servers during a polling interval, or
+(2) clock skew existed between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
+To eliminate obviously erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
+% \todo{We should probably mention what \% of data this covers. It will be a likely question.}
+%%% GKL: I don't want to admit to this unless a reviewer specifically asks.  The ratio is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this  filter criterion
 
-The distribution of coverage factors across all experiments run are shown in
-Figure~\ref{fig:cdfs}a which reveals that the majority of tests
-($> 85\%$ on Edison and $> 75\%$ on Mira) have high coverage factor
-($CF > 0.90$).  This is consistent with the observation that I/O occurs in
-bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding
-and causing contention for bandwidth (thereby reducing $CF$) is relatively low.
-In particular, Mira's CF distribution is so narrow that over 50\% of tests effectively ran completely uncontended for bandwidth; $\textit{CF} >= 0.99$ corresponds to the 43rd percentile on that system.
+The distribution of coverage factors across all experiments run are shown in Figure~\ref{fig:cdfs}a which reveals that the majority of tests ($> 85\%$ on Edison and $> 75\%$ on Mira) have high coverage factor ($\mathit{CF} > 0.90$).
+This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
+In particular, Mira's CF distribution is so narrow that over 50\% of tests effectively ran completely uncontended for bandwidth; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
 
 Despite this low incidence of overlapping bursts, though, the cumulative
 distribution function (CDF) of performance relative to the peak observed
-bandwidth for each application (Figure~\ref{fig:cdfs}b) is far more broadly distributed.
-Between 19\%-23\% (scratch1/scratch2) and 47\% (scratch3) of jobs on Edison got less than half of the peak observed performance, clearly indicating that the coverage factor (and therefore server-side
-I/O bandwidth) is not the only contributor to sub-optimal performance.  
-This finding is consistent with
-the work of Uselton and Wright\cite{Uselton2013} who demonstrated that Lustre
-file system performance is constrained by both the weighted sum of both bandwidth
-\emph{and} I/O operation (IOP) rate.  
+bandwidth for each application (Figure~\ref{fig:cdfs}b) is more broadly distributed.
+Edison's scratch3 exemplifies this; 26\% of jobs on that file system got less than half of the peak performance (fraction peak performance $< 0.50$) despite only 5\% of jobs showing $\mathit{CF} < 0.50$.  This indicates that the coverage factor (and therefore server-side I/O bandwidth) is not the only contributor to sub-optimal performance.  
+This finding is consistent with the work of Uselton and Wright\cite{Uselton2013} who demonstrated that Lustre file system performance is constrained by the weighted sum of both bandwidth \emph{and} I/O operation (IOP) rate.  
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figs/cdf-both.pdf}
-    \caption{Cumulative distribution function of the coverage factor (a) and the
-    performance relative to the maximum throughput observed across each file system
-    (b).  The line demarcating 50\% probability corresponds to coverage factors of
-    \todo{UPDATE}0.028, 0.004, 0.015, and 0.050 and peak performance fractions of 0.227, 0.185,
-    0.467, and 0.040 on Edison scratch1-scratch3 and Mira, respectively.}
+    \caption{Cumulative distribution function of the coverage factor (a) and the    performance relative to the maximum throughput observed across each file system (b).
+    The line demarcating 50\% probability corresponds to coverage factors of 0.88, 0.87, 0.84, and 0.94 and peak performance fractions of 0.89, 0.86, 0.78, and 0.95 on Edison scratch1-scratch3 and Mira, respectively.}
     \label{fig:cdfs}
 \end{figure}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figs/hist-cf-bw-and-ops.pdf}
-    \caption{Distribution  of the coverage factor for both bandwidth ($\textit{CF}_{\textup{bandwidth}}$) and read/write operations ($\textit{CF}_{\textup{iops}}$) for Mira.
+    \caption{Distribution of the coverage factor for both bandwidth ($\textit{CF}_{\textup{bandwidth}}$) and read/write operations ($\textit{CF}_{\textup{iops}}$) for Mira.
     }
     \label{fig:hist-cf-mira}
 \end{figure}
 
 To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.
 If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution.
-However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a clear bias towards high values.
-From this, we can conclude that many tests on Mira achieved high performance despite other I/O loads concurrently generating commensurate IOP loads.
-Thus, high background IOPS can be a cause for performance loss, but their presence do not necessarily preclude achieving high performance.
+However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a preponderance of high values.
+From this, we can conclude that many tests on Mira achieved high performance \emph{despite} other I/O loads concurrently generating commensurate IOP loads.
+Thus, while high background IOPS loads can be a cause for performance loss, their presence does not necessarily preclude high performance.
 
 % We should point out that the coverage factor for IOPS is more ambiguous than
 % the coverage factor for bandwidth because file system clients are able to
@@ -135,6 +116,8 @@ Thus, high background IOPS can be a cause for performance loss, but their presen
 % we don't see this happen on IOR, HACC, or VPIC, the BDCATS-IO benchmark
 % issues a TON of small (512-byte) transactions (per Darshan) that do not
 % appear on the server side.
+
+%%% GKL - RESUME WORK HERE 3/29/2017 @ 17:38 PDT
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Correlating Different Data Sources} \label{sec:results/correlating}
