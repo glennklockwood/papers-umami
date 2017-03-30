@@ -212,19 +212,32 @@ Similarly, Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write wo
 \subsection{Discussion} \label{sec:results/discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).  Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
+Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).
+Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
 
-The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.  In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.  For example, Figure \ref{fig:umami-deepdive} shows a "deep-dive" view of a particular VPIC run that showed a 3x performance loss.  By showing a server-side, time-resolved trace of write bandwidth on a per-OST basis, we see that there are no straggling writers as is often implicated in collective I/O.  Rather, the bubbles are likely due to a server-side blocking situation, such as journal flushing, which would arise from a high rate of small I/O transactions from another source filling the journal on one or more Lustre OSSes.
-\todo{show the good deepdive heatmap too}
+The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.
+In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.
+For example, Figure \ref{fig:umami-deepdive} shows server-side, time-resolved traces of write bandwidth on a per-OST basis for two particular VPIC jobs from Edison.
+Straggling OSTs, often implicated in poor collective I/O performance, would be indicated by horizontal bands of traffic in these traces.
+However, despite no indication of any straggling OSTs in Figure \ref{fig:umami-deepdive-bad}, there is a 3x performance slowdown relative to Figure \ref{fig:umami-deepdive-good}.
+Rather, the bubbles in Figure \ref{fig:umami-deepdive-bad} are likely due to server-side I/O blocking, such as would happen if the write journal had to be flushed.  
+This can arise from a high rate of small I/O transactions from another source filling the 100 GB journal LUN on one or more OSSes.
 
 \begin{figure}[t]
-    \centering
-    \includegraphics[width=1.0\columnwidth]{figs/deepdive-scratch3-vpic-write_feb24.pdf}
-    \caption{TOKIO-UMAMI time resolved view of a poorly performing VPIC job.  Each row in the heat map corresponds to an OST, and the line graph represents the sum over all OSTs at each time step.  Each I/O burst corresponds to writing out a single VPIC variable (see \ref{sec:methods/tests}) and, under normal conditions, does not demonstrate the discrete bubble of low bandwidth after each write operation.}
-    \label{fig:umami-deepdive}
+	\centering
+    \subfigure[Normal I/O trace]{
+        \includegraphics[width=1.0\columnwidth]{figs/deepdive-scratch3-vpic-write_mar15.pdf}
+        \label{fig:umami-deepdive-good}
+    }
+    \subfigure[Abnormal I/O trace]{
+        \includegraphics[width=\columnwidth]{figs/deepdive-scratch3-vpic-write_feb24.pdf}
+        \label{fig:umami-deepdive-bad}
+    }
+	\caption{TOKIO-UMAMI time resolved view of a VPIC job performing \subref{fig:umami-deepdive-good} within expected performance and \subref{fig:umami-deepdive-bad} abnormally slowly.  Each row in the heat map corresponds to an OST, and the line graph represents the sum over all OSTs at each time step.  Each I/O vertical band corresponds to a single VPIC variable being written out (see Section \ref{sec:methods/tests}).}
+	\label{fig:umami-deepdive}
 \end{figure}
 
-The TOKIO framework was also able to identify longer-term performance issues which progressively degraded write performance. Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing 2x slowdown over the normal 50 GIB/sec.  The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.  Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades with increasing OST fullness.
+The TOKIO framework was also able to identify longer-term performance issues which progressively degraded write performance. Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing 2x slowdown over the normal 50 GiB/sec.  The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.  Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades with increasing OST fullness.
 
 \begin{figure}[t]
     \centering
