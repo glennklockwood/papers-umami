@@ -87,7 +87,7 @@ To eliminate obviously erroneous data, we discard all test results where $CF > 1
 % \todo{We should probably mention what \% of data this covers. It will be a likely question.}
 %%% GKL: I don't want to admit to this unless a reviewer specifically asks.  The ratio is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this  filter criterion
 
-The distribution of coverage factors across all experiments run are shown in Figure~\ref{fig:cdfs}a which reveals that the majority of tests ($> 85\%$ on Edison and $> 75\%$ on Mira) have high coverage factor ($\mathit{CF} > 0.90$).
+The distribution of coverage factors across all experiments run are shown in Figure~\ref{fig:cdfs}a which reveals that the majority of tests ($> 75\%$ on Edison and $> 80\%$ on Mira) have high coverage factors ($\mathit{CF} > 0.80$).
 This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
 In particular, Mira's CF distribution is so narrow that over 50\% of tests effectively ran completely uncontended for bandwidth; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
 
@@ -138,8 +138,12 @@ Our choice to define our correlation parameter according to application performa
 However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
 As such, we can attempt to correlate a wide variety of measurements to job I/O performance to determine which measurements are likely culprits when looking for sources of poor I/O performance.
 
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview} ) with a wide range of metrics collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.
-Although an exhaustive examination of all correlations is beyond the scope of this work, several key points can be gleaned by what these data do \emph{and do not} show.
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview}) with a wide range of metrics collected on Edison and Mira, and the most interesting results are summarized in Figure \ref{fig:correlation-table}.
+While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric.
+In this sense, they are a suitable indicator of general strengths and confidences in correlation.
+
+The data generated in this study is extensive, and a comprehensive statistical analysis will be presented in future work.
+Nevertheless, we can highlight several interesting findings based on the summary data shown in Figure \ref{fig:correlation-table}:
 
 \begin{figure}[t]
     \centering
