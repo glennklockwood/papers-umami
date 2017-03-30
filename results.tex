@@ -189,7 +189,7 @@ To concisely visualize all of this information, we present the TOKIO Unified Mea
 TOKIO-UMAMI presents historic measurements from the components monitored by TOKIO, composing what we refer to as the \emph{I/O subsystem climate}, and summarizes each metric's distribution in a box plot to the right of each metric's time series plot.
 These time series plots terminate with the measurements taken for the job in question, describing the \emph{I/O subsystem weather} at the time that job ran.
 By overlaying this weather on the climate box plots in the form of dashed lines, TOKIO-UMAMI provides a quick visualization of how each metric's weather compared to the statistical distribution of past weather conditions.
-This conceptualization of a file system's weather with its overall climate, a user can differentiate between a long-term performance problem (as would occur if the application I/O is not optimized for the underlying file system) and a statistically rare event analogous to an extreme weather event.
+With this conceptualization of a file system's weather with its overall climate, a user can differentiate between a long-term performance problem (as would occur if the application I/O is not optimized for the underlying file system) and a statistically rare event analogous to an extreme weather event.
 
 The specific UMAMI example shown in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test which took place on March 3.
 This particular job showed abnormally low performance as evidenced by the "Job performance (GiB/sec)" measurement and its value relative to the previous six instances of this type of job.
