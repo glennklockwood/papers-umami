@@ -3,3 +3,32 @@
 \input{appendix-artifacts}
 
 \input{appendix-analysis}
+
+\todo{Here's the data we should ultimately provide, though probably not for initial submission:}
+
+\begin{enumerate}
+\item software
+    \begin{enumerate}
+    \item darshan
+    \item ggiostat
+    \item LMT (do we include if it's not technically ours, or did we sufficiently modify/extend LMT s.t. we can claim it?)
+    \item TOKIO-ABC
+    \item any of our tools/utilities used for this work?
+        \begin{itemize}
+        \item e.g., glue/utility scripts for extracting the metrics we are interested in from the data below, etc.
+        \item I don't think we could include this stuff in such little time -- these things are cobbled together at the moment and don't embrace the generic, platform-independent narrative we give in the paper
+        \item ultimately, i think it would be a good post-paper exercise to go through all of the scripts we've used in the process to think about how to generalize them and refine them so we could package them up in a general tokio repo to be of use to others
+        \end{itemize}
+    \end{enumerate}
+
+\item data
+    \begin{enumerate}
+    \item tokio-abc data:
+        \begin{itemize}
+        \item darshan logs
+        \item job logs
+        \end{itemize}
+    \item lmt/ggiostats data for the date range of our study
+    \item other data we present: health monitoring, scheduler data, etc.
+    \end{enumerate}
+\end{enumerate}
