@@ -21,7 +21,8 @@ The set of tools provided is not intended to be comprehensive or final -- new da
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
-Application behavior refers to the I/O pattern of a job as expressed from the perspective of the application itself before any system-level optimizations are applied).  To ensure minimal overhead from data collection, tracking application behavior generally involves tabulating reduced scalar data over the entirety of a job including the time spent performing I/O, the distribution of access sizes, aggregate data and read/write operation counts, and what files were accessed.
+Application behavior characterization is important as it helps describe the I/O pattern of a workload as expressed from the perspective of the application itself (i.e., before any system-level optimizations are applied).
+To ensure minimal overhead from data collection, characterizing application behavior generally involves tabulating reduced scalar data over the entirety of a job including the time spent performing I/O, the distribution of access sizes, aggregate data and read/write operation counts, and what files were accessed.
 
 To capture application behavior in this work, we relied on the Darshan I/O characterization tool~\cite{carns200924} which transparently records concise, bounded statistics about an application's I/O behavior.
 Reduction, compression, and storage of these statistics is deferred until the application exits in order to minimize overhead, allowing it be deployed for all production applications on large-scale systems without perturbing performance.
@@ -29,10 +30,10 @@ Darshan also operates at the application level, making it a highly portable and 
 
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
-Storage system traffic refers to the aggregate system-wide I/O workload observed by the storage system.
+Storage system traffic monitoring provides insight into the aggregate system-wide I/O workload imposed on a target storage system.
 On most modern-day HPC systems this is reflected in the aggregate traffic that reaches the parallel file system in terms of bytes read and written, I/O operations processed, and system-specific counters.
 Because such monitoring happens on the storage servers rather than user compute nodes, these data can be generated as time-series metrics with minimal impact to client performance.
-Because the tools used to monitor storage system traffic instrumentation are often specific to each file system implementation, we used two different system-specific tools to collect the data used in this study.
+Since the tools used to monitor storage system traffic instrumentation are often specific to each file system implementation, we used two different system-specific tools to collect the data used in this study.
 
 \label{sec:methods/lmt}
 The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
@@ -47,7 +48,7 @@ The metrics collected include bytes read and written, read and write request cou
 
 \subsection{Health monitoring} \label{sec:methods/health}
 
-Health monitoring refers to the current fault status and capacity of the
+Health monitoring is critical to understanding the current fault status and capacity of the
 storage system: what components are offline, failed-over, or another degraded state, and how much storage space remains on the available devices.
 
 % lfs df
@@ -62,7 +63,7 @@ In both GPFS and Lustre cases, we found that these time series data were suffici
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
 
-Job scheduling refers to the mix of concurrent application jobs that are running on the compute resources of a system to identify cases where I/O contention results from other jobs.
+Job scheduling data can provide details on the mix of concurrent jobs that are running on the compute resources of a system to identify cases where I/O contention results from other competing workloads.
 Because job scheduling is most useful in the context of a particular job of interest, we represent this data as a single scalar value that represents the number of other jobs running concurrently with our job of interest.
 
 On the Edison system, this is accomplished by querying the Slurm job accounting database for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
