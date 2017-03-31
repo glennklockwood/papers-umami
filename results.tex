@@ -101,11 +101,18 @@ This finding is consistent with the work of Uselton and Wright\cite{Uselton2013}
     \label{fig:hist-cf-mira}
 \end{figure}
 
-To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.
-If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution. \todo{$\leftarrow$ weak sauce}
-However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a preponderance of high values.
-From this, we can conclude that many tests on Mira achieved high performance \emph{despite} other I/O loads concurrently generating commensurate IOP loads.
-Thus, while high background IOPS loads can be a cause for performance loss, their presence does not necessarily preclude high performance.
+We can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement.
+However, these alternative coverage factor metrics are not likely to correlate well with performance unless the job of interest is making a meaningful contribution to the system-wide load.
+For example, the coverage factor for IOPs can be expressed as the fraction of read and write operations extracted from a job's Darshan log to the total read and write operations logged by ggiostat.  The distribution of this $\textit{CF}_\textit{IOPs}$ metric is shown alongside the bandwidth coverage factor, $\textit{CF}_\textit{BW}$, in  Figure \ref{fig:hist-cf-mira}.
+This figure suggests that the TOKIO-ABC tests likely do not contribute a significant IOPs load Mira;
+the relatively flat distribution of $\textit{CF}_\textit{IOPs}$ is likely a reflection of the background IOPs load which is not significantly perturbed when TOKIO-ABC jobs are running. \todo{is there is a clearer way to state the previous sentence?}
+
+%%% following paragraph is weak; replaced with the one above
+% To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.
+% If the relationship between performance and bandwidth is proportionately affected by IOPS-based contention, we would expect the coverage factor of IOPS to follow a similar distribution. \todo{$\leftarrow$ weak sauce}
+% However, as shown in Figure \ref{fig:hist-cf-mira}, $\textit{CF}_{\textup{iops}}$ for Mira jobs are broadly distributed, whereas $\textit{CF}_{\textup{bandwidth}}$ shows a preponderance of high values.
+% From this, we can conclude that many tests on Mira achieved high performance \emph{despite} other I/O loads concurrently generating commensurate IOP loads.
+% Thus, while high background IOPS loads can be a cause for performance loss, their presence does not necessarily preclude high performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Correlating Performance Metrics} \label{sec:results/correlating}
@@ -219,7 +226,7 @@ This is indicative of an expansive file system traversal that was being performe
 \subsection{Case Study: Storage Capacity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The TOKIO framework was also able to identify longer-term performance issues which progressively degraded write performance.
+\todo{tighten this up with respect to readdir(3) and make sure the discussion is consistent with earlier sections} The TOKIO framework was also able to identify longer-term performance issues which progressively degraded write performance.
 Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec.
 The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.
 Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades with increasing OST fullness.
