@@ -23,30 +23,18 @@
 I/O efficiency is essential to productivity in scientific computing,
 especially as more scientific domains become more data-intensive and
 large-scale computing platforms incorporate more complex storage
-hierarchies.  A variety of instrumentation and analysis tools have been
+hierarchies.
+A variety of instrumentation and analysis tools have been
 utilized to great effect to help understand and optimize specific aspects of
 HPC I/O, such as application access patterns, storage device traffic, and
-distributed file system configurations.  However, analyzing individual services in the
+distributed file system configurations.
+However, analyzing individual services in the
 I/O ecosystem in isolation fails to provide insight into the most important
-questions: how do the I/O components interact, what \emph{combinations}
-of optimizations across the stack are most effective, and what are the
-underlying causes and effects of I/O performance problems?
-\todo{make sure we update the abstract to reflect the questions we actually answer}
+questions: how do the I/O components interact, what are reasonable expectations for application performance, and what are the underlying causes and effects of I/O performance problems?
 
 In this work we propose a framework for holistic I/O characterization that combines I/O instrumentation data from multiple sources to obtain insights that were previously unobtainable.
 We describe a methodology that incorporates data from file system instrumentation, application instrumentation, health monitoring, and other sources, and then demonstrate its applicability, portability, and unobtrusiveness of this approach by deploying it in production on two distinct leadership-class computing platforms.
-%
-% Based on our month-long study, we demonstrate the utility of our
-% methodology through case studies that highlight how holistic I/O
-% characterization can improve our understanding of scientific applications'
-% I/O performance. We then extend these findings to provide broader insights
-% into how parallel file systems perform under different types of load.
-%
-% PHC: I don't think this is going to be a month-long study, right? Tuning
-% text here a little accordingly
-%%% GKL: As of this past weekend, we do actually have a month's worth of data.  But no need to mention the time range here.
-%
-Using formalized periodic regression benchmarking, we apply our holistic I/O characterization methodology to case studies that highlight how it can be used to improve our understanding of scientific application performance.
-We also extend these findings to provide broader insights into how parallel file systems perform under different types of load.
+Using formalized periodic regression benchmarking, we apply our holistic I/O characterization methodology to convert disparate sources of data into knowledge about system-level performance variation.
+We then use several case studies to highlight how this framework can be used to improve our understanding of scientific application performance.
 
 \end{abstract}
