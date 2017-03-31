@@ -7,8 +7,10 @@ TOKIO, schematically depicted in Figure \ref{fig:tokio-schematic}, integrates a 
 This data integration, detailed further in Section \ref{sec:data-integration}, enables systems staff to explore the overall climate of the I/O system over a past time range of interest.
 Furthermore, users can retrospectively examine the weather of the I/O system during their job and relate this information to the historic I/O system climate if TOKIO is deployed in an environment where users can access the required component-level monitoring data through a database or API.
 
-The following components of the I/O subsystem are critical to understanding both the I/O climate and I/O weather of a production system.
-Thus, they should be continuously instrumented to get the most insight out of the TOKIO framework, and we describe the pertinent data and exemplar tools for achieving this continuous monitoring in an unobtrusive, lightweight fashion.
+In the following sections we describe distinct components of the I/O subsystem that are critical to understanding both the I/O climate and I/O weather of a production system.
+Continuous instrumentation of each of these components should, therefore, be incorporated into TOKIO to enable the extraction of meaningful insight from the framework.
+We also provide pertinent details on the tools we have already chosen to integrate into TOKIO for instrumenting each of these components, preferring existing instrumentation solutions that are lightweight and unobtrusive enough to run full-time on production systems.
+The set of tools provided is not intended to be comprehensive or final -- new data can be incorporated into TOKIO by defining mechanisms for collecting and extracting relevant data from a specific instrumentation source.
 
 \begin{figure}[t]
     \centering
