@@ -19,7 +19,7 @@ We developed the TOKIO-UMAMI analysis tool to help diagnose I/O performance prob
 By integrating a range of distinct, normalized monitoring metrics into the TOKIO-UMAMI tool, we have provided a coherent foundation for simplified characterization of HPC I/O behavior across different platforms.
 This tool then enables us to perform comparative analysis studies of different HPC platforms that were previously infeasible.
 
-In the future we will...
+This study explored only one of the potential applications of TOKIO though.  Looking forward, it is possible to group historic data around server-side traffic patterns rather than application I/O motifs to identify collections of applications that, when run together, result in an uncommonly adversarial I/O load.  This could advise coscheduling to optimize performance.  In addition, the grouping process itself can be automated with clustering or other statistical techniques to explore emergent I/O behavior in an unbiased fashion.
 
 %%% GKL: I would really like to propose plugging Xiaosong Ma's clustering-based burst classification into this so that TOKIO-UMAMI can automatically figure out which jobs should define climate.  Not sure where it will fit though...
 % Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.
