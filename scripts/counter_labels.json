@@ -19,7 +19,7 @@
     "job_min_radius": "Min radius within job nodes",
     "lmt_bytes_covered": "Coverage Factor",
     "coverage_factor": "Coverage Factor",
-    "iops_coverage_factor": "Coverage Factor (IOPS)",
+    "iops_coverage_factor": "Coverage Factor (IOPs)",
     "lmt_frac_missing": "Fraction of Lustre server data missing",
     "lmt_mds_ave": "Avg MDS CPU load (%)",
     "lmt_mds_max": "Max OSS CPU load (%)",
