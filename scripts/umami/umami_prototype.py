@@ -173,7 +173,7 @@ row_plots_master = {
         ('lmt_ops_opencloses',               False),
         ('lmt_oss_max',                      False),
         ('ost_avg_pct',                      False),
-        ('ost_bad_pct',                      False),
+#       ('ost_bad_pct',                      False),
         ('job_max_radius',                   False),
         ('job_concurrent_jobs',              False),
     ],
@@ -183,7 +183,7 @@ row_plots_master = {
         ('iops_coverage_factor',             True),
         ('ggio_ops_opencloses',              False),
         ('ggio_ops_rw',                      False),
-        ('ggio_read_dirs',                   False),
+#       ('ggio_read_dirs',                   False),
     ],
 }
 
@@ -234,7 +234,7 @@ other_filters = [
 
 
 
-### For generating the Mira UMAMI figure in the paper
+### For generating the Mira UMAMI figure in the paper (v1)
 TARGET_FILE_SYSTEM = 'mira-fs1'
 TARGET_APP = 'VPIC-IO'
 TARGET_RW = 'write'
@@ -246,33 +246,16 @@ other_filters = [
 
 
 
-### Exploratory Umami - IOR requires an extra filter
+### For generating the Mira UMAMI figure in the paper (v2)
 TARGET_FILE_SYSTEM = 'mira-fs1'
 TARGET_APP = 'IOR'
-TARGET_RW = 'write'
+TARGET_RW = 'read'
 OUTPUT_SUFFIX = '-shared-all'
 other_filters = [
     (df['darshan_file_mode'] == "shared"),
-#    (df['darshan_end_time'] >= time.mktime(datetime.datetime(2016,  3,  4, 12,  0,  0).timetuple())),
-#    (df['darshan_end_time'] <= time.mktime(datetime.datetime(2018,  3,  7,  0,  0,  0).timetuple())),
+#    (df['darshan_end_time'] >= time.mktime(datetime.datetime(2016,  2, 27, 12,  0,  0).timetuple())),
+#    (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  9,  0,  0,  0).timetuple())),
 ]
-
-
-
-### An interesting long-term behavior where an OSS's CPU was maxing out
-TARGET_FILE_SYSTEM = 'scratch3'
-TARGET_APP = 'HACC-IO'
-TARGET_RW = 'write'
-OUTPUT_SUFFIX = '-long-term'
-other_filters = [
-     (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 21,  0,  0,  0).timetuple())),
-     (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3, 14,  0,  0,  0).timetuple())),
-]
-row_plots = [
-        ('darshan_agg_perf_by_slowest_gibs', True),
-        ('lmt_oss_max',                      False),
-        ('coverage_factor',                  True),
-    ]
 
 
 
@@ -292,6 +275,17 @@ row_plots = [
         ('ost_max_pct',                      False),
         ('coverage_factor',                  True),
     ]
+
+
+
+TARGET_FILE_SYSTEM = 'mira-fs1'
+TARGET_APP = 'HACC-IO'
+TARGET_RW = 'write'
+OUTPUT_SUFFIX = '-test'
+other_filters = [
+    (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  3,  1,  0,  0,  0).timetuple())),
+    (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3, 12,  0,  0,  0).timetuple())),
+]
 
 
 # ## Build a DataFrame based on UMAMI inputs

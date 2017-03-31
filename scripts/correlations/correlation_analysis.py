@@ -401,7 +401,7 @@ print_order = [
     "iops_coverage_factor",
     "lmt_ops_closes",
     "lmt_ops_opens",
-    "ggio_read_dirs",
+#   "ggio_read_dirs",
     "lmt_tot_bytes_write",
     "lmt_tot_bytes_read",
     "ggio_write_reqs",
@@ -673,14 +673,16 @@ print "Saved %s" % output_file
 
 
 scatterplots = [ 
-    (performance_key, 'coverage_factor'),
-    (performance_key, 'lmt_oss_max'),
-    (performance_key, 'job_concurrent_jobs'),
-    (performance_key, 'ost_avg_pct'),
-    (performance_key, 'ost_max_kib'),
-    (performance_key, 'coverage_factor'),
-    (performance_key, 'ggio_write_reqs'),
-    (performance_key, 'ggio_write_reqs'),
+    ('edison', performance_key, 'coverage_factor'),
+    ('mira', performance_key, 'coverage_factor'),
+    ('mira', performance_key, 'iops_coverage_factor'),
+    ('edison', performance_key, 'lmt_oss_max'),
+    ('edison', performance_key, 'job_concurrent_jobs'),
+    ('edison', performance_key, 'ost_avg_pct'),
+    ('edison', performance_key, 'ost_max_kib'),
+    ('mira', performance_key, 'ggio_write_reqs'),
+    ('mira', performance_key, 'ggio_read_reqs'),
+
 ]
 
 
@@ -694,19 +696,19 @@ blacklist = set([
     'lmt_tot_missing'
 ])
 # for scatterplot in correlations_edison + correlations_mira:
-for scatterplot in scatterplots:
-    x_key = scatterplot[0]
-    y_key = scatterplot[1]
+for system, x_key, y_key in scatterplots:
     if x_key in blacklist or y_key in blacklist:
         continue
-    if y_key in df_mira :
-        df_plot = df_mira
-        system = "Mira"
-    elif y_key in df_edison:
+    if system == "edison":
         df_plot = df_edison
         system = "Edison"
+    elif system == "mira":
+        df_plot = df_mira
+        system = "Mira"
     else:
-        warnings.warn("Cannot find key %s in any data frames" % y_key)
+        warnings.warn("Cannot do not understand system " + system)
+        continue
+        
     fig = plt.figure(figsize=(6,4))
     ax = fig.add_subplot(111)
     
@@ -738,7 +740,7 @@ for scatterplot in scatterplots:
 #                 % (x_label.split('(',1)[0].strip(),
 #                    y_label.split('(',1)[0].strip()))
     ax.set_title("Coefficient=%.4f, P-value=%.2g (%s)" 
-                    % sum((stats.pearsonr(x1, y1), (system,)), ()), fontsize=14 )
+                    % sum((stats.pearsonr(x1, y1), (system.title(),)), ()), fontsize=14 )
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     plt.grid(True)
@@ -1135,7 +1137,8 @@ for fs in _FILE_SYSTEM_ORDER:
         axes[idx].set_ylabel("")
         axes[idx].plot([0.0, 1.0],[0.5, 0.5], '--', linewidth=2.0, color='red')
         axes[idx].legend().remove()
-        axes[idx].set_xticks([0.0, 0.25, 0.50, 0.75, 1.0])
+#       axes[idx].set_xticks([0.0, 0.25, 0.50, 0.75, 1.0])
+        axes[idx].set_xticks(np.linspace(0.0, 1.0, 6))
         for tick in axes[idx].xaxis.get_major_ticks():
             tick.label.set_fontsize(16) 
         for tick in axes[idx].yaxis.get_major_ticks():
@@ -1166,6 +1169,47 @@ fig.subplots_adjust(hspace=0.0, wspace=0.0)
 output_file = "cdf-both.pdf"
 fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
+
+
+
+### The 99th percentile of Mira's coverage factors:
+# np.percentile( df_concat[df_concat['system'] == 'mira']['coverage_factor'], 99 )
+
+target_value = 0.99
+print "Coverage factor of %.2f or higher corresponds to the %.2fth percentile" % (
+    target_value,
+    stats.percentileofscore(df_concat[df_concat['system'] == 'mira']['coverage_factor'], target_value) )
+
+
+
+descriptions = {
+    'darshan_normalized_perf_by_max': "On %s, %4.1f%% of jobs got below %d%% peak performance",
+    'coverage_factor': "On %s, %4.1f%% of jobs got a coverage factor below %d%%",
+}
+target_fraction = 0.99
+### Back up the caption used in the paper for the above CDF plot
+for cdf_key in 'darshan_normalized_perf_by_max', 'coverage_factor':
+    for fs in _FILE_SYSTEM_ORDER:
+        df_fs = df_concat[df_concat['darshan_file_system'] == fs]
+        value = scipy.interpolate.interp1d(
+            cdfs[cdf_key][fs]['dependent_variable'],
+            cdfs[cdf_key][fs]['probability'])(target_fraction)
+        print descriptions[cdf_key] % (fs, 100.0 * value, int(100.0 * target_fraction))
+
+
+
+print "The line demarcing 50% probability corresponds to..."
+
+target_fraction = 0.50
+### Back up the caption used in the paper for the above CDF plot
+for cdf_key in 'darshan_normalized_perf_by_max', 'coverage_factor':
+    for fs in _FILE_SYSTEM_ORDER:
+        df_fs = df_concat[df_concat['darshan_file_system'] == fs]
+        value = scipy.interpolate.interp1d(
+            cdfs[cdf_key][fs]['probability'],
+            cdfs[cdf_key][fs]['dependent_variable']
+        )(target_fraction)
+        print fs, cdf_key, value
 
 
 # ## IOPS Coverage Factor
@@ -1247,6 +1291,32 @@ ax.yaxis.grid()
 output_file = "hist-cf-bw-and-ops.pdf"
 fig.savefig(output_file, bbox_inches="tight")
 print "Saved %s" % output_file
+
+
+
+### Also try bar plots for Edison
+
+for fs in df_concat[df_concat['system'] == 'edison']['darshan_file_system'].unique():
+    fig = plt.figure()
+    fig.set_size_inches(8,5)
+    ax = fig.add_subplot("111")
+    y = df_concat[df_concat['darshan_file_system'] == fs]['coverage_factor']
+    common_opts = {
+                    "width": 1.0/15.0,
+                    "bins": np.linspace(0.0, 1.0, 11),
+                    'alpha': 0.75,
+                    'lw': 3.0,
+                  }
+    ax.hist( y, label='Bandwidth', **common_opts)
+
+    ax.set_xlabel("Coverage Factor")
+    ax.set_ylabel("Frequency")
+#   ax.legend()
+    ax.yaxis.grid()
+    ax.set_title("%s Bandwidth Coverage Factor" % fs)
+    output_file = "hist-cf-bw-%s.pdf" % fs
+    fig.savefig(output_file, bbox_inches="tight")
+    print "Saved %s" % output_file
 
 
 # ## Identifying Statistical Distribution of Problem Sources
