@@ -1,34 +1,84 @@
 \appendix
 
-\input{appendix-artifacts}
+\subsection{Artifact Description} \label{sec:appendix/artifacts}
 
-\input{appendix-analysis}
+% Consider adding material here per guidance at
+% http://sc17.supercomputing.org/2017/02/07/submitting-a-technical-paper-to-sc17-participate-in-the-sc17-reproducibility-initiative/
+% see examples: http://sc17.supercomputing.org/submitters/technical-papers/reproducibility-initiatives-for-technical-papers/artifact-description-paper-title/
 
-\todo{Here's the data we should ultimately provide, though probably not for initial submission:}
+\todo{Here's the data we should ultimately provide, though probably not for initial submission}
+
+\todo{Note that most of last year's submissions seemed to generate the appendix as a separate document whose pages were concatenated with the main manuscript. the way LaTeX handles appendices and subsections doesn't seem very nice.}
+
+\todo{we need to agree on the scope of this.  do we just provide enough data to reproduce the results (figures) presented (e.g., the edison and mira CSVs, and the ggiostat/lmt dumps for the relevant time periods) or do we include the entire framework setup as well?  the latter is a much heavier lift than the former, and it's not clear to me (glenn) which is most in the spirit of this reproducibility initiative.}
+
+\subsubsection{Abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Here we describe the steps required to reproduce the analysis and results presented in Section \ref{sec:results} of this manuscript.
+
+\subsubsection{Description}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Check-List / Meta Information}
+
+\begin{itemize}
+	\item \textbf{Algorithm:}
+    \item \textbf{Program:}
+    \item \textbf{Compilation:} 
+    \item \textbf{Binary:}
+    \item \textbf{Data set:}
+    \item \textbf{Run-time environment:} Python 2.7.12; pandas 0.18.1; matplotlib 2.0.0; numpy 1.11.1; scipy 0.17.1
+    \item \textbf{Hardware:}
+    \item \textbf{Output:}
+    \item \textbf{Experiment workflow:}
+    \item \textbf{Publicly available?:} Yes
+\end{itemize}
+
+\paragraph{Obtaining Software}
 
 \begin{enumerate}
-\item software
-    \begin{enumerate}
-    \item darshan
-    \item ggiostat
-    \item LMT (do we include if it's not technically ours, or did we sufficiently modify/extend LMT s.t. we can claim it?)
-    \item TOKIO-ABC
+	\item \textbf{darshan}:
+    \item \textbf{ggiostat}:
+    \item \textbf{LMT}:
+    % (do we include if it's not technically ours, or did we sufficiently modify/extend LMT s.t. we can claim it?)
+    \item \textbf{TOKIO-ABC}:
     \item any of our tools/utilities used for this work?
-        \begin{itemize}
-        \item e.g., glue/utility scripts for extracting the metrics we are interested in from the data below, etc.
-        \item I don't think we could include this stuff in such little time -- these things are cobbled together at the moment and don't embrace the generic, platform-independent narrative we give in the paper
-        \item ultimately, i think it would be a good post-paper exercise to go through all of the scripts we've used in the process to think about how to generalize them and refine them so we could package them up in a general tokio repo to be of use to others
-        \end{itemize}
-    \end{enumerate}
-
-\item data
-    \begin{enumerate}
-    \item tokio-abc data:
-        \begin{itemize}
-        \item darshan logs
-        \item job logs
-        \end{itemize}
-    \item lmt/ggiostats data for the date range of our study
-    \item other data we present: health monitoring, scheduler data, etc.
-    \end{enumerate}
+	\begin{enumerate}
+		\item e.g., glue/utility scripts for extracting the metrics we are interested in from the data below, etc.
+		\item I don't think we could include this stuff in such little time -- these things are cobbled together at the moment and don't embrace the generic, platform-independent narrative we give in the paper
+		\item ultimately, i think it would be a good post-paper exercise to go through all of the scripts we've used in the process to think about how to generalize them and refine them so we could package them up in a general tokio repo to be of use to others
+	\end{enumerate}
 \end{enumerate}
+
+\paragraph{Hardware Dependencies}
+
+\paragraph{Software Dependencies}
+
+\paragraph{Datasets}
+
+\begin{enumerate}
+	\item tokio-abc data:
+    \begin{enumerate}
+        \item darshan logs
+		\item job logs
+        \item raw LMT slices in csv
+        \item raw ggiostat slices?
+    \end{enumerate}
+	\item lmt/ggiostats data for the date range of our study (all of it, or just time ranges covered by jobs per above?)
+    \item other data we present: health monitoring, scheduler data, etc.
+\end{enumerate}
+
+\subsubsection{Installation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Experiment Workflow}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Evaluation and Expected Result}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Experiment Customization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Notes}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
