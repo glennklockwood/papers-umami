@@ -126,29 +126,30 @@ In this section, we detail the configuration of the TOKIO-ABC tests and the plat
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
-The passive instrumentation methods described in Section \ref{sec:methods} are essential for ongoing understanding production workloads, but they do not provide any fixed reference point:
-the workload and state of the system evolves over time.
-We must therefore incorporate
+The instrumentation methods described in Section \ref{sec:methods}
+do not provide a fixed reference point; the workload and state of the
+system naturally evolve over time.  We must therefore combine TOKIO with
 routine, formalized I/O performance regression tests in order establish baseline behavior.
-
+%
 We developed the TOKIO Automated Benchmark Collection to meet
 this need.
-TOKIO-ABC consists of a collection of benchmarks, including
+TOKIO-ABC is a set of benchmarks, including
 both synthetic and application-derived workloads, that can be scaled in
-both the number of processes and data volume according to the constraints
-of the system on which it is deployed.
-Our two goals in choosing a scale for TOKIO-ABC deployment were
+both the number of processes and data volume.
+Our goals in choosing a scale for a given TOKIO-ABC deployment are
 a) to saturate the storage system and
 b) to limit core-hour consumption sufficiently for daily execution.
-We use
-a collection of benchmarks because performance is not well-represented
-by a single benchmark result; each storage system has its own strengths
-and weaknesses for different workloads.  The collection of benchmarks is
+%We chose 
+%a collection of benchmarks because performance is not well-represented
+%by a single benchmark result; each storage system has its own strengths
+%and weaknesses.  
+The collection of benchmarks is
 executed within a job script that can be scheduled nightly by a continuous
 integration system or cron job.  The script insures that no more than
 one TOKIO-ABC instance is active at a time, and all benchmark results
 and Darshan logs are archived for analysis at the conclusion of the job.
 The initial set of benchmarks included in TOKIO-ABC are as follows:
+
 
 \begin{itemize}
 \item \textbf{HACC}
