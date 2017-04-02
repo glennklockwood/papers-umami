@@ -28,11 +28,13 @@ The set of tools provided is not intended to be comprehensive or final--new data
 \subsection{Application behavior} \label{sec:methods/darshan}
 
 Application behavior characterization is important as it helps describe the I/O pattern of a workload as expressed from the perspective of the application itself (i.e., before any system-level optimizations are applied).
-To ensure minimal overhead from data collection, characterizing application behavior generally involves tabulating reduced scalar data over the entirety of a job including the time spent performing I/O, the distribution of access sizes, aggregate data and read/write operation counts, and what files were accessed.
-
-To capture application behavior in this work, we relied on the Darshan I/O characterization tool~\cite{carns200924} which transparently records concise, bounded statistics about an application's I/O behavior.
-Reduction, compression, and storage of these statistics is deferred until the application exits in order to minimize overhead, allowing it be deployed for all production applications on large-scale systems without perturbing performance.
-Darshan also operates at the application level, making it a highly portable and general tool that can be deployed on nearly any major HPC platform.
+We relied on the Darshan I/O characterization tool~\cite{carns200924}
+to capture application behavior in this work.  Darshan transparently records concise, bounded statistics about an application's I/O behavior.
+Reduction, compression, and storage of these statistics is deferred until the
+application exits in order to minimize overhead, allowing it be deployed for
+all production applications on large-scale systems without perturbing
+performance.  Because it operates at the application level, Darshan is also
+highly portable across platforms.
 
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
