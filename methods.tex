@@ -194,22 +194,28 @@ XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                              
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
-\begin{table*}[h]
+\begin{table}[h]
 \footnotesize
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
-\multirow{2}{*}{}                    & \multirow{2}{*}{\textbf{I/O Motif}}                           & \multicolumn{3}{c|}{\textbf{Mira}}                        & \multicolumn{3}{c|}{\textbf{Edison}}                      \\ \cline{3-8} 
-                                                       &                                                               & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} & \textbf{\# Nodes} & \textbf{\# Procs} & \textbf{\# Bytes} \\ \hline
-IOR                                                    & \begin{tabular}[c]{@{}c@{}}MPI-IO\\ shared file\end{tabular}  & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 0.5 TiB           \\ \hline
-IOR                                                    & \begin{tabular}[c]{@{}c@{}}POSIX\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
-HACC                                                   & \begin{tabular}[c]{@{}c@{}}GLEAN\\ file per proc\end{tabular} & 1,024             & 16,384            & 1.5 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
-\begin{tabular}[c]{@{}c@{}}VPIC\\ BD-CATS\end{tabular} & \begin{tabular}[c]{@{}c@{}}HDF5\\ shared file\end{tabular}    & 1,024             & 16,384            & 1.0 TiB           & 128               & 2,048             & 2.0 TiB           \\ \hline
+ & \textbf{I/O Motif} & \textbf{Mira size} & \textbf{Edison size} \\
+\hline
+IOR & MPI-IO shared file & 1.0 TiB & 0.5 TiB\\
+\hline
+IOR & POSIX file per proc & 1.0 TiB & 2.0 TiB\\
+\hline
+HACC & GLEAN file per proc & 1.5 TiB & 2.0 TiB \\
+\hline
+VPIC BD-CATS & HDF5 shared file & 1.0 TiB & 2.0 TiB\\
+\hline
 \end{tabular}
-\caption{TOKIO-ABC benchmarking configurations}
+\caption{TOKIO-ABC benchmark configurations. All Mira benchmarks were
+executed with 1,024 nodes and 16,384 MPI processes, while all Edison
+benchmarks were executed with 128 nodes and 2,048 MPI processes.}
 \label{tab:bench-config}
 \normalsize
-\end{table*}
+\end{table}
 
 \subsection{NERSC Edison} \label{sec:platforms/edison}
 
