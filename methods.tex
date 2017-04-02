@@ -150,6 +150,26 @@ one TOKIO-ABC instance is active at a time, and all benchmark results
 and Darshan logs are archived for analysis at the conclusion of the job.
 The initial set of benchmarks included in TOKIO-ABC are as follows:
 
+%%% also used tablesgenerator.com to make this monstrosity
+\begin{table*}[h]
+\footnotesize
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{\begin{tabular}[c]{@{}c@{}}System\\ (Center)\end{tabular}}                 & \textbf{Configuration}                                                                                         & \textbf{\begin{tabular}[c]{@{}c@{}}File System\\ (Type)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}\# Servers\\ (LUNs)\end{tabular}} & \textbf{\# I/O Nodes}                                                   & \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Capacity\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Peak\\ Performance\end{tabular}} \\ \hline
+\multirow{3}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Edison\\
+(NERSC)\end{tabular}}} & \multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Cray
+XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
+                                                                                   &                                                                                                                & scratch2 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
+                                                                                   &                                                                                                                & scratch3 (Lustre)                                                     & 36 (36)                                                              & 13 (shared)                                                             & 3.3 PB                                                          & 72 GB/sec                                                           \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Mira\\ (ALCF)\end{tabular}}                     & \begin{tabular}[c]{@{}c@{}}IBM Blue Gene/Q\\ 49,152 CNs\end{tabular}    & mira-fs1 (GPFS)                                                       & 48 (336)                                                             & \begin{tabular}[c]{@{}c@{}}384 (dedicated)\\ 1 per 128 CNs\end{tabular} & 7.0 PB                                                          & 90 GB/sec                                                           \\ \hline
+\end{tabular}
+\caption{Test platforms for TOKIO and TOKIO Automated Benchmarking Collection (TOKIO-ABC)}
+\label{tab:system-config}
+\normalsize
+\vspace{-.2in}
+\end{table*}
+
 
 \begin{itemize}
 \item \textbf{HACC}
@@ -191,26 +211,6 @@ where an application is performing I/O using the ideal parameters for each
 file system.
 
 \end{itemize}
-
-%%% also used tablesgenerator.com to make this monstrosity
-\begin{table*}[h]
-\footnotesize
-\centering
-\begin{tabular}{|c|c|c|c|c|c|c|}
-\hline
-\textbf{\begin{tabular}[c]{@{}c@{}}System\\ (Center)\end{tabular}}                 & \textbf{Configuration}                                                                                         & \textbf{\begin{tabular}[c]{@{}c@{}}File System\\ (Type)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}\# Servers\\ (LUNs)\end{tabular}} & \textbf{\# I/O Nodes}                                                   & \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Capacity\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Peak\\ Performance\end{tabular}} \\ \hline
-\multirow{3}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Edison\\
-(NERSC)\end{tabular}}} & \multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Cray
-XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
-                                                                                   &                                                                                                                & scratch2 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
-                                                                                   &                                                                                                                & scratch3 (Lustre)                                                     & 36 (36)                                                              & 13 (shared)                                                             & 3.3 PB                                                          & 72 GB/sec                                                           \\ \hline
-\textbf{\begin{tabular}[c]{@{}c@{}}Mira\\ (ALCF)\end{tabular}}                     & \begin{tabular}[c]{@{}c@{}}IBM Blue Gene/Q\\ 49,152 CNs\end{tabular}    & mira-fs1 (GPFS)                                                       & 48 (336)                                                             & \begin{tabular}[c]{@{}c@{}}384 (dedicated)\\ 1 per 128 CNs\end{tabular} & 7.0 PB                                                          & 90 GB/sec                                                           \\ \hline
-\end{tabular}
-\caption{Test platforms for TOKIO and TOKIO Automated Benchmarking Collection (TOKIO-ABC)}
-\label{tab:system-config}
-\normalsize
-\vspace{-.2in}
-\end{table*}
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
