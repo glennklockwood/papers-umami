@@ -70,7 +70,13 @@ An intuitive source of performance loss would be from other jobs that are also c
 \end{equation}
 %
 where $N_{\textup{bytes}}^{\textup{Darshan}}$ is the number of bytes read and written by job $j$ according to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ is the number of bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
-The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are both taken from the job's Darshan log~\cite{snyder2016modular}.
+The time interval over which the job ran ($\mathit{time}$) and the servers to
+which the job wrote ($\mathit{servers}$) are both taken from the job's
+Darshan log~\cite{snyder2016modular}.  It should be noted that we can
+generalize this notion of the coverage factor to any metric for which we can
+distinguish the contribution of an individual job from the global
+system-level measurement, but for brevity in this work we focus our analysis
+on bandwidth coverage factor.
 
 The coverage factor is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
 $CF = 1.0$ when all of the server-side I/O was caused by job $j$, while $CF = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
@@ -100,20 +106,21 @@ This finding is consistent with the work of Uselton and Wright\cite{Uselton2013}
 \vspace{-.2in}
 \end{figure}
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\columnwidth]{figs/hist-cf-bw-and-ops.pdf}
-    \caption{Distribution of the coverage factor for both bandwidth ($\textit{CF}_{\textup{bandwidth}}$) and read/write operations ($\textit{CF}_{\textup{iops}}$) for Mira.
-    }
-    \label{fig:hist-cf-mira}
-\vspace{-.2in}
-\end{figure}
-
-We can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement.
-However, these alternative coverage factor metrics are not likely to correlate well with performance unless the job of interest is making a meaningful contribution to the system-wide load.
-For example, the coverage factor for IOPs can be expressed as the fraction of read and write operations extracted from a job's Darshan log to the total read and write operations logged by ggiostat.  The distribution of this $\textit{CF}_\textit{IOPs}$ metric is shown alongside the bandwidth coverage factor, $\textit{CF}_\textit{BW}$, in  Figure \ref{fig:hist-cf-mira}.
-This figure suggests that the TOKIO-ABC tests likely do not contribute a significant IOPs load Mira;
-the relatively flat distribution of $\textit{CF}_\textit{IOPs}$ is likely a reflection of the background IOPs load which is not significantly perturbed when TOKIO-ABC jobs are running. \todo{is there is a clearer way to state the previous sentence?}
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\columnwidth]{figs/hist-cf-bw-and-ops.pdf}
+%     \caption{Distribution of the coverage factor for both bandwidth ($\textit{CF}_{\textup{bandwidth}}$) and read/write operations ($\textit{CF}_{\textup{iops}}$) for Mira.
+%     }
+%     \label{fig:hist-cf-mira}
+% \vspace{-.2in}
+% \end{figure}
+% 
+% We can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement.
+% However, these alternative coverage factor metrics are not likely to correlate well with performance unless the job of interest is making a meaningful contribution to the system-wide load.
+% For example, the coverage factor for IOPs can be expressed as the fraction of read and write operations extracted from a job's Darshan log to the total read and write operations logged by ggiostat.  The distribution of this $\textit{CF}_\textit{IOPs}$ metric is shown alongside the bandwidth coverage factor, $\textit{CF}_\textit{BW}$, in  Figure \ref{fig:hist-cf-mira}.
+% This figure suggests that the TOKIO-ABC tests likely do not contribute a significant IOPs load Mira;
+% the relatively flat distribution of $\textit{CF}_\textit{IOPs}$ is likely a reflection of the background IOPs load which is not significantly perturbed when TOKIO-ABC jobs are running. \todo{is there is a clearer way to state the previous sentence?}
+% 
 
 %%% following paragraph is weak; replaced with the one above
 % To understand the relationship between IOP contention and performance degradation, we can also calculate the coverage factor of IOPS in addition to the coverage factor of bandwidth described in Equation \ref{eq:cf}.
