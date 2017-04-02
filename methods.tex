@@ -2,9 +2,9 @@
 \section{TOKIO Framework} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-TOKIO is a framework that connects different sources of performance instrumentation that are already often collected by HPC facilities to present a holistic view of the I/O subsystem.
+TOKIO is a framework that connects different sources of performance data that are already often collected by HPC facilities to present a holistic view of the I/O subsystem.
 TOKIO, schematically depicted in Figure \ref{fig:tokio-schematic}, integrates a combination of scalar and time-series data from sources available throughout the I/O subsystem and indexes them by time and job identifiers.
-This data integration, detailed further in Section
+This integration, detailed further in Section
 \ref{sec:data-integration}, enables systems staff to explore the
 climate of the I/O system over a time range of interest and relate this
 information to the weather of the I/O system for a particular job.
@@ -64,7 +64,7 @@ storage system: what components are offline, failed-over, or another degraded st
 
 % lfs df
 % lctl dl -t
-To collect health monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes.
+To collect health-monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes.
 We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
 % mmlsdisk
 % mmdf
