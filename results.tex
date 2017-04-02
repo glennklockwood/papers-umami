@@ -133,10 +133,14 @@ This finding is consistent with the work of Uselton and Wright\cite{Uselton2013}
 \subsection{Correlating Performance Metrics} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
-However, the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
-As such, we can attempt to correlate a wide variety of measurements with job I/O performance to determine which measurements are likely culprits when looking for sources of poor performance.
-
+Although bandwidth is the most intuitive initial metric for application and server
+correlation,  
+%Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
+the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
+We can therefore attempt to correlate a wide variety of measurements with job
+I/O performance to objectively determine which measurements are likely
+culprits for poor application performance.
+%
 To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview}) with a wide range of metrics collected on Edison and Mira.
 While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric we analyzed.
 In this sense, we find that this correlation coefficient is a suitable indicator of general trends and confidences in correlation.
