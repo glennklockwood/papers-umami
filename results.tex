@@ -87,6 +87,15 @@ To eliminate obviously erroneous data, we discard all test results where $CF > 1
 % \todo{We should probably mention what \% of data this covers. It will be a likely question.}
 %%% GKL: I don't want to admit to this unless a reviewer specifically asks.  The ratio is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this  filter criterion
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{figs/cdf-both.pdf}
+    \caption{Cumulative distribution function of the coverage factor (a) and the    performance relative to the maximum throughput observed across each file system (b).
+    The line demarcating 50\% probability corresponds to coverage factors of 0.88, 0.87, 0.84, and 0.94 and peak performance fractions of 0.89, 0.86, 0.78, and 0.95 on Edison scratch1-scratch3 and Mira, respectively.}
+    \label{fig:cdfs}
+\vspace{-.2in}
+\end{figure}
+
 The distribution of coverage factors across all experiments run are shown in Figure~\ref{fig:cdfs}a which reveals that the majority of tests ($> 75\%$ on Edison and $> 80\%$ on Mira) have high coverage factors ($\mathit{CF} > 0.80$).
 This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
 In particular, Mira's CF distribution is so narrow that over 50\% of tests effectively ran completely uncontended for bandwidth; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
@@ -96,15 +105,6 @@ distribution function of performance relative to the peak observed
 bandwidth for each application (Figure~\ref{fig:cdfs}b) is more broadly distributed.
 Edison's scratch3 exemplifies this; 26\% of jobs on that file system got less than half of the peak performance (fraction peak performance $< 0.50$) despite only 5\% of jobs showing $\mathit{CF} < 0.50$.  This indicates that the coverage factor (and therefore server-side I/O bandwidth) is not the only contributor to sub-optimal performance.  
 This finding is consistent with the work of Uselton and Wright\cite{Uselton2013} who demonstrated that Lustre file system performance is constrained by the weighted sum of both bandwidth \emph{and} I/O operation (IOP) rate.  
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\columnwidth]{figs/cdf-both.pdf}
-    \caption{Cumulative distribution function of the coverage factor (a) and the    performance relative to the maximum throughput observed across each file system (b).
-    The line demarcating 50\% probability corresponds to coverage factors of 0.88, 0.87, 0.84, and 0.94 and peak performance fractions of 0.89, 0.86, 0.78, and 0.95 on Edison scratch1-scratch3 and Mira, respectively.}
-    \label{fig:cdfs}
-\vspace{-.2in}
-\end{figure}
 
 % \begin{figure}[t]
 %     \centering
