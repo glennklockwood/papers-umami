@@ -50,8 +50,9 @@ Edison's scratch3 also demonstrates very broad performance variation for the VPI
 \end{figure}
 
 Thus, Figure \ref{fig:perf-summary-boxplots-motif} demonstrates that 
-performance variability is the result of factors intrinsic to the application (e.g., I/O motif) \emph{and} factors intrinsic to the file system, and
-different I/O motifs result in different levels of performance \emph{and} variability.
+performance variability is the result of factors intrinsic to the application
+(e.g., I/O motif) \emph{and} factors intrinsic to the file system. 
+Different I/O motifs result in different levels of performance \emph{and} variability.
 Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, yet there is a marked difference in variability between scratch1/scratch and scratch3 shown in Figure~\ref{fig:perf-summary-boxplots-motif}.
 Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
 
