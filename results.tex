@@ -23,6 +23,7 @@ Although the source of this disparity in variation between Mira and Edison is no
     Each box reflects the distribution of all four application workloads and both read and write performance.
     Whiskers extend to the 5th and 95th percentiles.}
     \label{fig:perf-summary-boxplots-fs}
+\vspace{-.2in}
 \end{figure}
 
 Such variation in peak file system performance caused by different I/O access patterns is well documented\cite{Lofstead2010,Uselton2010,Xie2012}.
@@ -42,6 +43,7 @@ Edison's scratch3 also demonstrates very broad performance variation for the VPI
     applications and read/write mode.  Whiskers represent the 5th and 95th
     percentiles.}
     \label{fig:perf-summary-boxplots-motif}
+\vspace{-.2in}
 \end{figure}
 
 \textbf{Thus, Figure \ref{fig:perf-summary-boxplots-motif} demonstrates that 
@@ -91,6 +93,7 @@ This finding is consistent with the work of Uselton and Wright\cite{Uselton2013}
     \caption{Cumulative distribution function of the coverage factor (a) and the    performance relative to the maximum throughput observed across each file system (b).
     The line demarcating 50\% probability corresponds to coverage factors of 0.88, 0.87, 0.84, and 0.94 and peak performance fractions of 0.89, 0.86, 0.78, and 0.95 on Edison scratch1-scratch3 and Mira, respectively.}
     \label{fig:cdfs}
+\vspace{-.2in}
 \end{figure}
 
 \begin{figure}[t]
@@ -99,6 +102,7 @@ This finding is consistent with the work of Uselton and Wright\cite{Uselton2013}
     \caption{Distribution of the coverage factor for both bandwidth ($\textit{CF}_{\textup{bandwidth}}$) and read/write operations ($\textit{CF}_{\textup{iops}}$) for Mira.
     }
     \label{fig:hist-cf-mira}
+\vspace{-.2in}
 \end{figure}
 
 We can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement.
@@ -138,6 +142,7 @@ Nevertheless, we summarize some of the interesting correlations (and lack of cor
     Although the "\% Servers Failed Over" measurement were tracked on both Mira and Edison, no changes in the failover states of servers were ever observed over the course of this study.
     }
     \label{fig:correlation-table}
+\vspace{-.2in}
 \end{figure}
 
 \begin{itemize}
@@ -186,6 +191,7 @@ The system-level analysis can be integrated with ongoing I/O instrumentation to 
     The star denotes the metrics for the job of interest and is colored according to the quartile in which it falls (red being the worst quartile and blue the best).
     Box plot whiskers extend to the 5th and 95th percentiles, with outliers being denoted as circles.}
     \label{fig:umami-scratch2-hacc-write}
+\vspace{-.2in}
 \end{figure}
 
 To concisely visualize all of this information, we present the TOKIO Unified Measurements and Metrics Interface (UMAMI) with the goal of enabling users to quickly determine how a job of interest's performance compares to similar I/O workloads in the past.
@@ -220,6 +226,7 @@ This is indicative of an expansive file system traversal that was being performe
     \caption{TOKIO-UMAMI demonstrating the climate surrounding VPIC-IO write workloads on Mira compared to a most recent run, which showed highly unusual weather in the form of an excess of \texttt{readdir(3)} calls.
     Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.}
     \label{fig:umami-mira-fs1-vpic-write}
+\vspace{-.2in}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -237,4 +244,5 @@ Although such correlations cannot define causative relationships, these conditio
     \caption{TOKIO-UMAMI of HACC write performance on Edison's scratch3 file system showing a longer-term period of performance degradation that was associated with unusually high OSS CPU load.
     Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.}
     \label{fig:umami-scratch3-hacc-write-long-term}
+\vspace{-.2in}
 \end{figure}
