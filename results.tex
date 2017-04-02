@@ -154,7 +154,9 @@ Nevertheless, we summarize some of the interesting correlations (and lack of cor
     \caption{Correlation coefficients between fraction of peak performance measured for each I/O motif and a variety of server-side measurements and metrics.
     Box color indicates confidence; correlations with p-values $< 0.01$ are blue; p-values $< 0.05$ are green, and p-values $>= 0.05$ are red (and signify lack of correlation).
     Similarly, \textbf{bolded} values signify moderate correlation ($|r| > 0.30$), and \textit{italicized} values signify weak correlation ($|r| < 0.10$).
-    Although the "\% Servers Failed Over" measurement were tracked on both Mira and Edison, no changes in the failover states of servers were ever observed over the course of this study.
+    The "\% Servers Failed Over" metric is not applicable because no
+    changes in server failover state were
+    observed during this study.
     }
     \label{fig:correlation-table}
 \vspace{-.2in}
@@ -164,7 +166,9 @@ Nevertheless, we summarize some of the interesting correlations (and lack of cor
 
 \item As assumed in the previous sections, the coverage factors correlate with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
 The strength of this correlation on Mira was lower than Edison because the absolute performance of our tests on Mira were bound by the bandwidth of the exclusively allocated I/O nodes, leaving bandwidth headroom on the NSD servers for other jobs.
-Mira's file system also demonstrated moderate sensitivity to contention for IOPs; unfortunately, Lustre IOPs were not collected for this study, so no comparison can be made to Edison.
+Mira's file system also demonstrated moderate sensitivity to contention for
+IOPs, a metric that we were unable to collect on Edison in this study.
+%Lustre IOPs were not collected for this study, so no comparison can be made to Edison.
 
 \item Mira's performance correlates negatively with higher rates of \texttt{open(2)}/\texttt{close(2)} calls than Lustre.
 Given that Mira's file system serves metadata from the same physical servers as data, this relationship is reasonable.
@@ -178,11 +182,14 @@ This is a documented behavior of Lustre file systems.
 The lack of correlation with concurrent job count is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
 
 \item Similarly, the job diameter (a measurement of how spread out a job is across the compute fabric) has no discernible correlation with I/O performance on Edison.
-Given the fact that the low-diameter dragonfly topology of Edison is designed to reduce the performance impact of job topology, this is consistent with expectation.
+Given the fact that the low-diameter dragonfly topology of Edison is designed
+to reduce the performance impact of job topology, this is consistent with
+expectation.  Job diameter is not shown for Mira because it utilizes a dense
+torus partition for each job.
 
 \end{itemize}
 
-In addition to the measurements and metrics presented in Figure \ref{fig:correlation-table}, the TOKIO framework collected a larger number of system-specific measurements that did not correlate significantly to performance.
+The TOKIO framework collected a larger number of system-specific measurements that did not correlate significantly to performance.
 However it is important to underscore the fact that this demonstration was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that all three Edison file systems, each with unique users, workloads, and governance policies, were combined for this analysis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
