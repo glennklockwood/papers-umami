@@ -69,7 +69,7 @@ We also record the server to which each target is mapped at this time, allowing 
 % mmlsdisk
 % mmdf
 For GPFS, we record the fullness of each disk LUN that contains data and the failure status of each server when each job is submitted.
-The NSD server to NSD mapping collected on the login node allows us to identify if a server has failed and its NSDs are being handled by a secondary server.
+The NSD server to NSD mapping collected on the login node allows us to identify if a server has failed and a secondary server is handling its NSDs.
 In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
@@ -84,7 +84,7 @@ The API allows pulling out a list of jobs for a given time range and running on 
 \subsection{Other components} \label{sec:methods/other}
 
 There are a number of other general and system-specific components that may affect I/O performance.  For example, a job's layout and locality to I/O forwarding nodes can be calculated based on its node list and a topology map.
-In addition, network traffic on both compute and storage fabrics is often available through SNMP or vendor-specific monitoring tools.
+In addition, network traffic on both compute and storage fabrics are often available through SNMP or vendor-specific monitoring tools.
 More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which TOKIO can draw measurements.
 
 In this study, the job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database and the Cray service database.
@@ -260,19 +260,14 @@ Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing F
 Mira has has another primary file system not used in this study, mira-fs0, which shares the same QDR InfiniBand-based SAN fabric as mira-fs1.
 Although these file systems have independent NSD servers and devices, I/O can still contend for resources on this storage network.
 
-For the selection of the job size for TOKIO-ABC on Mira, we had to
-base our choice on the number of compute resources rather than the saturation of
-I/O subsystem.
+
 Unlike Edison, Mira's I/O architecture has fixed-size partitions of compute nodes connected to each I/O forwarding node.
 Saturating the I/O bandwidth of the underlying storage servers requires the
 use of many I/O nodes, meaning that peak storage bandwidth can only be
 attained using a large portion of the system's available compute nodes.
 Running daily I/O benchmarks that span a large portion of Mira's compute
 nodes is impractical due to the lengthy queue times of capability jobs and
-the disruption this would have to job scheduling.
-
-For these reasons, we used 1,024 Mira compute nodes (single
-rack), a partition size that was small enough to move quickly through
-scheduler queues but large enough to exercise an adequate portion of the
-storage system.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
+the disruption this would have to job scheduling. Therefore the selection of the job size for TOKIO-ABC on Mira, 1,024 Mira compute nodes (single
+rack), was based upon the availability of compute resources rather than the saturation of
+I/O subsystem.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
 In practice, the TOKIO-ABC IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.

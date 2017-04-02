@@ -35,17 +35,22 @@ With this framework, we are then able to differentiate general performance expec
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
-We show how TOKIO can contextualize I/O performance variation by using it to
-analyze a month-long interval of formalized I/O regression benchmarking on
-two major supercomputing facilities.
-We demonstrate a universal metrics and measurements interface (TOKIO-UMAMI) that quickly classifies a job's I/O performance as being within the expected variation of the file system climate, or if it reflects an extreme file system weather event. 
-Finally, we show how the TOKIO framework can be applied to bridge the gap of expert knowledge by identifying common sources of I/O performance variation.
-The primary contributions of this work are as follows:
+%We show how TOKIO can contextualize I/O performance variation by using it to
+%analyze a month-long interval of formalized I/O regression benchmarking on
+%two major supercomputing facilities.
+%We demonstrate a universal metrics and measurements interface (TOKIO-UMAMI) that quickly classifies a job's I/O performance as being within the expected variation of the file system climate, or if it reflects an extreme file system weather event. 
+%Finally, we show how the TOKIO framework can be applied to bridge the gap of expert knowledge by identifying common sources of I/O performance variation.
 
+The primary contributions of this work are as follows:
 \begin{itemize}
-\item A framework for holistic instrumentation of I/O subsystems that is
+\item We describe a framework for holistic instrumentation of I/O subsystems that is
 generalizable across platforms 
-\item A demonstration of the framework on NERSC's Edison system and ALCF's Mira system
-\item Case studies highlighting I/O performance insights gleaned from a
-multiplatform, month-long automated I/O benchmarking effort
+\item We deploy the framework in production on NERSC's Edison and ALCF's Mira systems and demonstrate its utility with a performing month-long automated I/O benchmarking effort 
+\item Our results show that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors. Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance; %we observed numerous instances of jobs that had uninhibited access to storage system resources that still exhibited poor I/O performance
+we highlight cases  where namespace contention and storage capacity both dramatically impacted performance
+%and a moderate inverse correlation between performance and extrinsic read/write operations
+\item There is no single monitoring metric that predicts I/O performance
+universally across HPC platforms; the most highly correlated metrics depend
+on system architecture, configuration parameters, workload characteristics,
+and system health.
 \end{itemize}
