@@ -39,9 +39,12 @@ highly portable across platforms.
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
 Storage system traffic monitoring provides insight into the aggregate system-wide I/O workload imposed on a target storage system.
-On most modern-day HPC systems this is reflected in the aggregate traffic that reaches the parallel file system in terms of bytes read and written, I/O operations processed, and system-specific counters.
-Because such monitoring happens on the storage servers rather than user compute nodes, these data can be generated as time-series metrics with minimal impact to client performance.
-Since the tools used to monitor storage system traffic instrumentation are often specific to each file system implementation, we used two different system-specific tools to collect the data used in this study.
+On most modern-day HPC systems this is reflected in the aggregate bytes read
+and written, I/O operations processed, and other similar metrics collected at
+the parallel file system.  This data can be collected in time-series format
+with minimal impact to application performance because it is gathered on
+dedicated storage resources without involvement of the compute nodes.
+We used two different system-specific tools to collect the data used in this study.
 
 \label{sec:methods/lmt}
 The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
