@@ -154,21 +154,28 @@ The initial set of benchmarks included in TOKIO-ABC are as follows:
 \begin{itemize}
 \item \textbf{HACC}
 The Hardware Accelerated Cosmology Code (HACC) framework~\cite{habib2012}
-is an N-body physics code for simulating the the evolution of the Universe
-from its early times to today and for understanding dark energy and dark matter.
+is an N-body physics code.
+%for simulating the the evolution of the Universe
+%from its early times to today and for understanding dark energy and dark matter.
 The HACC-IO kernel captures HACC's main checkpoint I/O which is about
-96 MiB/process or 1.5 TiB total using MPI-IO with a file per process. Each
+96 MiB/process 
+%or 1.5 TiB total 
+using MPI-IO with a file per process. Each
 file is written in 10 large chunks, one chunk for each variable.
 \item \textbf{VPIC} 
-Vector particle-in-cell (VPIC) is a highly scalable code developed to simulate
-interactions among trillions of plasma physics particles  \cite{Bowers2008}.
+Vector particle-in-cell (VPIC) 
+%is a highly scalable code developed to 
+simulates interactions among trillions of plasma physics particles  \cite{Bowers2008}.
 VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
 simulation, where each MPI process writes 8M (i.e., $8 \times 1024 \times 1024$) particles. Each
 particle has eight properties (six floating point and two integer) and each
-property is a single dimension array. The total number of particles depends on
-the number of MPI ranks used. The kernel uses the H5Part API \cite{H5Part} to write
-the data to a single shared HDF5 file, and the execution of the I/O kernel includes
-creating and opening a file, writing data to the file, and closing the file.
+property is a single dimension array. 
+% The total number of particles depends on
+%the number of MPI ranks used. 
+The kernel uses the H5Part API \cite{H5Part} to write
+the data to a single shared HDF5 file.
+%and the execution of the I/O kernel includes
+%creating and opening a file, writing data to the file, and closing the file.
 
 \item \textbf{BD-CATS} The BD-CATS clustering system~\cite{Patwary2015}  represents
 one of the analyses that is commonly performed on the output of VPIC's particle data files.
