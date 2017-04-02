@@ -237,6 +237,18 @@ umami_list = [
         'rw': 'write',
         'suffix': None,
         'other_filters': [
+            (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 25,  0,  0,  0).timetuple())),
+            (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  3, 12,  0,  0).timetuple())),
+        ],
+        'rows': _DEFAULT_ROW_PLOTS['edison'],
+    },
+    ### For generating the "I/O contention" case study figure (v2)
+    {
+        'fs': 'scratch2',
+        'app': 'HACC-IO',
+        'rw': 'write',
+        'suffix': '-v2',
+        'other_filters': [
 #           (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 25,  0,  0,  0).timetuple())),
             (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  3, 12,  0,  0).timetuple())),
         ],

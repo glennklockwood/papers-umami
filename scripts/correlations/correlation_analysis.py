@@ -389,7 +389,7 @@ counter_labels_table = {
     "job_concurrent_jobs": "# Concurrent Jobs",
     "lmt_oss_ave": "Avg CPU Load, Data Server",
     "job_max_radius": "Job Diameter",
-    "iops_coverage_factor": "Coverage Factor (IOPS)",
+    "iops_coverage_factor": "Coverage Factor (IOPs)",
     "ggio_write_reqs": "Write Ops",
     "ggio_read_reqs": "Read Ops",
     "ggio_read_dirs": "readdir(3) Calls",
@@ -749,7 +749,7 @@ for system, x_key, y_key in scatterplots:
     print "Saved %s" % output_file
 
 
-# Mira also has both server-side and client side IOPS.  Let's look at those specifically:
+# Mira also has both server-side and client side IOPs.  Let's look at those specifically:
 
 
 fig = plt.figure(figsize=(8,4))
@@ -1124,7 +1124,7 @@ cdf_file_labels = {
 ### Plot CDF side-by-side
 
 fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
-fig.set_size_inches(8,5)
+fig.set_size_inches(8,4)
 
 for fs in _FILE_SYSTEM_ORDER:
     for idx, cdf_key in enumerate(sorted(cdfs.keys())):
@@ -1251,7 +1251,7 @@ When performance is low, iops coverage factor is low
 fig = plt.figure()
 fig.set_size_inches(8,5)
 ax = fig.add_subplot("111")
-ax.plot(calculate_cdf( df_mira['iops_coverage_factor'] ), label='IOPS', lw=2.0)
+ax.plot(calculate_cdf( df_mira['iops_coverage_factor'] ), label='IOPs', lw=2.0)
 ax.plot(calculate_cdf( df_mira['coverage_factor'] ), label='Bandwidth', lw=2.0)
 ax.set_xlabel("Coverage Factor")
 ax.set_ylabel("Cumulative Probability")
@@ -1276,9 +1276,9 @@ common_opts = {
 #                 'zorder': 9,
               }
 
-# ax.hist( [ y1, y2 ], label=["IOPS", "Bandwidth"], **common_opts)
+# ax.hist( [ y1, y2 ], label=["IOPs", "Bandwidth"], **common_opts)
 for y, label in [ 
-                 (y1, 'IOPS'),
+                 (y1, 'IOPs'),
                  (y2, 'Bandwidth'),
 
                 ]:

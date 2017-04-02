@@ -79,11 +79,11 @@ system-level measurement, but for brevity in this work we focus our analysis
 on bandwidth coverage factor.
 
 The coverage factor is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
-$CF = 1.0$ when all of the server-side I/O was caused by job $j$, while $CF = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
-In practice, it is possible to observe $CF > 1.0$ if
+$\mathit{CF} = 1.0$ when all of the server-side I/O was caused by job $j$, while $\mathit{CF} = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
+In practice, it is possible to observe $\mathit{CF} > 1.0$ if
 a) storage system traffic monitoring (e.g., LMT or ggiostat) did not capture data from all servers during a polling interval, or
 b) clock skew existed between the compute nodes and the file system servers, causing the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
-To eliminate obviously erroneous data, we discard all test results where $CF > 1.2$ in the subsequent analysis.
+To eliminate obviously erroneous data, we discard all test results where $\mathit{CF} > 1.2$ in the subsequent analysis.
 % \todo{We should probably mention what \% of data this covers. It will be a likely question.}
 %%% GKL: I don't want to admit to this unless a reviewer specifically asks.  The ratio is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this  filter criterion
 
@@ -98,7 +98,7 @@ To eliminate obviously erroneous data, we discard all test results where $CF > 1
 
 The distribution of coverage factors across all experiments run are shown in Figure~\ref{fig:cdfs}a which reveals that the majority of tests ($> 75\%$ on Edison and $> 80\%$ on Mira) have high coverage factors ($\mathit{CF} > 0.80$).
 This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
-In particular, Mira's CF distribution is so narrow that over 50\% of tests effectively ran completely uncontended for bandwidth; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
+In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
 
 Despite this low incidence of overlapping bursts, though, the cumulative
 distribution function of performance relative to the peak observed
@@ -137,7 +137,7 @@ Although bandwidth is the most intuitive initial metric for application and serv
 correlation,  
 %Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
 the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
-We can therefore attempt to correlate a wide variety of measurements with job
+Thus, we can attempt to correlate a many other measurements with job
 I/O performance to objectively determine which measurements are likely
 culprits for poor application performance.
 %
