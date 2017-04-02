@@ -35,14 +35,17 @@ With this framework, we are then able to differentiate general performance expec
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
-By running month-long experiments on production systems at two major supercomputing facilities and using formalized I/O regression benchmarking called the TOKIO Automated Benchmark Collection (TOKIO-ABC), we then show how TOKIO can contextualize performance variation with these concepts of I/O climate and weather.
+We show how TOKIO can contextualize I/O performance variation by using it to
+analyze a month-long interval of formalized I/O regression benchmarking on
+two major supercomputing facilities.
 We demonstrate a universal metrics and measurements interface (TOKIO-UMAMI) that quickly classifies a job's I/O performance as being within the expected variation of the file system climate, or if it reflects an extreme file system weather event. 
-Finally, we show how the TOKIO framework can be applied to bridge the gap of expert knowledge by identifying common sources of I/O performance variation on two widely used file system architectures.
-
+Finally, we show how the TOKIO framework can be applied to bridge the gap of expert knowledge by identifying common sources of I/O performance variation.
 The primary contributions of this work are as follows:
 
 \begin{itemize}
-\item We describe a framework for holistic instrumentation of I/O subsystems that is generalizable across different file systems and infrastructures 
-\item We demonstrate this framework on NERSC's Edison system and ALCF's Mira system along with an automated benchmark collection to establish I/O climate records for several I/O motifs
-\item We highlight several insights that can be gleaned from this approach based on case studies of four applications and workloads drawn from the month-long benchmarking effort on Edison and Mira
+\item A framework for holistic instrumentation of I/O subsystems that is
+generalizable across platforms 
+\item A demonstration of the framework on NERSC's Edison system and ALCF's Mira system
+\item Case studies highlighting I/O performance insights gleaned from a
+multiplatform, month-long automated I/O benchmarking effort
 \end{itemize}
