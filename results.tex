@@ -178,7 +178,8 @@ By comparison, Edison's file systems each have their own discrete metadata serve
 
 \item The fullness of each storage device (LUN on Mira and OST on Edison) has markedly different behavior between Edison and Mira.
 While Mira's performance is uncorrelated with device capacity, Edison performance degrades as free space on OSTs is depleted.
-This is a documented behavior of Lustre file systems.
+This type of behavior is a known characteristic of the Lustre file system and has been observed on deployments at other HPC centers~\cite{oral2014best}, as well.
+%This is a documented behavior of Lustre file systems~\cite{oral2014best}.
 
 \item Perhaps contrary to historic intuition, I/O performance shows minimal correlation with the number of other jobs running concurrently.
 The lack of correlation with concurrent job count is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
@@ -262,7 +263,7 @@ This is indicative of an expansive file system traversal that was being performe
 The TOKIO framework was also able to identify longer-term performance issues that progressively degraded write performance.
 Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view of such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec.
 The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.
-Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades as OSTs fill.
+Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades as OSTs fill~\cite{oral2014best}.
  
 \begin{figure}[t]
     \centering
