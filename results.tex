@@ -23,7 +23,7 @@ Although the source of this disparity in variation between Mira and Edison is no
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.pdf}
     \caption{TOKIO-ABC I/O performance for Edison (scratch1, scratch2, scratch3) and Mira (mira-fs1), normalized to the maximum performance of all tests performed on each file system.
-    Each box reflects the distribution of all four application workloads and both read and write performance.
+    Each box reflects the distribution of an application workload and its read or write performance.
     Whiskers extend to the 5th and 95th percentiles.}
     \label{fig:perf-summary-boxplots-fs}
 \vspace{-.2in}
@@ -80,9 +80,9 @@ on bandwidth coverage factor.
 
 The coverage factor is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
 $\mathit{CF} = 1.0$ when all of the server-side I/O was caused by job $j$, while $\mathit{CF} = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
-In practice, two sources of noise can result in $\mathit{CF} > 1.0$:
-a) storage system traffic monitoring (LMT/ggiostat) did not capture data from all servers during a polling interval, or
-b) clock skew between the compute nodes and the file system servers caused the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
+In practice, $\mathit{CF}$ can be slightly greater than $1.0$ as a result of two conditions:
+a) when the storage system traffic monitoring (LMT/ggiostat) does not capture data from all servers during a polling interval, or
+b) when clock skew between the compute nodes and the file system servers causes the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
 %%% GKL: Nick pointed out that the CF > 1.2 data we dropped are not noise, they are the component monitoring being completely broken.
 In this study, such noise never resulted in $\mathit{CF} > 1.2$.
 %To eliminate obviously erroneous data, we discard all test results where $\mathit{CF} > 1.2$ in the subsequent analysis.
@@ -139,7 +139,7 @@ Although bandwidth is the most intuitive initial metric for application and serv
 correlation,  
 %Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
 the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
-Thus, we can calculate correlations of other measurements with job
+Thus, we can calculate correlations of other metrics with job
 I/O performance to objectively determine which of these are the likely
 culprits causing poor application performance.
 %
@@ -224,7 +224,7 @@ investigation based on historic correlation
 To concisely visualize all of this information, we present the TOKIO Unified Measurements And Metrics Interface (UMAMI) with the goal of enabling users to quickly determine how a job of interest's performance compares to similar I/O workloads in the past.
 TOKIO-UMAMI, demonstrated in Figure \ref{fig:umami-scratch2-hacc-write} and detailed in the following sections, presents historic measurements from the components monitored by TOKIO (the I/O climate) and summarizes each metric's distribution in an accompanying box plot.
 These time series plots terminate with the measurements taken for the job of interest, thereby describing the I/O weather at the time that job ran.
-By overlaying this weather on the climate as dashed lines in the box plots, TOKIO-UMAMI provides a quick visualization of how each metric's weather compared to the statistical distribution of past weather conditions.
+By overlaying this weather on the climate as dashed lines in the box plots, TOKIO-UMAMI provides a quick visualization of how each metric's contribution to weather compared to the statistical distribution of past weather conditions.
 With this conceptualization of a file system's weather and its overall climate, a user can differentiate between a long-term performance problem and a statistically rare event analogous to an extreme weather event.
 
 In the following sections, we illustrate how TOKIO-UMAMI can be applied to the problem of diagnosing poor performance of individual jobs in three case studies.
@@ -234,8 +234,8 @@ In the following sections, we illustrate how TOKIO-UMAMI can be applied to the p
 The specific UMAMI example shown in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test which took place on March 3.
 This particular job showed abnormally low performance as evidenced by the "Job performance (GiB/sec)" measurement and its value relative to previous instances of this type of job.
 This abnormally poor job performance was accompanied by an unusually low coverage factor and high metadata load, and these unfavorable conditions are highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
-The metrics corresponding to blue dashed lines fell into the most favorable quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, have no history of correlation with performance.
-Thus, we can quickly attribute the poor performance of this HACC job to an I/O extrinsic to this HACC job which was competing for both bandwidth on the data servers and metadata resources on the metadata server.
+The metrics corresponding to blue dashed lines fell into the most favorable quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, they have no history of correlation with performance.
+Thus, we can quickly attribute the poor performance of this HACC job to an I/O load extrinsic to this job which was competing for both bandwidth on the data servers and metadata resources on the metadata server.
 
 \subsection{Case Study: Namespace contention}
 

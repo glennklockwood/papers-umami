@@ -41,13 +41,13 @@ highly portable across platforms.
 Storage system traffic monitoring provides insight into the aggregate system-wide I/O workload imposed on a target storage system.
 On most modern-day HPC systems this is reflected in the aggregate bytes read
 and written, I/O operations processed, and other similar metrics collected at
-the parallel file system.  This data can be collected in time-series format
+the parallel file system level.  This data can be collected in time-series format
 with minimal impact to application performance because it is gathered on
 dedicated storage resources without involvement of the compute nodes.
 We used two different system-specific tools to collect the data used in this study.
 
 \label{sec:methods/lmt}
-The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from \texttt{/proc/fs/lustre} on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
+The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from /proc/fs/lustre on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
 In this work, we relied on the LMT service integrated into the Cray Sonexion Lustre platform \cite{Keopp2014} and built upon the pyLMT framework developed at NERSC \cite{Uselton2009} to archive these measurements.
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates on a per-server basis at five-second intervals.
 
@@ -65,10 +65,10 @@ storage system: what components are offline, failed-over, or another degraded st
 % lfs df
 % lctl dl -t
 To collect health-monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes.
-We also record the server to which each target is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
+We also record the server to which each OST is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
 % mmlsdisk
 % mmdf
-For GPFS, we record the fullness of each disk LUN that contains data and the failure status of each server when each job is submitted.
+For GPFS, we record the fullness of each disk LUN and the failure status of each server when each job is submitted.
 The NSD server to NSD mapping collected on the login node allows us to identify if a server has failed and a secondary server is handling its NSDs.
 In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
 
@@ -93,14 +93,14 @@ Similarly, job layout information on Mira was recorded in the Darshan logs throu
 
 \subsection{Data integration} \label{sec:data-integration}
 
-The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and job a unique job identifier provided by the system scheduler.
+The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and a unique job identifier.
 
 A given job's application behavior record is a logical starting point since it contains critical information including an estimate of I/O performance based on bytes moved and time spent in I/O.  It also contains job start time, end time, and its unique identifier, forming common indices with which storage system traffic, health monitoring, and job scheduling data can be aligned.
 
 In practice, our implementation of the TOKIO framework used in this study  extracts scalar summary information from a job's Darshan log and attaches job scheduling data based on the job id.
 Health monitoring data is also joined to these scalar data by identifying the last recorded health record before the job launched and attaching these data as scalar measurements.
-Storage system traffic data such as that provided by LMT and ggiostat are also reduced into scalar values (for example, as minimum, maximum, average bytes read and written per second).
-However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are indexed then using the job identifier stored in the Darshan log file.
+Storage system traffic data such as that provided by LMT and ggiostat are also reduced into scalar values (for example, as minimum, maximum, average bytes read per second).
+However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are then indexed using the job id.
 
 The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
 When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and time series data can be encoded in a portable binary format such as HDF5.
@@ -129,10 +129,7 @@ In this section, we detail the configuration of the TOKIO-ABC tests and the plat
 The instrumentation methods described in Section \ref{sec:methods}
 do not provide a fixed reference point; the workload and state of the
 system naturally evolve over time.  We must therefore combine TOKIO with
-routine, formalized I/O performance regression tests in order establish baseline behavior.
-%
-We developed the TOKIO Automated Benchmark Collection to meet
-this need.
+routine, formalized I/O performance regression tests in order establish baseline behavior, and we developed the TOKIO Automated Benchmark Collection to meet this need.
 TOKIO-ABC is a set of benchmarks, including
 both synthetic and application-derived workloads, that can be scaled in
 both the number of processes and data volume.
@@ -145,7 +142,7 @@ b) to limit core-hour consumption sufficiently for daily execution.
 %and weaknesses.  
 The collection of benchmarks is
 executed within a job script that can be scheduled nightly by a continuous
-integration system or cron job.  The script insures that no more than
+integration system or cron job.  The script ensures that no more than
 one TOKIO-ABC instance is active at a time, and all benchmark results
 and Darshan logs are archived for analysis at the conclusion of the job.
 The initial set of benchmarks included in TOKIO-ABC are as follows:
@@ -174,21 +171,21 @@ XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                              
 \begin{itemize}
 \item \textbf{HACC}
 The Hardware Accelerated Cosmology Code (HACC) framework~\cite{habib2012}
-is an N-body physics code.
+is an N-body cosmology application.
 %for simulating the the evolution of the Universe
 %from its early times to today and for understanding dark energy and dark matter.
 The HACC-IO kernel captures HACC's main checkpoint I/O which is about
 96 MiB/process 
 %or 1.5 TiB total 
-using MPI-IO with a file per process. 
+using POSIX I/O with a file per process. 
 %Each
 %file is written in 10 large chunks, one chunk for each variable.
 \item \textbf{VPIC} 
-Vector particle-in-cell (VPIC) 
+Vector particle-in-cell (VPIC) is a plasma physics application that
 %is a highly scalable code developed to 
-simulates interactions among trillions of plasma physics particles  \cite{Bowers2008}.
+simulates interactions among billions or trillions of particles  \cite{Bowers2008}.
 VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
-simulation, where each MPI process writes 8M (i.e., $8 \times 1024 \times 1024$) particles. 
+simulation, where each MPI process writes $8 \times 2^{20}$ particles. 
 %Each
 %particle has eight properties (six floating point and two integer) and each
 %property is a single dimension array. 
@@ -227,7 +224,7 @@ IOR & MPI-IO shared file & 1.0 TiB & 0.5 TiB\\
 \hline
 IOR & POSIX file per proc & 1.0 TiB & 2.0 TiB\\
 \hline
-HACC & GLEAN file per proc & 1.5 TiB & 2.0 TiB \\
+HACC & POSIX file per proc & 1.5 TiB & 2.0 TiB \\
 \hline
 VPIC BD-CATS & HDF5 shared file & 1.0 TiB & 2.0 TiB\\
 \hline
