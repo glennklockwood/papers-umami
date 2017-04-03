@@ -60,7 +60,7 @@ Thus, these differences in performance variation must be a result of their diffe
 \subsection{Combined Application/Server Metrics} \label{sec:results/combining}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To better understand of how performance variation is caused by factors extrinsic to the application, we combine data from application-level analysis provided by Darshan with storage system traffic analysis provided by LMT (Edison) and ggiostat (Mira).
+To better understand how performance variation is caused by factors extrinsic to the application, we combine data from application-level analysis provided by Darshan with storage system traffic analysis provided by LMT (Edison) and ggiostat (Mira).
 An intuitive source of performance loss would be from other jobs that are also consuming file system bandwidth, so to explore the effects of competing I/O traffic, we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$:
 
 \begin{equation} \label{eq:cf}
@@ -174,7 +174,7 @@ IOPs, a metric that we were unable to collect on Edison in this study.
 
 \item Mira's performance correlates negatively with higher rates of \texttt{open(2)}/\texttt{close(2)} calls than Lustre.
 Given that Mira's file system serves metadata from the same physical servers as data, this relationship is reasonable.
-By comparison, Edison's file systems each have their own discrete metadata servers are specifically designed to decoupled bulk data transfer performance from metadata operations.
+By comparison, Edison's file systems each have their own discrete metadata servers that are specifically designed to decouple bulk data transfer performance from metadata operations.
 
 \item The fullness of each storage device (LUN on Mira and OST on Edison) has markedly different behavior between Edison and Mira.
 While Mira's performance is uncorrelated with device capacity, Edison performance degrades as free space on OSTs is depleted.

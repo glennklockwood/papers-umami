@@ -54,7 +54,7 @@ LMT provides time series data including bytes read and written, CPU load average
 \label{sec:methods/ggiostat}
 To collect analogous data from IBM Spectrum Scale (GPFS) file systems, we developed the \emph{ggiostat} tool.
 It uses the \texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and client clusters.
-These metrics are queried on five second intervals by a persistent monitoring daemon and stored in a database.
+These metrics are queried on five-second intervals by a persistent monitoring daemon and stored in a database.
 The metrics collected include bytes read and written, read and write request counts, and metadata operation counts on a per-cluster basis.
 
 \subsection{Health monitoring} \label{sec:methods/health}
@@ -110,7 +110,7 @@ natively supports indexing data located in relational databases (including MySQL
 % What were the challenges in doing the data integration, and how did we solve them?
 In deploying the TOKIO framework and integrating data from multiple sources, we did encounter several noteworthy challenges.
 The most critical issue was ensuring that all components' clocks were synchronized to the same NTP servers to ensure that TOKIO's time-based indexing resulted in consistent data.
-Similarly, standardizing the frequency of time series data simplifies integration and data analysis; although we chose 5-second sampling intervals for LMT and ggiostat, the health monitoring data was collected at very low frequency.
+Similarly, standardizing the frequency of time series data simplifies integration and data analysis; although we chose five-second sampling intervals for LMT and ggiostat, the health monitoring data was collected at very low frequency.
 To align such low-frequency data with scalar job data, we chose to treat health monitoring data as scalar data, and the sample that most recently preceded each job was associated that job.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
