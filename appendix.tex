@@ -6,15 +6,14 @@
 % http://sc17.supercomputing.org/2017/02/07/submitting-a-technical-paper-to-sc17-participate-in-the-sc17-reproducibility-initiative/
 % see examples: http://sc17.supercomputing.org/submitters/technical-papers/reproducibility-initiatives-for-technical-papers/artifact-description-paper-title/
 
-\todo{Here's the data we should ultimately provide, though probably not for initial submission}
-
-\todo{Note that most of last year's submissions seemed to generate the appendix as a separate document whose pages were concatenated with the main manuscript. the way LaTeX handles appendices and subsections doesn't seem very nice.}
-
-\todo{we need to agree on the scope of this.  do we just provide enough data to reproduce the results (figures) presented (e.g., the edison and mira CSVs, and the ggiostat/lmt dumps for the relevant time periods) or do we include the entire framework setup as well?  the latter is a much heavier lift than the former, and it's not clear to me (glenn) which is most in the spirit of this reproducibility initiative.}
-
 \subsection{Abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Here we describe the steps required to reproduce the analysis and results presented in Section \ref{sec:results} of this manuscript.
+
+This work described a methodology for combining I/O metrics from a variety of components and presenting them in a uniform, normalized format called the TOKIO framework.
+To demonstrate the capabilities of this framework, a set of formalized regression benchmarks, called TOKIO-ABC as also created and run for a month on two distinct systems.
+The resulting data from this month-long experiment was then analyzed using the TOKIO framework to demonstrate the insights to be gained from approaching I/O performance characterization from an holistic approach.
+
+It follows that these three components (TOKIO, TOKIO-ABC, and the resulting data) each comprise an distinct artifact of this work.  Upon completion of the double-blind review process, all three artifacts will be made publicly available and version controlled with accompanying documentation to facilitate reproducibility and further analyses by the larger community.  In the following appendix, we briefly describe each artifact and the steps required to reproduce this work and extend the tools and data into new directions.
 
 \subsection{Description}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -23,53 +22,55 @@ Here we describe the steps required to reproduce the analysis and results presen
 
 {\small
 \begin{itemize}
-  \item {\bf Algorithm: }
-  \item {\bf Program: }
-  \item {\bf Compilation: }
-  \item {\bf Transformations: }
-  \item {\bf Binary: } 
-  \item {\bf Data set: }
-  \item {\bf Run-time environment: }
-  \item {\bf Hardware: }
-  \item {\bf Run-time state: }
-  \item {\bf Execution: }
-  \item {\bf Output: }
-  \item {\bf Experiment workflow: }
-  \item {\bf Experiment customization: }
-  \item {\bf Publicly available?: }
+  \item {\bf Program: } TOKIO and TOKIO-ABC
+  \item {\bf Compilation: } TOKIO requires no compilation; TOKIO-ABC includes autoconf-based build scripts to aid in compilation and deployment
+  \item {\bf Data set: } TOKIO index and relevant time series data presented in this work will be available as a combination of CSVs and HDF5 files
+  \item {\bf Run-time environment: } TOKIO requires Python 2.7, pandas 0.18, matplotlib 2.0, numpy 1.11, and scipy 0.17; TOKIO-ABC requires MPI-3.0 and HDF5 1.8.
+  \item {\bf Run-time state: } No specific state is required a priori.
+  \item {\bf Execution: } TOKIO: command-line tools and example Jupyter notebooks; TOKIO-ABC: either a continuous integration system (e.g., Jenkins) or from cron jobs.
+  \item {\bf Output: } TOKIO: index files, graphical plots, and TOKIO-UMAMI views; TOKIO-ABC: Darshan logs and job logs
+  \item {\bf Experiment workflow: } Generate an index entry for each job; add entry to TOKIO index; perform analysis against the TOKIO index
+  \item {\bf Experiment customization: } TOKIO: via additional TOKIO connector packages or new analysis tools; TOKIO-ABC: via input decks
+  \item {\bf Publicly available?: } Yes
 \end{itemize}
 }
-
 
 \subsubsection{How software can be obtained (if available)}
 
 \paragraph{TOKIO}
-The implementation of TOKIO presented here, will be publicly released upon completion of the double-blind review process.  Its dependent component-level monitoring tools are considered software dependencies and are separately discussed below.
+The implementation of TOKIO presented here will be available as a public git repository.
+Its dependent component-level monitoring tools are considered software dependencies and are separately discussed below.
 
 \paragraph{TOKIO-ABC}
-This artifact is comprised of four open source applications with download, configuration, and build scripts, several required portability patches, and tools for automation and managing output data.  Upon completion of the double-blind review process, we will be releasing TOKIO-ABC as a publicly accessible git repository.
+This artifact is comprised of four open source applications with download, configuration, and build scripts, several required portability patches, and tools for automation and managing output data.
+TOKIO-ABC will be released as a publicly accessible git repository.
 
 \subsubsection{Hardware dependencies}
 
-There are no specific hardware dependencies for TOKIO or TOKIO-ABC.  There may be hardware dependencies of the component-level monitoring tools with which TOKIO integrates, but such tools are not considered artifacts of this work.
+There are no specific hardware dependencies for TOKIO or TOKIO-ABC.
+There may be hardware dependencies of the component-level monitoring tools with which TOKIO integrates, but such tools are not considered artifacts of this work.
 
 \subsubsection{Software dependencies}
 
 \paragraph{TOKIO}
 
-TOKIO specifically depends on Python 2.7 and a number of associated data analysis packages.  Specifically, the reference implementation presented here relied on pandas 0.18.1, matplotlib 2.0.0, numpy 1.11.1, and scipy 0.17.1.  For simplicity, we opted to use the software environment provided by Continuum IO's Anaconda version 4.3.14 with matplotlib explicitly upgraded to 2.0.0.
+TOKIO specifically depends on Python 2.7 and a number of associated data analysis packages.
+Specifically, the reference implementation presented here relied on pandas 0.18.1, matplotlib 2.0.0, numpy 1.11.1, and scipy 0.17.1.
+For simplicity, we opted to use the software environment provided by Continuum IO's Anaconda version 4.3.14 with matplotlib explicitly upgraded to 2.0.0.
 
-TOKIO also relies on a number of component-level monitoring tools.  As described in this paper, TOKIO can integrate with any tool that provides scalar or time-resolved data types, and for the purposes of this study, we used the following:
+TOKIO also relies on a number of component-level monitoring tools.
+As described in this paper, TOKIO can integrate with any tool that provides scalar or time-resolved data types, and we include integration interfaces for the following data sources:
 
 \begin{itemize}
 \item Darshan 3.1.3 % \url{http://www.mcs.anl.gov/research/projects/darshan/}.
 \item ggiostat
-\item LMT % \url{https://github.com/LLNL/lmt}
+\item LMT (as provided by Neo 2.x on Sonexion) % \url{https://github.com/LLNL/lmt}
 \item Lustre 2.5.1 (health monitoring via lfs and lctl)
 \item Slurm 17.02.1-2 and CLE 6.0UP03 (job topology on Edison)
 \end{itemize}
 
-\paragraph{TOKIO-ABC} The Automated Benchmark Collection is a meta-package that contains the specific versions of each benchmark used, specific patches applied to those upstream versions, and scripts that configure and build the collection.  As such, its external dependencies are those of the benchmark applications which include:
+\paragraph{TOKIO-ABC} The Automated Benchmark Collection is a meta-package that contains the specific versions of each benchmark used, specific patches applied to those upstream versions, and scripts that configure and build the collection.
+As such, its external dependencies are those of the benchmark applications which include:
 
 \begin{itemize}
 \item autoconf 2.69 or later
@@ -82,13 +83,12 @@ Further details on known issues and specific version incompatibilities are docum
 
 \subsubsection{Datasets}
 
-For validation of this work as well as allowing the community to build upon our experimental data, we will release the entirety of the data presented in this paper upon completion of the double-blind review process.  This data set will include
+For validation of this work as well as allowing the community to build upon our experimental data, we will release the entirety of the data presented in this paper including
 
 \begin{itemize}
 \item All scalar values recorded for every TOKIO-ABC job conducted over the experimental period in the form of CSV files
 \item Unmodified Darshan logs for each ABC job
 \item Time series data collected by LMT and ggiostat for each TOKIO-ABC job at 5-second resolution on a per-OST (LMT) or per-cluster (ggiostat) basis.  These data will be encoded in HDF5 format.
-\item 
 \end{itemize}
 
 This dataset will be accompanied by documentation that describes the nomenclature and file formats.
@@ -96,18 +96,60 @@ This dataset will be accompanied by documentation that describes the nomenclatur
 \subsection{Installation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{TOKIO}
+\paragraph{TOKIO} After unpacking the TOKIO source distribution, there are no additional installation steps required.
+The data sources to be indexed are enabled and configured through a json file whose location is defined by the \texttt{TOKIO\_CONFIG} environment variable.
+Additional data sources are implemented as Python packages in the \texttt{tokio/sources} subdirectory, and some modification of these data source connectors may be required on a site-by-site basis.
+Specific documentation now how to approach this is included in the TOKIO repository.
 
-\paragraph{TOKIO-ABC}
+\paragraph{TOKIO-ABC} Build scripts for Mira and Edison are included in the TOKIO-ABC source distribution, and the specific configure options used for each benchmark are defined near the top of each script.
+These scripts should be portable to any Blue Gene/Q and Cray Linux 6 environment, respectively, and only minor modification should be required to build TOKIO-ABC on commodity platforms.
+These build scripts configure, build, and install the benchmarks within the unpacked source repository itself, and all of the utility scripts provided assume this self-contained installation directory structure.
 
 \subsection{Experiment workflow}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\paragraph{TOKIO}
+To reproduce the figures in this plot, the workflow involves
+
+\begin{enumerate}
+\item summarizing each job of interest into an index entry
+\item adding these job index entries into the TOKIO index
+\item running the appropriate analysis tool (e.g., the TOKIO-UMAMI tool) with the correct job of interest, a configuration json file (which defines tool-specific input parameters), and the TOKIO index (if multiple indices exist)
+\end{enumerate}
+
+Each figure presented in this manuscript is the result of an analysis tool that is provided in the \texttt{examples} directory.
+
+\paragraph{TOKIO-ABC}
+TOKIO-ABC is designed to run from either a continuous integration system (such as Jenkins) or a cron job.
+The specific details of submitting jobs from these two mechanisms will be site specific, but both the Jenkins run script used for Mira and the cron job script used for Edison are provided in the TOKIO-ABC source repository as examples.
+
 \subsection{Evaluation and expected result}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{TOKIO}
+If the TOKIO-ABC sample data is used as the TOKIO index, the figures presented in this paper will be regenerated.
+The sample analyses provided in the \texttt{examples} directory generate PDFs (or other graphic formats, configurable via the tool-specific json configuration files) in the directory from which the tool was run.
+Some tools also generate numerical results which are printed to stdout by default.
+
+Detailed documentation for each example tool, its expected inputs and outputs, and the analytical methods they apply are provided in the repository.
+
+\paragraph{TOKIO-ABC}
+The standard output streams and the Darshan logs are the principal output of a single TOKIO-ABC run.
+Some of the TOKIO data source packages can also be used as standalone scripts to perform basic data extraction; for example, TOKIO's Darshan connector package relies on Darshan's native \texttt{darshan-parser} binary to generate a variety of scalar measurements from a job and serialize them into the index.
+Each TOKIO connector package is documented within the TOKIO repository.
 
 \subsection{Experiment customization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\paragraph{TOKIO} Customization can be done by either adding new TOKIO connector packages to interface with different component-level monitoring tools or creating new tools which analyze the TOKIO index.
+As an example, the job layout data used in this study only looked at the minimum, maximum, and average job diameter, but the job layout TOKIO connector package could easily be modified to provide a richer set of node topology information to enable more sophisticated analyses of the example data provided.
+
+\paragraph{TOKIO-ABC} The input parameters for each benchmark are defined in \texttt{.params} files in the \texttt{inputs} subdirectory of the repository.
+These files are simple text files which specify the desired parallelism, working set size, and read/write behavior for an individual job on each line.
+Application-specific documentation is provided in the repository; the most common customization is to alter the data volume and parallelism to suitably stress the underlying file system without using an excessive amount of core hours.
+
 \subsection{Notes}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Significantly more documentation on TOKIO, TOKIO-ABC, and the sample dataset used in this study are contained within each repository.
+For additional clarity, many of the tools used to generate the figures for this manuscript are also included as self-documented Jupyter notebooks.
