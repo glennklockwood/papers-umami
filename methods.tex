@@ -83,13 +83,19 @@ The API allows pulling out a list of jobs for a given time range and running on 
 
 \subsection{Other components} \label{sec:methods/other}
 
-There are a number of other general and system-specific components that may affect I/O performance.  For example, a job's layout and locality to I/O forwarding nodes can be calculated based on its node list and a topology map.
+There are a number of other general and system-specific components that may
+affect I/O performance.  We anticipate that burst buffer metrics will play a
+critical role in emerging platforms, but we omit them in this study because
+our experimental platforms are not equipped with burst buffer hardware.
+Other examples of additional metrics that could be gathered include job layout and locality to I/O forwarding nodes, which
+can based on a job's node list and a topology map.
 In addition, network traffic on both compute and storage fabrics are often available through SNMP or vendor-specific monitoring tools.
 More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which TOKIO can draw measurements.
 
 In this study, the job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database and the Cray service database.
 The association between jobs and Lustre OSTs was also recorded in each job's Darshan log through the Darshan Lustre module.
-Similarly, job layout information on Mira was recorded in the Darshan logs through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.
+Similarly, job layout information on Mira was recorded in the Darshan logs
+through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.  
 
 \subsection{Data integration} \label{sec:data-integration}
 
