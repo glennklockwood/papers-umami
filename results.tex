@@ -6,32 +6,34 @@ a) establish baseline expectations for performance and variability and b) formal
 %These two factors are critical to interpreting I/O performance, but they have been traditionally documented and communicated in informal anecdotes and institutional expert knowledge.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Statistical Overview} \label{sec:results/overview}
+\subsection{Baseline I/O Performance} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Figure \ref{fig:perf-summary-boxplots-fs} shows the distribution of performance measured by all benchmarks normalized to the highest performance observed on each file system.
-Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of the peak performance.
-By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
-Although the source of this disparity in variation between Mira and Edison is not clear from Figure \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
+% Figure \ref{fig:perf-summary-boxplots-fs} shows the distribution of performance measured by all benchmarks normalized to the highest performance observed on each file system.
+% Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of the peak performance.
+% By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
+% Although the source of this disparity in variation between Mira and Edison is not clear from Figure \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.pdf}
-    \caption{I/O performance for Edison (scratch1, scratch2, scratch3) and Mira (mira-fs1), normalized to the maximum performance of all tests performed on each file system.
-    Each box reflects the distribution of an application workload and its read or write performance.
-    Whiskers extend to the 5th and 95th percentiles.}
-    \label{fig:perf-summary-boxplots-fs}
-\vspace{-.2in}
-\end{figure}
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.pdf}
+%     \caption{I/O performance for Edison (scratch1, scratch2, scratch3) and Mira (mira-fs1), normalized to the maximum performance of all tests performed on each file system.
+%     Each box reflects the distribution of an application workload and its read or write performance.
+%     Whiskers extend to the 5th and 95th percentiles.}
+%     \label{fig:perf-summary-boxplots-fs}
+% \vspace{-.2in}
+% \end{figure}
 
-Such variation in peak file system performance caused by different I/O access patterns is well documented~\cite{Lofstead2010,Uselton2010,Xie2012}.
-To focus solely on the variation caused by factors \emph{extrinsic} to each application, we then define the \emph{fraction of peak performance} as the performance of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
+We first establish the baseline performance variation of each benchmark on each system tested.
+% Such variation in peak file system performance caused by different I/O access patterns is well documented~\cite{Lofstead2010,Uselton2010,Xie2012}.
+Because variation in peak I/O performance is known to be caused by different I/O access patterns~\cite{Lofstead2010,Uselton2010,Xie2012}, 
+% To focus solely on the variation caused by factors \emph{extrinsic} to each application,
+we define a metric called \emph{fraction of peak performance} which is the performance of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
 For example, the fraction peak performance for a HACC write test is only normalized to the maximum performance of all other HACC write tests on the same file system.
-References to fraction peak performance are hereafter defined this way.
 
-This fraction peak performance distribution, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application also varies with each file system.
-For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite that file system's overall lower variation shown in Figure~\ref{fig:perf-summary-boxplots-fs}.
-Similarly, all Edison file systems show a long tail of performance loss for the IOR/shared file read workload.
+The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application varies with each file system.
+For example, the HACC write workload is susceptible to a long tail of performance degradation on mira-fs1 despite that file system's overall lower variation as evidenced by the distance between all I/O motifs' whiskers relative to the Edison file systems.
+% Similarly, all Edison file systems show a long tail of performance loss for the IOR/shared file read workload.
 Edison's scratch3 also demonstrates very broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application on other systems.
 
 \begin{figure}[t]
