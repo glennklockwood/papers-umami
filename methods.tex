@@ -11,9 +11,9 @@
 %information to the weather of the I/O system for a particular job.
 %%Furthermore, users can retrospectively examine the weather of the I/O system during their job and relate this information to the historic I/O system climate if TOKIO is deployed in an environment where users can access the required component-level monitoring data through a database or API.
 
-In the following sections we describe distinct components of the I/O subsystem that are critical to understanding both the I/O climate and I/O weather of a production system.
+% In the following sections we describe distinct components of the I/O subsystem that are critical to understanding both the I/O climate and I/O weather of a production system.
 % Continuous instrumentation of each of these components should, therefore, be incorporated into TOKIO to enable the extraction of meaningful insight from the framework.
-We also provide pertinent details on the tools we have chosen to to instrument each of these components, preferring existing instrumentation solutions that are lightweight and unobtrusive enough to run full-time on production systems.
+% We also provide pertinent details on the tools we have chosen to to instrument each of these components, preferring existing instrumentation solutions that are lightweight and unobtrusive enough to run full-time on production systems.
 % The set of tools provided is not intended to be comprehensive or final--new data can be incorporated into TOKIO by defining mechanisms for accessing and indexing relevant data from a specific instrumentation source.
 
 % \begin{figure}[t]
@@ -28,35 +28,31 @@ We also provide pertinent details on the tools we have chosen to to instrument e
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
-Application behavior characterization is important as it helps describe the I/O pattern of a workload as expressed from the perspective of the application itself (i.e., before any system-level optimizations are applied).
-We relied on the Darshan I/O characterization tool~\cite{carns200924}
-to capture application behavior in this work.  Darshan transparently records concise, bounded statistics about an application's I/O behavior.
-Reduction, compression, and storage of these statistics is deferred until the
-application exits in order to minimize overhead, allowing it be deployed for
-all production applications on large-scale systems without perturbing
-performance.  Because it operates at the application level, Darshan is also
-highly portable across platforms.
+Application behavior characterization describes the I/O pattern of a workload as expressed from the perspective of the application itself (i.e., before any system-level optimizations are applied).
+To capture this application-level behavior, we used the Darshan I/O characterization tool~\cite{carns200924} which 
+transparently records statistics about an application's I/O behavior at runtime.
+Reduction of these statistics is deferred until the application exits to minimize overhead, allowing it be deployed for all production applications on large-scale systems without perturbing
+performance.
+% Because it operates at the application level, Darshan is also highly portable across platforms.
 
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
 Storage system traffic monitoring provides insight into the aggregate system-wide I/O workload imposed on a target storage system.
-On most modern-day HPC systems this is reflected in the aggregate bytes read
-and written, I/O operations processed, and other similar metrics collected at
-the parallel file system level.  This data can be collected in time-series format
-with minimal impact to application performance because it is gathered on
-dedicated storage resources without involvement of the compute nodes.
-We used two different system-specific tools to collect the data used in this study.
+On most modern-day HPC systems this is reflected in the aggregate bytes read and written, I/O operations processed, and other similar metrics collected at the parallel file system level.
+This data can be collected in time-series format with minimal impact to application performance because it is gathered on the storage servers themselves without the involvement of the compute nodes.
+For this study, we used two different file system-specific tools to collect this data.
 
 \label{sec:methods/lmt}
-The Lustre Monitoring Tool (LMT) is a widely used tool that aggregates Lustre-specific counters from /proc/fs/lustre on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
-In this work, we relied on the LMT service integrated into the Cray Sonexion Lustre platform \cite{Keopp2014} and built upon the pyLMT framework developed at NERSC \cite{Uselton2009} to archive these measurements.
+\textbf{Lustre Monitoring Tool (LMT)} is a tool that aggregates Lustre-specific counters from /proc/fs/lustre on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
+% In this work, we relied on the LMT service integrated into the Cray Sonexion Lustre platform \cite{Keopp2014} and built upon the pyLMT framework developed at NERSC \cite{Uselton2009} to archive these measurements.
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates on a per-server basis at five-second intervals.
 
 \label{sec:methods/ggiostat}
-To collect analogous data from IBM Spectrum Scale (GPFS) file systems, we developed the \emph{ggiostat} tool.
+\textbf{ggiostat} is a tool we developed 
+to collect analogous data from IBM Spectrum Scale (GPFS) file systems %, we developed the \emph{ggiostat} tool.
 It uses the \texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and client clusters.
 These metrics are queried on five-second intervals by a persistent monitoring daemon and stored in a database.
-The metrics collected include bytes read and written, read and write request counts, and metadata operation counts on a per-cluster basis.
+In this study, we used bytes read and written, read and write request counts, and metadata operation counts which were collected on a per-cluster basis.
 
 \subsection{Health monitoring} \label{sec:methods/health}
 
@@ -65,18 +61,19 @@ storage system: what components are offline, failed-over, or another degraded st
 
 % lfs df
 % lctl dl -t
-To collect health-monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes via a simple cron job.
-We also record the server to which each OST is mapped at this time, allowing us to identify object storage servers that have an abnormal number of OSTs as a result of a failover.
+To collect health-monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes.
+We also record the server to which each OST is mapped at this time, allowing us to identify OSTs that have failed over to a partner OSS and are degraded as a result.
 % mmlsdisk
 % mmdf
 For GPFS, we record the fullness of each disk LUN and the failure status of each server when each job is submitted.
-The NSD server to NSD mapping collected on the login node allows us to identify if a server has failed and a secondary server is handling its NSDs.
-In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
+Recording the mapping between NSD servers and NSDs allows us to identify if a server has failed and a secondary server is handling its NSDs.
+% In both GPFS and Lustre cases, we found that these time series data were sufficiently coarse-grained that storing these data in flat files indexed by date was sufficient.
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
 
 Job scheduling data can provide details on the mix of concurrent jobs that are running on the compute resources of a system to identify cases where I/O contention results from other competing workloads.
-Because job scheduling is most useful in the context of a particular job of interest, we represent this data as a single scalar value that represents the number of other jobs running concurrently with our job of interest.
+% Because job scheduling is most useful in the context of a particular job of interest, we represent this data as a single scalar value that represents the number of other jobs running concurrently with our job of interest.
+Because job scheduling is most useful in the context of jobs which overlapped with our benchmark jobs of interest, we only considered a metric defined as the total number of other jobs running concurrently with our job of interest.
 
 On the Edison system, this is accomplished by querying the Slurm job accounting database for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
 Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API called Ni.
@@ -105,9 +102,9 @@ The API allows pulling out a list of jobs for a given time range and running on 
 % A given job's application behavior record is a logical starting point since it contains critical information including an estimate of I/O performance based on bytes moved and time spent in I/O.  It also contains job start time, end time, and its unique identifier, forming common indices with which storage system traffic, health monitoring, and job scheduling data can be aligned.
 
 %In practice, our implementation of the TOKIO framework used in this study 
-To integrate the data from these tools, we extracted scalar summary information from a job's Darshan log and attached job scheduling data based by indexing the job id in both data sets.
+To integrate the data from these disparate tools, we extracted summary metrics from each job's Darshan log and attached job scheduling data by joining on overlapping start and end timestamps.
 Health monitoring data was also joined to these data by identifying the last recorded health record before the job launched.
-Storage system traffic data such as that provided by LMT and ggiostat were also reduced into scalar values (for example, as minimum, maximum, average bytes read per second) over the period each benchmark job was run.
+Time series storage system traffic data such as that provided by LMT and ggiostat were reduced to scalar values (for example, as minimum, maximum, average bytes read per second) over the period each benchmark job was run.
 % However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are then indexed using the job id.
 
 % The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
@@ -125,21 +122,19 @@ Storage system traffic data such as that provided by LMT and ggiostat were also 
 \section{Experimental Methods} \label{sec:platforms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To demonstrate the utility and generality of this holistic approach, we ran a suite of I/O benchmarks every day on two distinct computing platforms:
+To demonstrate the utility and generality of this holistic approach, we conducted a month-long experiment where we ran a series of I/O benchmarks every day on two distinct computing platforms:
 Edison, a Cray XC-30 system at NERSC, and Mira, a Blue Gene/Q system at ALCF.
-Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to characterize the performance variability intrinsic to each system.
-With a holistic view of I/O, we were then able to gain insight into the overall I/O climate and contextualize the I/O behavior of specific jobs.
-
-The analysis of these benchmarks reflect a total of 118 (Mira) and 1,014 (Edison) individual benchmark runs conducted over a period of 29 days (Mira) and 39 days (Edison).
-In this section, we detail the configuration of the benchmark suite used and the platforms on which they were run.
+Over the course of this month-long period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to
+obtained a complete view of I/O during the time each benchmark job ran.
+With this wide body of performance measurements and observed metrics, we performed statistical analysis this to characterize the performance variability intrinsic to Edison and Mira (I/O climate) and contextualize the I/O behavior of specific jobs (I/O weather).
+The analysis of these benchmark data reflect a total of 118 (Mira) and 1,014 (Edison) individual benchmark runs conducted over a period of 29 days (Mira) and 39 days (Edison).
+%In this section, we detail the configuration of the benchmark suite used and the platforms on which they were run.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
 The instrumentation tools described in Section \ref{sec:methods} do not provide a fixed reference point on I/O behavior because
 the workload and state of the system evolve over time.
-To establish this baseline behavior and define the climate of the I/O subsystem, we ran daily formalized I/O performance regression tests based on 
-both synthetic and application-derived workloads that could scaled in
-both parallelism and data volume.
+To characterize the baseline behavior of Edison and Mira and define the climate of their I/O subsystems, we ran daily I/O performance regression tests based on both synthetic and application-derived workloads.
 %We chose 
 %a collection of benchmarks because performance is not well-represented
 %by a single benchmark result; each storage system has its own strengths
@@ -172,48 +167,39 @@ XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                              
 \vspace{-.2in}
 \end{table*}
 
-\textbf{HACC}
-The Hardware Accelerated Cosmology Code (HACC) framework~\cite{habib2012}
-is an N-body cosmology application.
-%for simulating the the evolution of the Universe
+The \textbf{Hardware Accelerated Cosmology Code (HACC)} framework~\cite{habib2012} is an N-body cosmology application
+for simulating the the evolution of the Universe.
 %from its early times to today and for understanding dark energy and dark matter.
-The HACC-IO kernel captures HACC's main checkpoint I/O which is about
+We used the HACC-IO kernel which captures HACC's checkpoint I/O which generates
 96 MiB/process 
 %or 1.5 TiB total 
-using POSIX I/O with a file per process. 
+using POSIX file-per-process I/O.
 %Each
 %file is written in 10 large chunks, one chunk for each variable.
 
-\textbf{VPIC} 
-Vector particle-in-cell (VPIC) is a plasma physics application that
-%is a highly scalable code developed to 
-simulates interactions among billions or trillions of particles  \cite{Bowers2008}.
-VPIC-IO kernel extracts the I/O operations of a magnetic reconnection
-simulation, where each MPI process writes $8 \times 2^{20}$ particles. 
+\textbf{Vector particle-in-cell (VPIC)} is a plasma physics application that simulates interactions among billions or trillions of particles \cite{Bowers2008}.
+We used the VPIC-IO kernel which I/O operations of a magnetic reconnection simulation, where each MPI process writes $8 \times 2^{20}$ particles. 
 %Each
 %particle has eight properties (six floating point and two integer) and each
 %property is a single dimension array. 
 % The total number of particles depends on
 %the number of MPI ranks used. 
-The kernel uses the H5Part API \cite{H5Part} to write
-the data to a single shared HDF5 file.
+The kernel uses the H5Part API \cite{H5Part} to write the data to a single shared HDF5 file.
 %and the execution of the I/O kernel includes
 %creating and opening a file, writing data to the file, and closing the file.
 
-\textbf{BD-CATS} The BD-CATS clustering system~\cite{Patwary2015} represents
-an analysis that is commonly performed on VPIC data.
-We configured the BD-CATS I/O kernel benchmark to emulate the I/O workload of
+The \textbf{BD-CATS} clustering system~\cite{Patwary2015} represents
+a clustering analysis that is commonly performed on VPIC data.
+We configured the BD-CATS I/O kernel to emulate the I/O workload of
 a three-dimensional clustering that reads 75\% of the data
 contained in the VPIC data file.
 
-\textbf{IOR} The IOR benchmark has been used extensively
-to characterize the performance characteristics of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}
-due to its extensive configurability.  For the purposes of this work, we applied
-IOR to determine each file system's performance variability under conditions
-where an application is performing I/O using idealized parameters for each
+The \textbf{IOR} benchmark is a widely used tool
+to characterize the performance of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}.
+For the purposes of this work, we applied IOR to determine each file system's performance variability under conditions where an application performs I/O using idealized parameters for each
 file system.
 
-Furthermore, the scale at which we ran each benchmark was governed by two criteria:
+The scale at which we ran each benchmark was governed by two goals:
 a) to saturate the storage system and
 b) to limit core-hour consumption sufficient for daily execution.
 The specific benchmark configurations used are detailed in Table \ref{tab:bench-config}.
@@ -261,15 +247,14 @@ As such, the IOR benchmark configurations demonstrated peak performance at 90\% 
 
 \subsection{ALCF Mira} \label{sec:platforms/mira}
 
-Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) whose architecture is detailed in Table \ref{tab:system-config}.  In addition to the servers and LUNs listed, six of the network shared disk (NSD) servers also have an SSD-based LUN on which metadata is stored.  Furthermore, 
-Mira has has another primary file system not used in this study, mira-fs0, which shares the same QDR InfiniBand-based SAN fabric as mira-fs1.
+Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) whose architecture is detailed in Table \ref{tab:system-config}.
+In addition to the servers and LUNs listed, six of the network shared disk (NSD) servers also have an SSD-based LUN on which metadata is stored.
+Mira also has has another primary file system not used in this study, mira-fs0, which shares the same InfiniBand SAN fabric as mira-fs1.
 Although these file systems have independent NSD servers and devices, I/O can still contend for resources on this storage network.
-
 
 Unlike Edison, Mira's I/O architecture has fixed-size partitions of compute nodes connected to each I/O forwarding node.
 Saturating the I/O bandwidth of the underlying storage servers requires the use of many I/O nodes, meaning that peak storage bandwidth can only be attained using a large portion of the system's available compute nodes.
 Running daily I/O benchmarks that span a large portion of Mira's compute nodes is impractical due to the lengthy queue times of capability jobs and the disruption this would have to job scheduling.
-Therefore the selection of the job size for TOKIO-ABC on Mira, 1,024 Mira compute nodes (single rack), was based upon the availability of compute resources rather than the saturation of
-I/O subsystem.
+Therefore the job size used on Mira, 1,024 Mira compute nodes (a single rack), was based upon the availability of compute resources rather than the saturation of I/O subsystem.
 This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
 In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
