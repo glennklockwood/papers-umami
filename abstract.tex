@@ -21,16 +21,16 @@
 % different file systems and workloads.
 
 I/O efficiency is essential to productivity in scientific computing,
-especially as many scientific domains become more data-intensive and large-scale computing platforms incorporate more complex storage hierarchies.
-A variety of instrumentation and analysis tools have been used to great effect to help understand and optimize specific aspects of HPC I/O including application access patterns, storage device traffic, and distributed file system configurations.
-However, analyzing individual services in the I/O ecosystem in isolation fails to provide insight into the most important questions:
+especially as many scientific domains become more data-intensive.
+A variety of characterization tools have been used to elucidate and optimize specific aspects of parallel I/O.
+However, analyzing individual component of the I/O subsystem in isolation fails to provide insight into the most important questions:
 how do the I/O components interact,
 what are reasonable expectations for application performance,
 and what are the underlying causes and effects of I/O performance problems?
 
-In this work we present a framework for holistic I/O characterization that integrates I/O instrumentation data from multiple sources to provide novel insight into performance.
-We describe a methodology that incorporates data from file system instrumentation, application instrumentation, health monitoring, and other sources, and then demonstrate its applicability, portability, and unobtrusiveness by deploying it in production on two distinct, large-scale computing platforms.
-Using formalized periodic regression benchmarking, we apply our holistic I/O characterization methodology to convert disparate sources of data into knowledge about system-level performance variation.
-We then present three case studies that highlight how this framework can be used by facilities staff and advanced users to understand the abnormal I/O performance of scientific applications in increasingly complex storage systems.
+In this work we present the results of holistic I/O characterization that integrates I/O instrumentation data from multiple sources to provide novel insight into performance.
+We incorporate data from file system instrumentation, application instrumentation, and health monitoring on two distinct, large-scale computing platforms and 
+use periodic regression benchmarking to convert disparate sources of data into knowledge about system-level performance variation.
+We then present three case studies that highlight how this holistic approach can be used to understand abnormal I/O performance in increasingly complex storage systems.
 
 \end{abstract}
