@@ -1,36 +1,23 @@
 \section{Introduction} \label{sec:introduction}
 
-% \emph{From Rob}: I think a component of the story is that when we approach
-% these problems, there are a few challenges:
-% \begin{enumerate}
-
-% \item increasing number of interoperating components (in this case, additional
-% BB and DVS and so forth)
-
 The stratification of performance and capacity in storage technology is motivating the design of increasingly complex parallel storage systems architectures.
 For example, leadership-class computing systems are now being deployed with flash-based, on-fabric burst buffer tiers~\cite{Henseler2016} that provide even higher performance than traditional disk-based scratch file systems~\cite{Bhimji2016}.
 Although designed to provide optimal performance and capacity on an economic basis, this increasing number of interoperating components also complicates the task of understanding I/O performance.
 
-% \item different components have different "views" on I/O, different levels of
-% monitoring, some of which aren't practical in production
-
 The current state of practice is to monitor each component in the I/O stack separately.
-However, different components approach I/O from different perspectives, often resulting in component-level monitoring data that are not obviously compatible.
+However, these components approach I/O from different perspectives, often resulting in component-level monitoring data that are not obviously compatible.
 For example, server-side monitoring tools such as LMT~\cite{lmt} measure a limited number of metrics as a high-frequency time series to achieve low overhead, while application-level profiling tools such as Darshan~\cite{carns200924} track metrics that are expressed as bounded
 summaries of individual jobs.
-Data types representing the same logical quantity, such as data written, may also be expressed in different units such as bytes, pages, and blocks, and these units of data may also be transformed by aggregation, coalescing, and caching as they traverse the I/O stack.
+% Data types representing the same logical quantity, such as data written, may also be expressed in different units such as bytes, pages, and blocks, and these units of data may also be transformed by aggregation, coalescing, and caching as they traverse the I/O stack.
 
-% \item no current framework for integration, lots of expert knowledge to
-% construct the story of what happened and how to fix.
-
-At present, the gaps of information resulting from these incompatibilities are filled using expert institutional knowledge.
+At present, the gaps of information resulting from these incompatibilities are filled using expert institutional knowledge and intuition.
 Absent this expert knowledge though, a principal challenge in understanding I/O performance is knowing how to gauge the performance and behavior of application within a broader context and answer the question: 
 does the I/O performance of a given job meet expectations given the capabilities of the system and the nature of the access pattern?
-Relying on expert knowledge to answer this question is neither scalable nor sustainable as I/O subsystems of increasing size and complexity are deployed.
-Thus, there is a growing need to integrate data from across all components to present a coherent, holistic view of inter-dependent behavior to clarify the relationships that have traditionally fallen on I/O experts.
+Relying on intuition to answer this question is neither scalable nor sustainable as I/O subsystems of increasing size and complexity are deployed.
+Thus, there is a growing need to systematically integrate data from across all components to present a coherent, holistic view of inter-dependent behavior to clarify the relationships that have traditionally fallen on I/O experts.
 
-To demonstrate the new insights possible through this integrated approach, we present a detailed analysis resulting from the combination of data from file system servers, application-level profiling, and other system-level components into a uniform and normalized format.
-With this approach, we show how it is possible to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
+To demonstrate the new insights possible through an holistic approach, we present a detailed analysis resulting from the combination of data from file system servers, application-level profiling, and other system-level components.
+This holistic approach demonstrates that it is possible to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
@@ -43,9 +30,10 @@ Complementary to the I/O climate, the \emph{I/O weather} is determined by transi
 The primary contributions of this work are as follows:
 \begin{itemize}[leftmargin=*]
 % \item We describe a framework for holistic instrumentation of I/O subsystems that is generalizable across platforms
-\item We integrate the data from instrumentation already available on NERSC's Edison and ALCF's Mira systems to demonstrate the utility of this holistic approach by performing a month-long automated I/O benchmarking effort 
-\item Our results show that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors. Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance;
-we highlight cases  where namespace contention and storage capacity both dramatically impacted performance
-\item There is no single monitoring metric that predicts I/O performance
+\item We integrate the data from existing component-level tools available on NERSC's Edison and ALCF's Mira systems, along with a month-long automated I/O benchmarking effort, to demonstrate novel insights enabled by this holistic approach
+\item We show that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors.
+Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance, and
+we highlight cases where metadata contention and storage capacity both dramatically impacted performance
+\item We show that there is no single monitoring metric that predicts I/O performance
 universally across HPC platforms; the most highly correlated metrics depend on system architecture, configuration parameters, workload characteristics, and system health.
 \end{itemize}
