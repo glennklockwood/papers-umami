@@ -27,11 +27,10 @@ At present, the gaps of information resulting from these incompatibilities are f
 Absent this expert knowledge though, a principal challenge in understanding I/O performance is knowing how to gauge the performance and behavior of application within a broader context and answer the question: 
 does the I/O performance of a given job meet expectations given the capabilities of the system and the nature of the access pattern?
 Relying on expert knowledge to answer this question is neither scalable nor sustainable as I/O subsystems of increasing size and complexity are deployed.
-Thus, there is a growing need for a framework that integrates data from across all components and presents a coherent, holistic view of inter-dependent behavior to clarify the relationships that have traditionally fallen on I/O experts.
+Thus, there is a growing need to integrate data from across all components to present a coherent, holistic view of inter-dependent behavior to clarify the relationships that have traditionally fallen on I/O experts.
 
-To address this need, we have developed a framework for the holistic instrumentation of I/O subsystems, called the Total Knowledge of I/O (TOKIO) framework.
-TOKIO combines data from file system servers, application-level profiling, and other system-level components into a uniform and normalized format in a way that is generalizable to different system architectures.
-With this framework, we are then able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
+To demonstrate the new insights possible through this integrated approach, we present a detailed analysis resulting from the combination of data from file system servers, application-level profiling, and other system-level components into a uniform and normalized format.
+With this approach, we show how it is possible to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
@@ -42,15 +41,11 @@ Complementary to the I/O climate, the \emph{I/O weather} is determined by transi
 %Finally, we show how the TOKIO framework can be applied to bridge the gap of expert knowledge by identifying common sources of I/O performance variation.
 
 The primary contributions of this work are as follows:
-\begin{itemize}
-\item We describe a framework for holistic instrumentation of I/O subsystems that is
-generalizable across platforms 
-\item We deploy the framework in production on NERSC's Edison and ALCF's Mira systems and demonstrate its utility by performing a month-long automated I/O benchmarking effort 
-\item Our results show that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors. Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance; %we observed numerous instances of jobs that had uninhibited access to storage system resources that still exhibited poor I/O performance
+\begin{itemize}[leftmargin=*]
+% \item We describe a framework for holistic instrumentation of I/O subsystems that is generalizable across platforms
+\item We integrate the data from instrumentation already available on NERSC's Edison and ALCF's Mira systems to demonstrate the utility of this holistic approach by performing a month-long automated I/O benchmarking effort 
+\item Our results show that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors. Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance;
 we highlight cases  where namespace contention and storage capacity both dramatically impacted performance
-%and a moderate inverse correlation between performance and extrinsic read/write operations
 \item There is no single monitoring metric that predicts I/O performance
-universally across HPC platforms; the most highly correlated metrics depend
-on system architecture, configuration parameters, workload characteristics,
-and system health.
+universally across HPC platforms; the most highly correlated metrics depend on system architecture, configuration parameters, workload characteristics, and system health.
 \end{itemize}

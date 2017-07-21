@@ -1,29 +1,30 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{TOKIO Framework} \label{sec:methods}
+% \section{TOKIO Framework} \label{sec:methods}
+\section{Instrumentation \& Data Sources} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-TOKIO is a framework that connects different sources of performance data that are already often collected by HPC facilities to present a holistic view of the I/O subsystem.
-TOKIO, schematically depicted in Figure \ref{fig:tokio-schematic}, integrates a combination of scalar and time-series data from sources available throughout the I/O subsystem and indexes them by time and job identifiers.
-This integration, detailed further in Section
-\ref{sec:data-integration}, enables systems staff to explore the
-climate of the I/O system over a time range of interest and relate this
-information to the weather of the I/O system for a particular job.
-%Furthermore, users can retrospectively examine the weather of the I/O system during their job and relate this information to the historic I/O system climate if TOKIO is deployed in an environment where users can access the required component-level monitoring data through a database or API.
+%TOKIO is a framework that connects different sources of performance data that are already often collected by HPC facilities to present a holistic view of the I/O subsystem.
+%TOKIO, schematically depicted in Figure \ref{fig:tokio-schematic}, integrates a combination of scalar and time-series data from sources available throughout the I/O subsystem and indexes them by time and job identifiers.
+%This integration, detailed further in Section
+%\ref{sec:data-integration}, enables systems staff to explore the
+%climate of the I/O system over a time range of interest and relate this
+%information to the weather of the I/O system for a particular job.
+%%Furthermore, users can retrospectively examine the weather of the I/O system during their job and relate this information to the historic I/O system climate if TOKIO is deployed in an environment where users can access the required component-level monitoring data through a database or API.
 
 In the following sections we describe distinct components of the I/O subsystem that are critical to understanding both the I/O climate and I/O weather of a production system.
-Continuous instrumentation of each of these components should, therefore, be incorporated into TOKIO to enable the extraction of meaningful insight from the framework.
-We also provide pertinent details on the tools we have already chosen to integrate into TOKIO for instrumenting each of these components, preferring existing instrumentation solutions that are lightweight and unobtrusive enough to run full-time on production systems.
-The set of tools provided is not intended to be comprehensive or final--new data can be incorporated into TOKIO by defining mechanisms for accessing and indexing relevant data from a specific instrumentation source.
+% Continuous instrumentation of each of these components should, therefore, be incorporated into TOKIO to enable the extraction of meaningful insight from the framework.
+We also provide pertinent details on the tools we have chosen to to instrument each of these components, preferring existing instrumentation solutions that are lightweight and unobtrusive enough to run full-time on production systems.
+% The set of tools provided is not intended to be comprehensive or final--new data can be incorporated into TOKIO by defining mechanisms for accessing and indexing relevant data from a specific instrumentation source.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=.9\columnwidth]{figs/tokio-schematic.pdf}
-    \caption{Overview of the TOKIO framework.  Data is collected from sources
-    throughout the I/O subsystem, indexed and normalized, and then presented
-    through an interface that relates the I/O conditions of a specific job to the overall climate of the I/O subsystem.}
-    \label{fig:tokio-schematic}
-\vspace{-.2in}
-\end{figure}
+% \begin{figure}[t]
+%    \centering
+%    \includegraphics[width=.9\columnwidth]{figs/tokio-schematic.pdf}
+%    \caption{Overview of the TOKIO framework.  Data is collected from sources
+%    throughout the I/O subsystem, indexed and normalized, and then presented
+%    through an interface that relates the I/O conditions of a specific job to the overall climate of the I/O subsystem.}
+%    \label{fig:tokio-schematic}
+%\vspace{-.2in}
+%\end{figure}
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
@@ -90,7 +91,7 @@ our experimental platforms are not equipped with burst buffer hardware.
 Other examples of additional metrics that could be gathered include job layout and locality to I/O forwarding nodes, which
 can based on a job's node list and a topology map.
 In addition, network traffic on both compute and storage fabrics are often available through SNMP or vendor-specific monitoring tools.
-More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which TOKIO can draw measurements.
+More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which measurements can be drawn.
 
 In this study, the job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database and the Cray service database.
 The association between jobs and Lustre OSTs was also recorded in each job's Darshan log through the Darshan Lustre module.
@@ -99,59 +100,57 @@ through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.
 
 \subsection{Data integration} \label{sec:data-integration}
 
-The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and a unique job identifier.
+% The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and a unique job identifier.
 
-A given job's application behavior record is a logical starting point since it contains critical information including an estimate of I/O performance based on bytes moved and time spent in I/O.  It also contains job start time, end time, and its unique identifier, forming common indices with which storage system traffic, health monitoring, and job scheduling data can be aligned.
+% A given job's application behavior record is a logical starting point since it contains critical information including an estimate of I/O performance based on bytes moved and time spent in I/O.  It also contains job start time, end time, and its unique identifier, forming common indices with which storage system traffic, health monitoring, and job scheduling data can be aligned.
 
-In practice, our implementation of the TOKIO framework used in this study  extracts scalar summary information from a job's Darshan log and attaches job scheduling data based on the job id.
-Health monitoring data is also joined to these scalar data by identifying the last recorded health record before the job launched and attaching these data as scalar measurements.
-Storage system traffic data such as that provided by LMT and ggiostat are also reduced into scalar values (for example, as minimum, maximum, average bytes read per second).
-However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are then indexed using the job id.
+%In practice, our implementation of the TOKIO framework used in this study 
+To integrate the data from these tools, we extracted scalar summary information from a job's Darshan log and attached job scheduling data based by indexing the job id in both data sets.
+Health monitoring data was also joined to these data by identifying the last recorded health record before the job launched.
+Storage system traffic data such as that provided by LMT and ggiostat were also reduced into scalar values (for example, as minimum, maximum, average bytes read per second) over the period each benchmark job was run.
+% However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are then indexed using the job id.
 
-The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
-When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and time series data can be encoded in a portable binary format such as HDF5.
-Because our implementation of TOKIO builds upon community software including Python and pandas, it can interact directly with a variety of data interfaces and
-natively supports indexing data located in relational databases (including MySQL, PostgreSQL, and SQLite) and serializing data to text and binary formats (including CSV, HDF5, and Excel spreadsheets).  Ultimately, every system will have a different set of component-level monitoring tools in place, and TOKIO is designed to be sufficiently general to accept any scalar or time-series data available with only minor modification to its format or representation.
+% The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
+% When transferring data between systems, all scalar measurements associated with a job can be serialized as a single row in a relational database or CSV-formatted file, and time series data can be encoded in a portable binary format such as HDF5.
+% Because our implementation of TOKIO builds upon community software including Python and pandas, it can interact directly with a variety of data interfaces and
+% natively supports indexing data located in relational databases (including MySQL, PostgreSQL, and SQLite) and serializing data to text and binary formats (including CSV, HDF5, and Excel spreadsheets).
+% Ultimately, every system will have a different set of component-level monitoring tools in place, and TOKIO is designed to be sufficiently general to accept any scalar or time-series data available with only minor modification to its format or representation.
 
-% What were the challenges in doing the data integration, and how did we solve them?
-In deploying the TOKIO framework and integrating data from multiple sources, we did encounter several noteworthy challenges.
-The most critical issue was ensuring that all components' clocks were synchronized to the same NTP servers to ensure that TOKIO's time-based indexing resulted in consistent data.
-Similarly, standardizing the frequency of time series data simplifies integration and data analysis; although we chose five-second sampling intervals for LMT and ggiostat, the health monitoring data was collected at very low frequency.
-To align such low-frequency data with scalar job data, we chose to treat health monitoring data as scalar data, and the sample that most recently preceded each job was associated that job.
+% In deploying the TOKIO framework and integrating data from multiple sources, we did encounter several noteworthy challenges.
+% The most critical issue was ensuring that all components' clocks were synchronized to the same NTP servers to ensure that TOKIO's time-based indexing resulted in consistent data.
+% Similarly, standardizing the frequency of time series data simplifies integration and data analysis; although we chose five-second sampling intervals for LMT and ggiostat, the health monitoring data was collected at very low frequency.
+% To align such low-frequency data with scalar job data, we chose to treat health monitoring data as scalar data, and the sample that most recently preceded each job was associated that job.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Experimental Methods} \label{sec:platforms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To demonstrate the utility and generality of the TOKIO framework, we deployed it on two distinct computing platforms: Edison, a Cray XC-30 system at NERSC, and Mira, a Blue Gene/Q system at ALCF.
-We also assembled a suite of I/O benchmarks, called the TOKIO Automated Benchmark Collection (TOKIO-ABC), to run on these two systems and explore how TOKIO's holistic view of I/O can provide insight into the overall I/O climate and contextualize the I/O behavior of specific jobs.
+To demonstrate the utility and generality of this holistic approach, we ran a suite of I/O benchmarks every day on two distinct computing platforms:
+Edison, a Cray XC-30 system at NERSC, and Mira, a Blue Gene/Q system at ALCF.
+Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to characterize the performance variability intrinsic to each system.
+With a holistic view of I/O, we were then able to gain insight into the overall I/O climate and contextualize the I/O behavior of specific jobs.
 
-Over the course of a month-long evaluation period, we collected measurements from the data sources described in Section \ref{sec:methods} and used these data to characterize the performance variability observed in the daily TOKIO-ABC tests.
-These measurements were taken from a total of 118 (Mira) and 1,014 (Edison) runs over a period of 29 days (Mira) and 39 days (Edison).
-In this section, we detail the configuration of the TOKIO-ABC tests and the platforms on which TOKIO and TOKIO-ABC were deployed.
+The analysis of these benchmarks reflect a total of 118 (Mira) and 1,014 (Edison) individual benchmark runs conducted over a period of 29 days (Mira) and 39 days (Edison).
+In this section, we detail the configuration of the benchmark suite used and the platforms on which they were run.
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
-The instrumentation methods described in Section \ref{sec:methods}
-do not provide a fixed reference point on I/O behavior; the workload and state of the
-system naturally evolve over time.  We must therefore combine TOKIO with
-routine, formalized I/O performance regression tests in order establish baseline behavior, and we developed the TOKIO Automated Benchmark Collection to meet this need.
-TOKIO-ABC is a set of benchmarks, including
-both synthetic and application-derived workloads, that can be scaled in
-both the number of processes and data volume.
-Our goals in choosing a scale for a given TOKIO-ABC deployment are
-a) to saturate the storage system and
-b) to limit core-hour consumption sufficiently for daily execution.
+The instrumentation tools described in Section \ref{sec:methods} do not provide a fixed reference point on I/O behavior because
+the workload and state of the system evolve over time.
+To establish this baseline behavior and define the climate of the I/O subsystem, we ran daily formalized I/O performance regression tests based on 
+both synthetic and application-derived workloads that could scaled in
+both parallelism and data volume.
 %We chose 
 %a collection of benchmarks because performance is not well-represented
 %by a single benchmark result; each storage system has its own strengths
 %and weaknesses.  
-The collection of benchmarks is
-executed within a job script that can be scheduled nightly by a continuous
-integration system or cron job.  The script ensures that no more than
-one TOKIO-ABC instance is active at a time, and all benchmark results
-and Darshan logs are archived for analysis at the conclusion of the job.
-The initial set of benchmarks included in TOKIO-ABC are as follows:
+%The collection of benchmarks is
+%executed within a job script that can be scheduled nightly by a continuous
+%integration system or cron job.  The script ensures that no more than
+%one TOKIO-ABC instance is active at a time, and all benchmark results
+%and Darshan logs are archived for analysis at the conclusion of the job.
+%The initial set of benchmarks included in TOKIO-ABC are as follows:
+The specific benchmarks we chose are as follows.
 
 %%% also used tablesgenerator.com to make this monstrosity
 \begin{table*}[h]
@@ -173,9 +172,7 @@ XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                              
 \vspace{-.2in}
 \end{table*}
 
-
-\begin{itemize}
-\item \textbf{HACC}
+\textbf{HACC}
 The Hardware Accelerated Cosmology Code (HACC) framework~\cite{habib2012}
 is an N-body cosmology application.
 %for simulating the the evolution of the Universe
@@ -186,7 +183,8 @@ The HACC-IO kernel captures HACC's main checkpoint I/O which is about
 using POSIX I/O with a file per process. 
 %Each
 %file is written in 10 large chunks, one chunk for each variable.
-\item \textbf{VPIC} 
+
+\textbf{VPIC} 
 Vector particle-in-cell (VPIC) is a plasma physics application that
 %is a highly scalable code developed to 
 simulates interactions among billions or trillions of particles  \cite{Bowers2008}.
@@ -202,20 +200,23 @@ the data to a single shared HDF5 file.
 %and the execution of the I/O kernel includes
 %creating and opening a file, writing data to the file, and closing the file.
 
-\item \textbf{BD-CATS} The BD-CATS clustering system~\cite{Patwary2015} represents
+\textbf{BD-CATS} The BD-CATS clustering system~\cite{Patwary2015} represents
 an analysis that is commonly performed on VPIC data.
 We configured the BD-CATS I/O kernel benchmark to emulate the I/O workload of
 a three-dimensional clustering that reads 75\% of the data
 contained in the VPIC data file.
 
-\item \textbf{IOR} The IOR benchmark has been used extensively
+\textbf{IOR} The IOR benchmark has been used extensively
 to characterize the performance characteristics of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}
 due to its extensive configurability.  For the purposes of this work, we applied
 IOR to determine each file system's performance variability under conditions
 where an application is performing I/O using idealized parameters for each
 file system.
 
-\end{itemize}
+Furthermore, the scale at which we ran each benchmark was governed by two criteria:
+a) to saturate the storage system and
+b) to limit core-hour consumption sufficient for daily execution.
+The specific benchmark configurations used are detailed in Table \ref{tab:bench-config}.
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
@@ -243,6 +244,7 @@ benchmarks were executed with 128 nodes and 2,048 MPI processes.}
 \vspace{-.4in}
 \end{table}
 
+
 \subsection{NERSC Edison} \label{sec:platforms/edison}
 
 Edison is a Cray XC-30 system deployed at the National Energy Research Scientific Computing Center (NERSC) whose architecture is described in Table \ref{tab:system-config}.
@@ -253,7 +255,7 @@ The Edison architecture routes I/O traffic from the Cray Aries high-speed networ
 As a result of this design and the use of Lustre fine-grained routing, all jobs on Edison that utilize one file system share the same set of I/O nodes.
 This ensures that each file system's traffic is isolated as it transits I/O nodes.
 
-The TOKIO-ABC benchmark input configurations for the Edison file systems are described in Table \ref{tab:bench-config}.
+The benchmark configurations for the Edison file systems are described in Table \ref{tab:bench-config}.
 In all cases, data was striped over all of the OSTs in the file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen specifically to saturate each file system's bandwidth.
 As such, the IOR benchmark configurations demonstrated peak performance at 90\% of the theoretical peaks listed in Table \ref{tab:system-config}.
 
@@ -265,12 +267,9 @@ Although these file systems have independent NSD servers and devices, I/O can st
 
 
 Unlike Edison, Mira's I/O architecture has fixed-size partitions of compute nodes connected to each I/O forwarding node.
-Saturating the I/O bandwidth of the underlying storage servers requires the
-use of many I/O nodes, meaning that peak storage bandwidth can only be
-attained using a large portion of the system's available compute nodes.
-Running daily I/O benchmarks that span a large portion of Mira's compute
-nodes is impractical due to the lengthy queue times of capability jobs and
-the disruption this would have to job scheduling. Therefore the selection of the job size for TOKIO-ABC on Mira, 1,024 Mira compute nodes (single
-rack), was based upon the availability of compute resources rather than the saturation of
-I/O subsystem.  This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
-In practice, the TOKIO-ABC IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
+Saturating the I/O bandwidth of the underlying storage servers requires the use of many I/O nodes, meaning that peak storage bandwidth can only be attained using a large portion of the system's available compute nodes.
+Running daily I/O benchmarks that span a large portion of Mira's compute nodes is impractical due to the lengthy queue times of capability jobs and the disruption this would have to job scheduling.
+Therefore the selection of the job size for TOKIO-ABC on Mira, 1,024 Mira compute nodes (single rack), was based upon the availability of compute resources rather than the saturation of
+I/O subsystem.
+This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
+In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
