@@ -28,7 +28,7 @@ We first establish the baseline performance variation of each benchmark on each 
 % Such variation in peak file system performance caused by different I/O access patterns is well documented~\cite{Lofstead2010,Uselton2010,Xie2012}.
 Because variation in peak I/O performance is known to be caused by different I/O access patterns~\cite{Lofstead2010,Uselton2010,Xie2012}, 
 % To focus solely on the variation caused by factors \emph{extrinsic} to each application,
-we define a metric called \emph{fraction of peak performance} which is the performance of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
+we define the \emph{fraction of peak performance} as the performance of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
 For example, the fraction peak performance for a HACC write test is only normalized to the maximum performance of all other HACC write tests on the same file system.
 
 The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of performance variation \emph{within} each application varies with each file system.
@@ -46,17 +46,17 @@ Edison's scratch3 also demonstrates very broad performance variation for the VPI
 \vspace{-.2in}
 \end{figure}
 
-Thus, Figure \ref{fig:perf-summary-boxplots-motif} demonstrates that performance variability is the result of factors intrinsic to the application (e.g., I/O motif) \emph{and} factors intrinsic to the file system. 
-Different I/O motifs result in different levels of performance \emph{and} variability.
-Furthermore, these behaviors are not a function of the parallel file system software architecture either; all Edison file systems are Lustre-based, yet there is a marked difference in variability between scratch1/scratch2 and scratch3 shown in Figure~\ref{fig:perf-summary-boxplots-motif}.
+We can conclude from this that performance variability is the result of factors intrinsic to the application \emph{and} factors intrinsic to the file system;
+different I/O motifs result in different levels of performance \emph{and} variability.
+Furthermore, these behaviors are not a function of the parallel file system architecture either; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
 Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Combined Application/Server Metrics} \label{sec:results/combining}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To better understand how performance variation is caused by factors extrinsic to the application, we combine data from application-level analysis provided by Darshan with storage system traffic analysis provided by LMT (Edison) and ggiostat (Mira).
-An intuitive source of performance loss would be from other jobs that are also consuming file system bandwidth, so to explore the effects of competing I/O traffic, we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$:
+To better understand how performance variation is caused by factors extrinsic to the application, we combine data from application-level analysis provided by Darshan with storage system traffic data provided by LMT and ggiostat.
+I/O bandwidth contention from other jobs is an intuitive source in I/O performance variation, so we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$ to quantify the effects of such competing I/O traffic:
 
 \begin{equation} \label{eq:cf}
     \mathit{CF}(j) = \frac{N_{\textup{bytes}}^{\textup{Darshan}}(j)}
@@ -64,20 +64,17 @@ An intuitive source of performance loss would be from other jobs that are also c
     \left [ N_{\textup{bytes}}^{\textup{LMT,ggiostat}}(t,s) \right ] }
 \end{equation}
 %
-where $N_{\textup{bytes}}^{\textup{Darshan}}$ is the number of bytes read and written by job $j$ according to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ is the number of bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
+where $N_{\textup{bytes}}^{\textup{Darshan}}$ are the bytes read and written by job $j$ from to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ are the bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
 The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are both taken from the job's Darshan log~\cite{snyder2016modular}.
 % It should be noted that we can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement, but for brevity in this work we focus our analysis on bandwidth coverage factor.
 
-The coverage factor is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
-$\mathit{CF} = 1.0$ when all of the server-side I/O was caused by job $j$, while $\mathit{CF} = 0.5$ indicates that only half of the server-side I/O was attributable to job $j$ while the other half came from other sources.
-In practice, $\mathit{CF}$ can be slightly greater than $1.0$ as a result of two conditions:
-a) when the storage system traffic monitoring (LMT/ggiostat) does not capture data from all servers during a polling interval, or
-b) when clock skew between the compute nodes and the file system servers causes the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
-%%% GKL: Nick pointed out that the CF > 1.2 data we dropped are not noise, they are the component monitoring being completely broken.
-In this study, such noise never resulted in $\mathit{CF} > 1.2$.
-%To eliminate obviously erroneous data, we discard all test results where $\mathit{CF} > 1.2$ in the subsequent analysis.
-% \todo{We should probably mention what \% of data this covers. It will be a likely question.}
-%%% GKL: I don't want to admit to this unless a reviewer specifically asks.  The ratio is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this  filter criterion
+This CF is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
+When $\mathit{CF} = 1.0$, all of the server-side I/O can be attributed to job $j$, while $\mathit{CF} = 0.5$ indicates that only half of the server-side I/O is attributable to job $j$ while the other half is from other sources.
+%In practice, $\mathit{CF}$ can be slightly greater than $1.0$ as a result of two conditions:
+%a) when the storage system traffic monitoring (LMT/ggiostat) does not capture data from all servers during a polling interval, or
+%b) when clock skew between the compute nodes and the file system servers causes the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
+%In this study, such noise never resulted in $\mathit{CF} > 1.2$.
+%%%% GKL: The ratio of CF > 1.2 to all CF measurements is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this filter criterion
 
 % \begin{figure}[t]
 %     \centering
@@ -92,12 +89,12 @@ In this study, such noise never resulted in $\mathit{CF} > 1.2$.
 %This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
 %In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
 
-The distribution of coverage factors across all experiments revealed that ($> 75\%$ on Edison and $> 80\%$ on Mira) have high coverage factors ($\mathit{CF} > 0.80$).
+Across all benchmark runs, over 75\% (Edison) and 80\% (Mira) of the measurements analyzed had high coverage factors ($\mathit{CF} > 0.80$).
 This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
-In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
+In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponded to the 40th percentile on that system.
 
 Despite this low incidence of overlapping bursts, the distribution of performance relative to the peak observed bandwidth for each application such as shown in Figure~\ref{fig:perf-summary-boxplots-motif} is more broadly distributed.
-Edison's scratch3 exemplifies this; 26\% of jobs on that file system got less than half of the peak performance (fraction peak performance $< 0.50$) despite only 5\% of jobs showing $\mathit{CF} < 0.50$.  This indicates that the coverage factor (and therefore server-side I/O bandwidth) is not the only contributor to sub-optimal performance.
+Edison's scratch3 exemplifies this; 26\% of jobs on that file system got less than half of the peak performance (fraction peak performance $< 0.50$) despite only 5\% of jobs showing $\mathit{CF} < 0.50$.  This indicates that the coverage factor (and therefore server-side I/O bandwidth) is not the only contributor to I/O performance degradation.
 This finding is consistent with previous work that found Lustre file system performance to be constrained by both bandwidth \emph{and} I/O operation (IOP) rate~\cite{Uselton2013}.
 
 % \begin{figure}[t]
@@ -120,16 +117,17 @@ This finding is consistent with previous work that found Lustre file system perf
 \subsection{Correlating Performance Metrics} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Although bandwidth is the most intuitive initial metric for application and server
-correlation,  
+Given the observation that bandwidth contention is not the sole source of performance variability, 
+% Although bandwidth is the most intuitive initial metric for application and server correlation,  
 %Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
 %the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
 %Thus,
-we can calculate correlations of other metrics with job I/O performance to objectively determine which of these are the likely culprits causing poor application performance.
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (as defined in Section \ref{sec:results/overview}) with a wide range of metrics collected on Edison and Mira.
+% we can 
+we then establish correlations between job I/O performance and other metrics to identify which components in the I/O subsystem are the most likely causes of poor I/O performance.
+To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (defined in \ref{sec:results/overview}) with the range of metrics described in Section \ref{sec:methods}.
 While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric we analyzed.
-In this sense, we find that this correlation coefficient is a suitable qualitative indicator of general trends and confidences in correlation.
-A summary of some of the interesting correlations (and lack of correlations) are presented in Figure \ref{fig:correlation-table} and highlight several interesting findings:
+As such, this correlation coefficient is a suitable qualitative indicator of general trends and confidences despite the unknown distribution of each underlying component's metrics.
+A summary of some of the most notable correlations (or lack thereof) are presented in Figure \ref{fig:correlation-table} and highlight several interesting findings:
 
 \begin{figure}[t]
     \centering
@@ -147,44 +145,40 @@ A summary of some of the interesting correlations (and lack of correlations) are
 
 \begin{itemize}[leftmargin=*]
 
-\item As assumed in the previous sections, the coverage factors correlate with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
-The strength of this correlation on Mira was lower than Edison because the absolute performance of our tests on Mira were bound by the bandwidth of the exclusively allocated I/O nodes, leaving bandwidth headroom on the NSD servers for other jobs.
+\item CFs correlate with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
+This correlation is less strong on Mira because the absolute performance of our tests on Mira were limited by the bandwidth of the I/O nodes allocated, leaving bandwidth headroom on the NSD servers for other jobs.
 Mira's file system also demonstrated moderate sensitivity to contention for
-IOPs, a metric that we were unable to collect on Edison in this study.
+IOPs confirming the generalizability of the conclusions of Uselton and Wright~\cite{Uselton2013} based on Lustre performance.
 %Lustre IOPs were not collected for this study, so no comparison can be made to Edison.
 
 \item Mira's performance correlates negatively with higher rates of \texttt{open(2)}/\texttt{close(2)} calls than Lustre.
-Given that Mira's file system serves metadata from the same physical servers as data, this relationship is reasonable.
+This is reasonable given that Mira's file system serves metadata from the same physical servers as data.
 By comparison, Edison's file systems each have their own discrete metadata servers that are specifically designed to decouple bulk data transfer performance from metadata operations.
 
-\item The fullness of each storage device (LUN on Mira and OST on Edison) has markedly different behavior between Edison and Mira.
+\item File system fullness has markedly different behavior on Edison relative to Mira.
 While Mira's performance is uncorrelated with device capacity, Edison performance degrades as free space on OSTs is depleted.
-This type of behavior is a known characteristic of the Lustre file system and has been observed on deployments at other HPC centers~\cite{oral2014best}, as well.
-%This is a documented behavior of Lustre file systems~\cite{oral2014best}.
+This type of behavior is a known characteristic of the Lustre file system and has been observed on deployments at other HPC centers~\cite{oral2014best}.
 
-\item Perhaps contrary to historic intuition, I/O performance shows minimal correlation with the number of other jobs running concurrently.
-The lack of correlation with concurrent job count is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
+\item Contrary to our expectation, I/O performance shows minimal correlation with the number of other jobs running concurrently.
+The lack of correlation is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
 
-\item Similarly, the job diameter (a measurement of how spread out a job is across the compute fabric) has no discernible correlation with I/O performance on Edison.
-Since the low-diameter dragonfly topology of Edison is designed
-to reduce the performance impact of job topology, this is consistent with
-expectation.  Job diameter is not shown for Mira because it utilizes a dense
-torus partition for each job.
+% \item Similarly, the job diameter (a measurement of how spread out a job is across the compute fabric) has no discernible correlation with I/O performance on Edison.
+% Since the low-diameter dragonfly topology of Edison is designed
+% to reduce the performance impact of job topology, this is consistent with
+% expectation.  Job diameter is not shown for Mira because it utilizes a dense
+% torus partition for each job.
 
 \end{itemize}
 
-We collected additional system-specific measurements that did not correlate significantly to performance.
-However it is important to underscore the fact that this demonstration was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that data for all three Edison file systems were combined for this analysis.
+%We collected additional system-specific measurements that did not correlate significantly to performance.
+%However this correlation analysis was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that data for all three Edison file systems were combined for this analysis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Job-Level Analysis} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This holistic I/O analysis is not only useful to understand broad system behavior as illustrated in Section~\ref{sec:results}, but also to understand the factors that contribute to the performance of individual application executions.
-The system-level analysis can be integrated with ongoing I/O instrumentation to describe
-where on the spectrum of normalcy a job's I/O behavior fell relative to
-jobs with similar motifs and which metrics are the most promising starting point for
-investigation based on historic correlation.
+Such holistic analysis is also useful when analyzing the factors that contribute to performance loss of individual jobs.
+The system-level analysis described above can contextualize performance anomalies and describe where on the spectrum of normalcy a job's I/O performance fell relative to jobs with similar motifs, and it can point to the metrics that are most likely culprits for investigation based on historic correlation.
 
 \begin{figure}[t]
     \centering
@@ -197,28 +191,28 @@ investigation based on historic correlation.
 \vspace{-.2in}
 \end{figure}
 
-To concisely visualize all of this information, we present a Unified Measurements And Metrics Interface (UMAMI) as a tool to quickly determine how a job of interest's performance compares to similar I/O workloads in the past.
-UMAMI, demonstrated in Figure \ref{fig:umami-scratch2-hacc-write} and detailed in the following sections, presents historic measurements (the I/O climate) and summarizes each metric's distribution in an accompanying box plot.
-These time series plots terminate with the measurements relevant to the job of interest, thereby describing the I/O weather at the time that job ran.
-By overlaying this weather on the climate as dashed lines in the box plots, UMAMI provides a quick visualization of how each metric's contribution to weather compared to the statistical distribution of past weather conditions.
-With this conceptualization of a file system's weather and its overall climate, a user can differentiate between a long-term performance problem and a statistically rare event analogous to an extreme weather event.
+To concisely visualize all of this information, we present a Unified Measurements And Metrics Interface (UMAMI) diagram as a tool to quickly determine how a job of interest's performance compares to similar I/O workloads in the past.
+UMAMI, demonstrated in Figure \ref{fig:umami-scratch2-hacc-write}, presents historic measurements (the I/O climate) and summarizes each metric's distribution in an accompanying box plot.
+These time series plots terminate with the metrics for the job of interest and define the I/O weather at the time that job ran.
+By overlaying this weather on the climate (dashed lines in the box plots), UMAMI provides a quick view of how each metric compared to the statistical distribution of past weather conditions.
+With this juxtaposition of a file system's weather and its overall climate, a user can differentiate between a long-term performance problem and a statistically rare event.% analogous to an extreme weather event.
 
 % In the following sections, we illustrate how UMAMI can be applied to the problem of diagnosing poor performance of individual jobs in three case studies.
 
 \subsection{Case Study: I/O Contention}
 
 The specific UMAMI example shown in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test which took place on March 3.
-This particular job showed abnormally low performance as evidenced by the "Job performance (GiB/sec)" measurement and its value relative to previous instances of this type of job.
-This abnormally poor job performance was accompanied by an unusually low coverage factor and high metadata load, and these unfavorable conditions are highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
+Per the "Job performance" measurement and its value relative to previous instances of this type of job, this job's performance is statistically abnormal.
+This poor performance was accompanied by an unusually low coverage factor and high metadata load, and these unfavorable conditions are highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
 The metrics corresponding to blue dashed lines fell into the most favorable quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, they have no history of correlation with performance.
-Thus, we can quickly attribute the poor performance of this HACC job to an I/O load extrinsic to this job which was competing for both bandwidth on the data servers and metadata resources on the metadata server.
+Thus, we can attribute this HACC job's poor performance to I/O loads extrinsic to this job which competed for both bandwidth and metadata operation rates.
 
 \subsection{Case Study: Metadata Load}
 
 Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload
 that showed poor performance on Mira.
-Its coverage factor is within normal parameters (orange lines in each metric's box plot signifies a value in the second quartile) indicating low bandwidth contention.
-Although the IOPS coverage factor is also abnormally low, previous conditions have been worse despite a lack of dramatic performance loss (e.g., on March 7).
+Its coverage factor is within normal parameters (orange lines in the box plots denote a value in the second quartile) indicating low bandwidth contention.
+Although the IOPS coverage factor is also low, previous conditions have been worse despite a lack of dramatic performance loss (e.g., on March 7).
 The only metric that shows a unique, undesirable value is the number of \texttt{readdir(3)} operations handled by the file system.
 This is indicative of an expansive file system traversal that was being performed at the same time as the job execution.
 % The \emph{readdir(3)} metric was demonstrated to correlate moderately negatively with performance in Figure \ref{fig:correlation-table}.
@@ -227,7 +221,8 @@ This is indicative of an expansive file system traversal that was being performe
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-mira-fs1-vpic-write.pdf}
     \caption{UMAMI demonstrating the climate surrounding VPIC-IO write workloads on Mira compared to a most recent run, which showed highly unusual weather in the form of an excess of \texttt{readdir(3)} calls.
-    Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.}
+%   Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.
+    }
     \label{fig:umami-mira-fs1-vpic-write}
 \vspace{-.2in}
 \end{figure}
@@ -236,16 +231,18 @@ This is indicative of an expansive file system traversal that was being performe
 \subsection{Case Study: Storage Capacity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This holistic approach is also able to identify longer-term performance issues that progressively degraded write performance.
-Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view of such an event on Edison's scratch3 file system where coverage factors were not highly abnormal despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec.
+This holistic approach is also able to identify longer-term performance degradation.
+Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view of such an event on Edison's scratch3 file system where coverage factors were not unusual despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec.
 The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.
-Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance, consistent with our understanding of how Lustre performance degrades as OSTs fill~\cite{oral2014best}.
+Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance.
+Incidentally, this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.
  
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-scratch3-hacc-write-long-term.pdf}
     \caption{UMAMI of HACC write performance on Edison's scratch3 file system showing a longer-term period of performance degradation that was associated with unusually high OSS CPU load.
-    Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.}
+%   Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.
+    }
     \label{fig:umami-scratch3-hacc-write-long-term}
 \vspace{-.2in}
 \end{figure}

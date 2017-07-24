@@ -58,7 +58,6 @@ In this study, we used bytes read and written, read and write request counts, an
 
 Health monitoring is critical to understanding the current fault status and capacity of the
 storage system: what components are offline, failed-over, or another degraded state, and how much storage space remains on the available devices.
-
 % lfs df
 % lctl dl -t
 To collect health-monitoring data on Lustre file systems, we record the fullness of each Lustre object storage target (OST) every fifteen minutes.
@@ -199,7 +198,8 @@ to characterize the performance of parallel file systems\cite{Yildiz2016,Xie2012
 For the purposes of this work, we applied IOR to determine each file system's performance variability under conditions where an application performs I/O using idealized parameters for each
 file system.
 
-The scale at which we ran each benchmark was governed by two goals:
+We chose the size of each benchmark run based on two goals:
+%The scale at which we ran each benchmark was governed by two goals:
 a) to saturate the storage system and
 b) to limit core-hour consumption sufficient for daily execution.
 The specific benchmark configurations used are detailed in Table \ref{tab:bench-config}.
