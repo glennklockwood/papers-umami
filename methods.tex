@@ -28,11 +28,10 @@
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
-Application behavior characterization describes the I/O pattern of a workload as expressed from the perspective of the application itself (i.e., before any system-level optimizations are applied).
-To capture this application-level behavior, we used the Darshan I/O characterization tool~\cite{carns200924} which 
-transparently records statistics about an application's I/O behavior at runtime.
-Reduction of these statistics is deferred until the application exits to minimize overhead, allowing it be deployed for all production applications on large-scale systems without perturbing
-performance.
+% Application behavior characterization describes the I/O pattern of a workload as expressed from the perspective of the application itself (i.e., before any system-level optimizations are applied).
+To capture the I/O patterns and user-observable application performance in this study, we used the Darshan I/O characterization tool~\cite{carns200924} which transparently records statistics about an application's I/O behavior at runtime.
+It imposes minimal overhead because it defers the reduction of these statistics until the application exits,
+allowing it be deployed for all production applications on large-scale systems without perturbing performance.  Both systems used in this study link Darshan in compiled applications by default.
 % Because it operates at the application level, Darshan is also highly portable across platforms.
 
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
@@ -78,8 +77,8 @@ On the Edison system, this is accomplished by querying the Slurm job accounting 
 Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API called Ni.
 The API allows pulling out a list of jobs for a given time range and running on a specific resource.
 
-% \subsection{Other components} \label{sec:methods/other}
-%
+\subsection{Job Topology} \label{sec:methods/other}
+
 % There are a number of other general and system-specific components that may
 % affect I/O performance.  We anticipate that burst buffer metrics will play a
 % critical role in emerging platforms, but we omit them in this study because
@@ -89,21 +88,21 @@ The API allows pulling out a list of jobs for a given time range and running on 
 % In addition, network traffic on both compute and storage fabrics are often available through SNMP or vendor-specific monitoring tools.
 % More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which measurements can be drawn.
 %
-% In this study, the job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database and the Cray service database.
+Job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database, which maps jobs to node lists, and the Cray service database, which maps nodes to positions within the dragonfly network.  Job layouts on Mira are always close-packed due to its scheduling policy.
 % The association between jobs and Lustre OSTs was also recorded in each job's Darshan log through the Darshan Lustre module.
 % Similarly, job layout information on Mira was recorded in the Darshan logs
 % through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.  
 
-\subsection{Data integration} \label{sec:data-integration}
+% \subsection{Data integration} \label{sec:data-integration}
 
 % The metrics outlined above are all integrated by the TOKIO framework by indexing the measurements from each data source by time and a unique job identifier.
 
 % A given job's application behavior record is a logical starting point since it contains critical information including an estimate of I/O performance based on bytes moved and time spent in I/O.  It also contains job start time, end time, and its unique identifier, forming common indices with which storage system traffic, health monitoring, and job scheduling data can be aligned.
 
-%In practice, our implementation of the TOKIO framework used in this study 
-To integrate the data from these disparate tools, we extracted summary metrics from each job's Darshan log and attached job scheduling data by joining on overlapping start and end timestamps.
-Health monitoring data was also joined to these data by identifying the last recorded health record before the job launched.
-Time series storage system traffic data such as that provided by LMT and ggiostat were reduced to scalar values (for example, as minimum, maximum, average bytes read per second) over the period each benchmark job was run.
+% In practice, our implementation of the TOKIO framework used in this study 
+% To integrate the data from these disparate tools, we extracted summary metrics from each job's Darshan log and attached job scheduling data by joining on overlapping start and end timestamps.
+% Health monitoring data was also joined to these data by identifying the last recorded health record before the job launched.
+% Time series storage system traffic data such as that provided by LMT and ggiostat were reduced to scalar values (for example, as minimum, maximum, average bytes read per second) over the period each benchmark job was run.
 % However, all of the time series data recorded between a job's start and end times are also retained as time-resolved slices which are then indexed using the job id.
 
 % The resulting data structure is very concise and can be represented as a simple index of pointers to the raw files in which each I/O system component stores its measurements (e.g., Darshan logs or pyLMT HDF5 files).
@@ -120,6 +119,26 @@ Time series storage system traffic data such as that provided by LMT and ggiosta
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Experimental Methods} \label{sec:platforms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% also used tablesgenerator.com to make this monstrosity
+\begin{table*}[h]
+\footnotesize
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{\begin{tabular}[c]{@{}c@{}}System\\ (Center)\end{tabular}}                 & \textbf{Configuration}                                                                                         & \textbf{\begin{tabular}[c]{@{}c@{}}File System\\ (Type)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}\# Servers\\ (LUNs)\end{tabular}} & \textbf{\# I/O Nodes}                                                   & \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Capacity\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Peak\\ Performance\end{tabular}} \\ \hline
+\multirow{3}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Edison\\
+(NERSC)\end{tabular}}} & \multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Cray
+XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
+                                                                                   &                                                                                                                & scratch2 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
+                                                                                   &                                                                                                                & scratch3 (Lustre)                                                     & 36 (36)                                                              & 13 (shared)                                                             & 3.3 PB                                                          & 72 GB/sec                                                           \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Mira\\ (ALCF)\end{tabular}}                     & \begin{tabular}[c]{@{}c@{}}IBM Blue Gene/Q\\ 49,152 CNs\end{tabular}    & mira-fs1 (GPFS)                                                       & 48 (336)                                                             & \begin{tabular}[c]{@{}c@{}}384 (dedicated)\\ 1 per 128 CNs\end{tabular} & 7.0 PB                                                          & 90 GB/sec                                                           \\ \hline
+\end{tabular}
+\caption{Test platforms for TOKIO and TOKIO Automated Benchmarking Collection (TOKIO-ABC)}
+\label{tab:system-config}
+\normalsize
+\vspace{-.2in}
+\end{table*}
 
 To demonstrate the utility and generality of this holistic approach, we conducted a month-long experiment where we ran a series of I/O benchmarks every day on two distinct computing platforms:
 Edison, a Cray XC-30 system at NERSC, and Mira, a Blue Gene/Q system at ALCF.
@@ -145,26 +164,6 @@ To characterize the baseline behavior of Edison and Mira and define the climate 
 %and Darshan logs are archived for analysis at the conclusion of the job.
 %The initial set of benchmarks included in TOKIO-ABC are as follows:
 The specific benchmarks we chose are as follows.
-
-%%% also used tablesgenerator.com to make this monstrosity
-\begin{table*}[h]
-\footnotesize
-\centering
-\begin{tabular}{|c|c|c|c|c|c|c|}
-\hline
-\textbf{\begin{tabular}[c]{@{}c@{}}System\\ (Center)\end{tabular}}                 & \textbf{Configuration}                                                                                         & \textbf{\begin{tabular}[c]{@{}c@{}}File System\\ (Type)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}\# Servers\\ (LUNs)\end{tabular}} & \textbf{\# I/O Nodes}                                                   & \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Capacity\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Peak\\ Performance\end{tabular}} \\ \hline
-\multirow{3}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Edison\\
-(NERSC)\end{tabular}}} & \multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Cray
-XC-30\\5,586 CNs\end{tabular}} & scratch1 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
-                                                                                   &                                                                                                                & scratch2 (Lustre)                                                     & 24 (24)                                                              & 9 (shared)                                                              & 2.2 PB                                                          & 48 GB/sec                                                           \\ \cline{3-7} 
-                                                                                   &                                                                                                                & scratch3 (Lustre)                                                     & 36 (36)                                                              & 13 (shared)                                                             & 3.3 PB                                                          & 72 GB/sec                                                           \\ \hline
-\textbf{\begin{tabular}[c]{@{}c@{}}Mira\\ (ALCF)\end{tabular}}                     & \begin{tabular}[c]{@{}c@{}}IBM Blue Gene/Q\\ 49,152 CNs\end{tabular}    & mira-fs1 (GPFS)                                                       & 48 (336)                                                             & \begin{tabular}[c]{@{}c@{}}384 (dedicated)\\ 1 per 128 CNs\end{tabular} & 7.0 PB                                                          & 90 GB/sec                                                           \\ \hline
-\end{tabular}
-\caption{Test platforms for TOKIO and TOKIO Automated Benchmarking Collection (TOKIO-ABC)}
-\label{tab:system-config}
-\normalsize
-\vspace{-.2in}
-\end{table*}
 
 The \textbf{Hardware Accelerated Cosmology Code (HACC)} framework~\cite{habib2012} is an N-body cosmology application
 for simulating the the evolution of the Universe.
@@ -238,8 +237,9 @@ Its scratch1 and scratch2 file systems are identically configured, and users are
 However, access to Edison's scratch3 file system is only granted to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
 
 The Edison architecture routes I/O traffic from the Cray Aries high-speed network to the FDR InfiniBand-based SAN fabric through LNET I/O nodes.
-As a result of this design and the use of Lustre fine-grained routing, all jobs on Edison that utilize one file system share the same set of I/O nodes.
-This ensures that each file system's traffic is isolated as it transits I/O nodes.
+Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems.
+%As a result of this design and the use of Lustre fine-grained routing, all jobs on Edison that utilize one file system share the same set of I/O nodes.
+This ensures that each file system's traffic is isolated as it transits I/O nodes and also allows every Edison job to use the maximum number of I/O nodes.
 
 The benchmark configurations for the Edison file systems are described in Table \ref{tab:bench-config}.
 In all cases, data was striped over all of the OSTs in the file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen specifically to saturate each file system's bandwidth.
@@ -249,12 +249,13 @@ As such, the IOR benchmark configurations demonstrated peak performance at 90\% 
 
 Mira is an IBM Blue Gene/Q system deployed at the Argonne Leadership Computing Facility (ALCF) whose architecture is detailed in Table \ref{tab:system-config}.
 In addition to the servers and LUNs listed, six of the network shared disk (NSD) servers also have an SSD-based LUN on which metadata is stored.
-Mira also has has another primary file system not used in this study, mira-fs0, which shares the same InfiniBand SAN fabric as mira-fs1.
-Although these file systems have independent NSD servers and devices, I/O can still contend for resources on this storage network.
+% Mira also has has another primary file system not used in this study, mira-fs0, which shares the same InfiniBand SAN fabric as mira-fs1.
+% Although these file systems have independent NSD servers and devices, I/O can still contend for resources on this storage network.
 
-Unlike Edison, Mira's I/O architecture has fixed-size partitions of compute nodes connected to each I/O forwarding node.
-Saturating the I/O bandwidth of the underlying storage servers requires the use of many I/O nodes, meaning that peak storage bandwidth can only be attained using a large portion of the system's available compute nodes.
-Running daily I/O benchmarks that span a large portion of Mira's compute nodes is impractical due to the lengthy queue times of capability jobs and the disruption this would have to job scheduling.
-Therefore the job size used on Mira, 1,024 Mira compute nodes (a single rack), was based upon the availability of compute resources rather than the saturation of I/O subsystem.
-This job size corresponds to eight I/O nodes, each with a QDR 4x InfiniBand link to the SAN, totaling an absolute peak of ~25 GB/sec.
-In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the absolute peak performance of this I/O node allocation.
+Unlike Edison, Mira's I/O architecture has fixed-size partitions of compute nodes connected to each I/O forwarding node, 
+meaning that storage bandwidth available through I/O nodes scales linearly with the size of the compute job.
+% Running daily I/O benchmarks that span a large portion of Mira's compute nodes is impractical due to the lengthy queue times of capability jobs and the disruption this would have to job scheduling.
+%Therefore the job size used on Mira, 1,024 Mira compute nodes (a single rack), was based upon the availability of compute resources rather than the saturation of I/O subsystem.
+To minimize system system disruption and maximize throughput of our daily benchmarks, we opted to run every benchmark using 1,024 compute nodes which 
+corresponds to eight I/O nodes and an aggregate peak bandwidth of ~25 GB/sec.
+In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of this peak performance of this I/O node allocation.

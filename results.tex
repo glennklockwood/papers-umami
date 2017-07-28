@@ -50,6 +50,7 @@ We can conclude from this that performance variability is the result of factors 
 different I/O motifs result in different levels of performance \emph{and} variability.
 Furthermore, these behaviors are not a function of the parallel file system architecture either; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
 Thus, these differences in performance variation must be a result of their different hardware configurations (discussed in Section \ref{sec:platforms}), their specific user workloads, or a combination of both.
+This finding highlights the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert to develop a full understanding of I/O performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Combined Application/Server Metrics} \label{sec:results/combining}
@@ -89,13 +90,13 @@ When $\mathit{CF} = 1.0$, all of the server-side I/O can be attributed to job $j
 %This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
 %In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponds to the 40th percentile on that system.
 
-Across all benchmark runs, over 75\% (Edison) and 80\% (Mira) of the measurements analyzed had high coverage factors ($\mathit{CF} > 0.80$).
-This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
-In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponded to the 40th percentile on that system.
-
-Despite this low incidence of overlapping bursts, the distribution of performance relative to the peak observed bandwidth for each application such as shown in Figure~\ref{fig:perf-summary-boxplots-motif} is more broadly distributed.
-Edison's scratch3 exemplifies this; 26\% of jobs on that file system got less than half of the peak performance (fraction peak performance $< 0.50$) despite only 5\% of jobs showing $\mathit{CF} < 0.50$.  This indicates that the coverage factor (and therefore server-side I/O bandwidth) is not the only contributor to I/O performance degradation.
-This finding is consistent with previous work that found Lustre file system performance to be constrained by both bandwidth \emph{and} I/O operation (IOP) rate~\cite{Uselton2013}.
+% Across all benchmark runs, over 75\% (Edison) and 80\% (Mira) of the measurements analyzed had high coverage factors ($\mathit{CF} > 0.80$).
+% This is consistent with the observation that I/O occurs in bursts~\cite{Carns2011,Liu2016}, and the probability of two bursts coinciding and causing contention for bandwidth (thereby reducing $\mathit{CF}$) is relatively low.
+% In particular, Mira's $\mathit{CF}$ distribution is so narrow that over 50\% of tests effectively ran without bandwidth contention; $\mathit{CF} >= 0.99$ corresponded to the 40th percentile on that system.
+% 
+% Despite this low incidence of overlapping bursts, the distribution of performance relative to the peak observed bandwidth for each application such as shown in Figure~\ref{fig:perf-summary-boxplots-motif} is more broadly distributed.
+% Edison's scratch3 exemplifies this; 26\% of jobs on that file system got less than half of the peak performance (fraction peak performance $< 0.50$) despite only 5\% of jobs showing $\mathit{CF} < 0.50$.  This indicates that the coverage factor (and therefore server-side I/O bandwidth) is not the only contributor to I/O performance degradation.
+% This finding is consistent with previous work that found Lustre file system performance to be constrained by both bandwidth \emph{and} I/O operation (IOP) rate~\cite{Uselton2013}.
 
 % \begin{figure}[t]
 %     \centering
@@ -114,64 +115,64 @@ This finding is consistent with previous work that found Lustre file system perf
 % 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Correlating Performance Metrics} \label{sec:results/correlating}
+% \subsection{Correlating Performance Metrics} \label{sec:results/correlating}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given the observation that bandwidth contention is not the sole source of performance variability, 
-% Although bandwidth is the most intuitive initial metric for application and server correlation,  
-%Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
-%the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
-%Thus,
-% we can 
-we then establish correlations between job I/O performance and other metrics to identify which components in the I/O subsystem are the most likely causes of poor I/O performance.
-To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (defined in \ref{sec:results/overview}) with the range of metrics described in Section \ref{sec:methods}.
-While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric we analyzed.
-As such, this correlation coefficient is a suitable qualitative indicator of general trends and confidences despite the unknown distribution of each underlying component's metrics.
-A summary of some of the most notable correlations (or lack thereof) are presented in Figure \ref{fig:correlation-table} and highlight several interesting findings:
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\columnwidth]{figs/correlation_table.pdf}
-    \caption{Correlation coefficients between fraction of peak performance measured for each I/O motif and a variety of server-side measurements and metrics.
-    Box color indicates confidence; correlations with p-values $< 0.01$ are blue; p-values $< 0.05$ are green, and p-values $>= 0.05$ are red (and signify lack of correlation).
-    Similarly, \textbf{bolded} values signify moderate correlation ($|r| > 0.30$), and \textit{italicized} values signify weak correlation ($|r| < 0.10$).
-    The "\% Servers Failed Over" metric is not applicable because no
-    changes in server failover state were
-    observed during this study.
-    }
-    \label{fig:correlation-table}
-\vspace{-.2in}
-\end{figure}
-
-\begin{itemize}[leftmargin=*]
-
-\item CFs correlate with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
-This correlation is less strong on Mira because the absolute performance of our tests on Mira were limited by the bandwidth of the I/O nodes allocated, leaving bandwidth headroom on the NSD servers for other jobs.
-Mira's file system also demonstrated moderate sensitivity to contention for
-IOPs confirming the generalizability of the conclusions of Uselton and Wright~\cite{Uselton2013} based on Lustre performance.
-%Lustre IOPs were not collected for this study, so no comparison can be made to Edison.
-
-\item Mira's performance correlates negatively with higher rates of \texttt{open(2)}/\texttt{close(2)} calls than Lustre.
-This is reasonable given that Mira's file system serves metadata from the same physical servers as data.
-By comparison, Edison's file systems each have their own discrete metadata servers that are specifically designed to decouple bulk data transfer performance from metadata operations.
-
-\item File system fullness has markedly different behavior on Edison relative to Mira.
-While Mira's performance is uncorrelated with device capacity, Edison performance degrades as free space on OSTs is depleted.
-This type of behavior is a known characteristic of the Lustre file system and has been observed on deployments at other HPC centers~\cite{oral2014best}.
-
-\item Contrary to our expectation, I/O performance shows minimal correlation with the number of other jobs running concurrently.
-The lack of correlation is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
-
-% \item Similarly, the job diameter (a measurement of how spread out a job is across the compute fabric) has no discernible correlation with I/O performance on Edison.
-% Since the low-diameter dragonfly topology of Edison is designed
-% to reduce the performance impact of job topology, this is consistent with
-% expectation.  Job diameter is not shown for Mira because it utilizes a dense
-% torus partition for each job.
-
-\end{itemize}
-
-%We collected additional system-specific measurements that did not correlate significantly to performance.
-%However this correlation analysis was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that data for all three Edison file systems were combined for this analysis.
+% Given the observation that bandwidth contention is not the sole source of performance variability, 
+% % Although bandwidth is the most intuitive initial metric for application and server correlation,  
+% %Our choice to define our correlation parameter according to application performance and server-side bandwidth and IOPs was motivated by a broad body of literature and an intuitive assumption that competition for bandwidth and IOPs affect performance the most dramatically.
+% %the TOKIO framework is generalized to draw data from any resource that can be indexed on a per-job or time series basis.
+% %Thus,
+% % we can 
+% we then establish correlations between job I/O performance and other metrics to identify which components in the I/O subsystem are the most likely causes of poor I/O performance.
+% To this end, we calculated the Pearson correlation coefficient between each job's fraction of peak performance (defined in \ref{sec:results/overview}) with the range of metrics described in Section \ref{sec:methods}.
+% While many of these metrics are not expected to be normally distributed~\cite{Kim2010}, Pearson correlation coefficients are applied here to compare the directions and relative strengths of the relationships between each metric we analyzed.
+% As such, this correlation coefficient is a suitable qualitative indicator of general trends and confidences despite the unknown distribution of each underlying component's metrics.
+% A summary of some of the most notable correlations (or lack thereof) are presented in Figure \ref{fig:correlation-table} and highlight several interesting findings:
+% 
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\columnwidth]{figs/correlation_table.pdf}
+%     \caption{Correlation coefficients between fraction of peak performance measured for each I/O motif and a variety of server-side measurements and metrics.
+%     Box color indicates confidence; correlations with p-values $< 0.01$ are blue; p-values $< 0.05$ are green, and p-values $>= 0.05$ are red (and signify lack of correlation).
+%     Similarly, \textbf{bolded} values signify moderate correlation ($|r| > 0.30$), and \textit{italicized} values signify weak correlation ($|r| < 0.10$).
+%     The "\% Servers Failed Over" metric is not applicable because no
+%     changes in server failover state were
+%     observed during this study.
+%     }
+%     \label{fig:correlation-table}
+% \vspace{-.2in}
+% \end{figure}
+% 
+% \begin{itemize}[leftmargin=*]
+% 
+% \item CFs correlate with performance on all file systems, indicating that contending for file system I/O is a moderate contributor to performance loss.
+% This correlation is less strong on Mira because the absolute performance of our tests on Mira were limited by the bandwidth of the I/O nodes allocated, leaving bandwidth headroom on the NSD servers for other jobs.
+% Mira's file system also demonstrated moderate sensitivity to contention for
+% IOPs confirming the generalizability of the conclusions of Uselton and Wright~\cite{Uselton2013} based on Lustre performance.
+% %Lustre IOPs were not collected for this study, so no comparison can be made to Edison.
+% 
+% \item Mira's performance correlates negatively with higher rates of \texttt{open(2)}/\texttt{close(2)} calls than Lustre.
+% This is reasonable given that Mira's file system serves metadata from the same physical servers as data.
+% By comparison, Edison's file systems each have their own discrete metadata servers that are specifically designed to decouple bulk data transfer performance from metadata operations.
+% 
+% \item File system fullness has markedly different behavior on Edison relative to Mira.
+% While Mira's performance is uncorrelated with device capacity, Edison performance degrades as free space on OSTs is depleted.
+% This type of behavior is a known characteristic of the Lustre file system and has been observed on deployments at other HPC centers~\cite{oral2014best}.
+% 
+% \item Contrary to our expectation, I/O performance shows minimal correlation with the number of other jobs running concurrently.
+% The lack of correlation is consistent with our finding that I/O remains highly bursty; a large number of small jobs are highly unlikely to burst simultaneously, and each small job is not individually capable of significantly impacting our tests' coverage factors.
+% 
+% % \item Similarly, the job diameter (a measurement of how spread out a job is across the compute fabric) has no discernible correlation with I/O performance on Edison.
+% % Since the low-diameter dragonfly topology of Edison is designed
+% % to reduce the performance impact of job topology, this is consistent with
+% % expectation.  Job diameter is not shown for Mira because it utilizes a dense
+% % torus partition for each job.
+% 
+% \end{itemize}
+% 
+% %We collected additional system-specific measurements that did not correlate significantly to performance.
+% %However this correlation analysis was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that data for all three Edison file systems were combined for this analysis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Job-Level Analysis} \label{sec:results/umami}

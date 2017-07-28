@@ -1,36 +1,28 @@
 \begin{abstract}
-%%% I had to submit a 150-word abstract to SC, so below is the shortened
-%%% version I submitted
-%
-% As scientific computing becomes more data-intensive and storage hierarchies
-% deepen, I/O performance is becoming increasingly critical to productivity in
-% HPC.  Instrumentation and analysis tools have long been used to understand
-% parallel I/O performance, but analyzing the individual components of I/O
-% subsystems in isolation fails to answer how these components interact and
-% result in poor I/O performance.
-%
-% To this end, we have developed a framework for holistic I/O characterization
-% that integrates instrumentation from file system servers, applications, file
-% system health monitors, and other system resources.  Along with formalized
-% periodic regression benchmarking, we then demonstrate this framework's
-% portability and unobtrusiveness by deploying it in production on two
-% leadership-class computing platforms.  Using data collected during a month
-% long study, we provide unique insights into applications' I/O performance
-% that are enabled by this approach.  We then extend these findings to provide
-% a broader understanding of how application performance varies across
-% different file systems and workloads.
 
-I/O efficiency is essential to productivity in scientific computing,
-especially as many scientific domains become more data-intensive.
+I/O efficiency is essential to productivity in scientific computing, especially as many scientific domains become more data-intensive.
 A variety of characterization tools have been used to elucidate and optimize specific aspects of parallel I/O.
-However, analyzing individual component of the I/O subsystem in isolation fails to provide insight into the most important questions:
+However, analyzing individual component of complex I/O subsystems in isolation fails to provide insight into the most important questions:
 how do the I/O components interact,
-what are reasonable expectations for application performance,
-and what are the underlying causes and effects of I/O performance problems?
+what are reasonable expectations for application performance, and what are the underlying causes and effects of I/O performance problems?
+These questions suggest the the need for a unified, comprehensive, multi-level, system-wide I/O characterization tool, but such an effort would fail to capitalize on existing proven component-level characterization tools, and it would not be portable across facilities with diverse computing and storage vendors.
 
-In this work we present the results of holistic I/O characterization that integrates I/O instrumentation data from multiple sources to provide novel insight into performance.
-We incorporate data from file system instrumentation, application instrumentation, and health monitoring on two distinct, large-scale computing platforms and 
-use periodic regression benchmarking to convert disparate sources of data into knowledge about system-level performance variation.
-We then present three case studies that highlight how this holistic approach can be used to understand abnormal I/O performance in increasingly complex storage systems.
+In this work, we instead evaluate the feasibility of a practical alternative approach: on-demand, modular synthesis of \emph{existing} I/O characterization data sources into a normalized, coherent, holistic view of I/O behavior.
+We explore this approach on two distinct large-scale computing platforms with three benchmark case studies.
+The case studies highlight the importance of analyzing application I/O performance in context with both contemporaneous and historical component metrics.
+The case studies also reveal the challenges of portable data integration and the potential impact of applying these techniques to production workloads.
+
+% I/O efficiency is essential to productivity in scientific computing,
+% especially as many scientific domains become more data-intensive.
+% A variety of characterization tools have been used to elucidate and optimize specific aspects of parallel I/O.
+% However, analyzing individual component of the I/O subsystem in isolation fails to provide insight into the most important questions:
+% how do the I/O components interact,
+% what are reasonable expectations for application performance,
+% and what are the underlying causes and effects of I/O performance problems?
+
+% In this work we present the results of holistic I/O characterization that integrates I/O instrumentation data from multiple sources to provide novel insight into performance.
+% We incorporate data from file system instrumentation, application instrumentation, and health monitoring on two distinct, large-scale computing platforms and 
+% use periodic regression benchmarking to convert disparate sources of data into knowledge about system-level performance variation.
+% We then present three case studies that highlight how this holistic approach can be used to understand abnormal I/O performance in increasingly complex storage systems.
 
 \end{abstract}
