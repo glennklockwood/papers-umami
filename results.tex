@@ -1,12 +1,13 @@
-\section{System-Level Analysis} \label{sec:results}
+% \section{System-Level Analysis} \label{sec:results}
+\section{Baseline I/O Performance} \label{sec:results}
 
-We begin our analysis with a broad study of the overall I/O climate of each system to
-a) establish baseline expectations for performance and variability and b) formally quantify the relationships between I/O components.
+% We begin our analysis with a broad study of the overall I/O climate of each system to
+% a) establish baseline expectations for performance and variability and b) formally quantify the relationships between I/O components.
 %
 %These two factors are critical to interpreting I/O performance, but they have been traditionally documented and communicated in informal anecdotes and institutional expert knowledge.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Baseline I/O Performance} \label{sec:results/overview}
+% \subsection{Baseline I/O Performance} \label{sec:results/overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Figure \ref{fig:perf-summary-boxplots-fs} shows the distribution of performance measured by all benchmarks normalized to the highest performance observed on each file system.
@@ -53,29 +54,8 @@ Thus, these differences in performance variation must be a result of their diffe
 This finding highlights the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert to develop a full understanding of I/O performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Combined Application/Server Metrics} \label{sec:results/combining}
+% \subsection{Combined Application/Server Metrics} \label{sec:results/combining}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-To better understand how performance variation is caused by factors extrinsic to the application, we combine data from application-level analysis provided by Darshan with storage system traffic data provided by LMT and ggiostat.
-I/O bandwidth contention from other jobs is an intuitive source in I/O performance variation, so we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$ to quantify the effects of such competing I/O traffic:
-
-\begin{equation} \label{eq:cf}
-    \mathit{CF}(j) = \frac{N_{\textup{bytes}}^{\textup{Darshan}}(j)}
-    {\sum_{t,s}^{\textup{time,servers}}
-    \left [ N_{\textup{bytes}}^{\textup{LMT,ggiostat}}(t,s) \right ] }
-\end{equation}
-%
-where $N_{\textup{bytes}}^{\textup{Darshan}}$ are the bytes read and written by job $j$ from to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ are the bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
-The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are both taken from the job's Darshan log~\cite{snyder2016modular}.
-% It should be noted that we can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement, but for brevity in this work we focus our analysis on bandwidth coverage factor.
-
-This CF is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
-When $\mathit{CF} = 1.0$, all of the server-side I/O can be attributed to job $j$, while $\mathit{CF} = 0.5$ indicates that only half of the server-side I/O is attributable to job $j$ while the other half is from other sources.
-%In practice, $\mathit{CF}$ can be slightly greater than $1.0$ as a result of two conditions:
-%a) when the storage system traffic monitoring (LMT/ggiostat) does not capture data from all servers during a polling interval, or
-%b) when clock skew between the compute nodes and the file system servers causes the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
-%In this study, such noise never resulted in $\mathit{CF} > 1.2$.
-%%%% GKL: The ratio of CF > 1.2 to all CF measurements is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this filter criterion
 
 % \begin{figure}[t]
 %     \centering
@@ -175,11 +155,32 @@ When $\mathit{CF} = 1.0$, all of the server-side I/O can be attributed to job $j
 % %However this correlation analysis was not intended to be exhaustive, and the correlations and p-values for the Edison system are likely diminished by the fact that data for all three Edison file systems were combined for this analysis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Job-Level Analysis} \label{sec:results/umami}
+\section{Integrated Analysis} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Such holistic analysis is also useful when analyzing the factors that contribute to performance loss of individual jobs.
-The system-level analysis described above can contextualize performance anomalies and describe where on the spectrum of normalcy a job's I/O performance fell relative to jobs with similar motifs, and it can point to the metrics that are most likely culprits for investigation based on historic correlation.
+With an understanding of the baseline performance variation on each system and I/O motif tested, we can then combine the application performance data derived from Darshan with server-side load data derived from LMT/ggiostat to
+better understand how performance variation is caused by factors extrinsic to the application.
+I/O bandwidth contention from other jobs is an intuitive source in I/O performance variation, so we define the \emph{coverage factor} ($\mathit{CF}$) of a job $j$ to quantify the effects of such competing I/O traffic:
+
+\begin{equation} \label{eq:cf}
+    \mathit{CF}(j) = \frac{N_{\textup{bytes}}^{\textup{Darshan}}(j)}
+    {\sum_{t,s}^{\textup{time,servers}}
+    \left [ N_{\textup{bytes}}^{\textup{LMT,ggiostat}}(t,s) \right ] }
+\end{equation}
+%
+where $N_{\textup{bytes}}^{\textup{Darshan}}$ are the bytes read and written by job $j$ from to its Darshan log, and $N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ are the bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
+The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are both taken from the job's Darshan log~\cite{snyder2016modular}.
+% It should be noted that we can generalize this notion of the coverage factor to any metric for which we can distinguish the contribution of an individual job from the global system-level measurement, but for brevity in this work we focus our analysis on bandwidth coverage factor.
+
+This CF is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
+When $\mathit{CF} = 1.0$, all of the server-side I/O can be attributed to job $j$, while $\mathit{CF} = 0.5$ indicates that only half of the server-side I/O is attributable to job $j$ while the other half is from other sources.
+%In practice, $\mathit{CF}$ can be slightly greater than $1.0$ as a result of two conditions:
+%a) when the storage system traffic monitoring (LMT/ggiostat) does not capture data from all servers during a polling interval, or
+%b) when clock skew between the compute nodes and the file system servers causes the Darshan log and LMT/ggiostat to have an inconsistent understanding of when I/O happened.
+%In this study, such noise never resulted in $\mathit{CF} > 1.2$.
+%%%% GKL: The ratio of CF > 1.2 to all CF measurements is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this filter criterion
+
+This CF metric, along with the system health, job scheduling, and job topology data then allow us to contextualize performance anomalies and describe where on the spectrum of normalcy a job's I/O performance fell relative to jobs with similar motifs, and it can point to the metrics that are most likely culprits for investigation based on historic correlation.
 
 \begin{figure}[t]
     \centering
@@ -205,7 +206,7 @@ With this juxtaposition of a file system's weather and its overall climate, a us
 The specific UMAMI example shown in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test which took place on March 3.
 Per the "Job performance" measurement and its value relative to previous instances of this type of job, this job's performance is statistically abnormal.
 This poor performance was accompanied by an unusually low coverage factor and high metadata load, and these unfavorable conditions are highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
-The metrics corresponding to blue dashed lines fell into the most favorable quartile for this problematic job, but as discussed in Section \ref{sec:results/correlating}, they have no history of correlation with performance.
+The metrics corresponding to blue dashed lines fell into the most favorable quartile for this problematic job, but they were also not found to correlate with performance.
 Thus, we can attribute this HACC job's poor performance to I/O loads extrinsic to this job which competed for both bandwidth and metadata operation rates.
 
 \subsection{Case Study: Metadata Load}

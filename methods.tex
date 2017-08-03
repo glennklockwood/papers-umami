@@ -47,8 +47,7 @@ For this study, we used two different file system-specific tools to collect this
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates on a per-server basis at five-second intervals.
 
 \label{sec:methods/ggiostat}
-\textbf{ggiostat} is a tool we developed 
-to collect analogous data from IBM Spectrum Scale (GPFS) file systems %, we developed the \emph{ggiostat} tool.
+\textbf{ggiostat} is a tool developed at ALCF to collect analogous data from IBM Spectrum Scale (GPFS) file systems.
 It uses the \texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and client clusters.
 These metrics are queried on five-second intervals by a persistent monitoring daemon and stored in a database.
 In this study, we used bytes read and written, read and write request counts, and metadata operation counts which were collected on a per-cluster basis.
@@ -74,7 +73,7 @@ Job scheduling data can provide details on the mix of concurrent jobs that are r
 Because job scheduling is most useful in the context of jobs which overlapped with our benchmark jobs of interest, we only considered a metric defined as the total number of other jobs running concurrently with our job of interest.
 
 On the Edison system, this is accomplished by querying the Slurm job accounting database for all jobs with a start time before the job of interest's end time and an end time after the job of interest's start time.
-Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a python API called Ni.
+Similarly, the job accounting data on Mira is uploaded by Cobalt into a database that can be accessed via a Python API called Ni.
 The API allows pulling out a list of jobs for a given time range and running on a specific resource.
 
 \subsection{Job Topology} \label{sec:methods/other}
@@ -88,7 +87,8 @@ The API allows pulling out a list of jobs for a given time range and running on 
 % In addition, network traffic on both compute and storage fabrics are often available through SNMP or vendor-specific monitoring tools.
 % More comprehensive monitoring frameworks such as LDMS~\cite{7013000} can also serve as data repositories from which measurements can be drawn.
 %
-Job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database, which maps jobs to node lists, and the Cray service database, which maps nodes to positions within the dragonfly network.  Job layouts on Mira are always close-packed due to its scheduling policy.
+Job layouts on the Edison system were recorded for each job by combining queries to the Slurm accounting database, which maps jobs to node lists, and the Cray service database, which maps nodes to positions within the dragonfly network.
+On Mira, jobs are always close-packed on its torus which results in identical layout for each job.
 % The association between jobs and Lustre OSTs was also recorded in each job's Darshan log through the Darshan Lustre module.
 % Similarly, job layout information on Mira was recorded in the Darshan logs
 % through Darshan's Blue Gene/Q module~\cite{snyder2016modular}.  
@@ -175,14 +175,14 @@ using POSIX file-per-process I/O.
 %Each
 %file is written in 10 large chunks, one chunk for each variable.
 
-\textbf{Vector particle-in-cell (VPIC)} is a plasma physics application that simulates interactions among billions or trillions of particles \cite{Bowers2008}.
-We used the VPIC-IO kernel which I/O operations of a magnetic reconnection simulation, where each MPI process writes $8 \times 2^{20}$ particles. 
+\textbf{Vector Particle-In-Cell (VPIC)} is a plasma physics application that simulates interactions among billions or trillions of particles \cite{Bowers2008}.
+We used the VPIC-IO kernel which I/O operations of a magnetic reconnection simulation, where each MPI process writes $8 \times 2^{20}$ particles
 %Each
 %particle has eight properties (six floating point and two integer) and each
 %property is a single dimension array. 
 % The total number of particles depends on
 %the number of MPI ranks used. 
-The kernel uses the H5Part API \cite{H5Part} to write the data to a single shared HDF5 file.
+to a single shared HDF5 file using the H5Part API \cite{H5Part}.
 %and the execution of the I/O kernel includes
 %creating and opening a file, writing data to the file, and closing the file.
 
