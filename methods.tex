@@ -39,18 +39,16 @@ allowing it be deployed for all production applications on large-scale systems w
 Storage system traffic monitoring provides insight into the aggregate system-wide I/O workload imposed on a target storage system.
 On most modern-day HPC systems this is reflected in the aggregate bytes read and written, I/O operations processed, and other similar metrics collected at the parallel file system level.
 This data can be collected in time-series format with minimal impact to application performance because it is gathered on the storage servers themselves without the involvement of the compute nodes.
-For this study, we used two different file system-specific tools to collect this data.
+For this study, we used two different file system-specific tools to collect this data.  These data were collected at five-second intervals as a trade-off between low performance impact and sufficient granularity to correlate performance with server activity~\cite{madireddy2017}.
 
 \label{sec:methods/lmt}
 \textbf{Lustre Monitoring Tool (LMT)} is a tool that aggregates Lustre-specific counters from /proc/fs/lustre on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
-% In this work, we relied on the LMT service integrated into the Cray Sonexion Lustre platform \cite{Keopp2014} and built upon the pyLMT framework developed at NERSC \cite{Uselton2009} to archive these measurements.
-LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates on a per-server basis at five-second intervals.
+LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates.
 
 \label{sec:methods/ggiostat}
-\textbf{ggiostat} is a tool developed at ALCF to collect analogous data from IBM Spectrum Scale (GPFS) file systems.
-It uses the \texttt{mmpmon} monitoring system built into GPFS to retrieve metrics from server and client clusters.
-These metrics are queried on five-second intervals by a persistent monitoring daemon and stored in a database.
-In this study, we used bytes read and written, read and write request counts, and metadata operation counts which were collected on a per-cluster basis.
+\textbf{ggiostat} is a tool developed at ALCF to collect similar data from IBM Spectrum Scale (GPFS) file systems.
+It includes a daemon that uses GPFS's \texttt{mmpmon} monitoring system to retrieve and store metrics from server and client clusters.
+In this study, we examined bytes read and written, read and write request counts, and metadata operation counts.% which were collected on a per-cluster basis.
 
 \subsection{Health monitoring} \label{sec:methods/health}
 
@@ -150,9 +148,10 @@ The analysis of these benchmark data reflect a total of 118 (Mira) and 1,014 (Ed
 
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 
-The instrumentation tools described in Section \ref{sec:methods} do not provide a fixed reference point on I/O behavior because
-the workload and state of the system evolve over time.
-To characterize the baseline behavior of Edison and Mira and define the climate of their I/O subsystems, we ran daily I/O performance regression tests based on both synthetic and application-derived workloads.
+\noindent
+%The instrumentation tools described in Section \ref{sec:methods} do not provide a fixed reference point on I/O behavior because
+%the workload and state of the system evolve over time.
+%To characterize the baseline behavior of Edison and Mira and define the climate of their I/O subsystems, we ran daily I/O performance regression tests based on both synthetic and application-derived workloads.
 %We chose 
 %a collection of benchmarks because performance is not well-represented
 %by a single benchmark result; each storage system has its own strengths
@@ -163,7 +162,12 @@ To characterize the baseline behavior of Edison and Mira and define the climate 
 %one TOKIO-ABC instance is active at a time, and all benchmark results
 %and Darshan logs are archived for analysis at the conclusion of the job.
 %The initial set of benchmarks included in TOKIO-ABC are as follows:
-The specific benchmarks we chose are as follows.
+
+We chose the size our benchmark runs to 
+%The scale at which we ran each benchmark was governed by two goals:
+a) saturate the storage system and
+b) limit core-hour consumption sufficient for daily execution.
+The specific benchmark configurations used are detailed in Table \ref{tab:bench-config}, and the four applications chosen are described as follows. 
 
 The \textbf{Hardware Accelerated Cosmology Code (HACC)} framework~\cite{habib2012} is an N-body cosmology application
 for simulating the the evolution of the Universe.
@@ -192,16 +196,8 @@ We configured the BD-CATS I/O kernel to emulate the I/O workload of
 a three-dimensional clustering that reads 75\% of the data
 contained in the VPIC data file.
 
-The \textbf{IOR} benchmark is a widely used tool
-to characterize the performance of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}.
-For the purposes of this work, we applied IOR to determine each file system's performance variability under conditions where an application performs I/O using idealized parameters for each
-file system.
-
-We chose the size of each benchmark run based on two goals:
-%The scale at which we ran each benchmark was governed by two goals:
-a) to saturate the storage system and
-b) to limit core-hour consumption sufficient for daily execution.
-The specific benchmark configurations used are detailed in Table \ref{tab:bench-config}.
+\textbf{IOR} is a widely used tool to characterize the performance of parallel file systems\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}.
+For the purposes of this work, we applied IOR to determine each file system's performance variability under conditions where an application performs I/O using idealized parameters for each file system.
 
 % abandon all hope ye who try to edit this stupid table by hand.  I used
 % http://www.tablesgenerator.com to make it.
