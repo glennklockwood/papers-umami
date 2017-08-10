@@ -181,7 +181,7 @@ Retrieving these data on Edison is accomplished by querying the job accounting d
 Similarly, the job accounting data on Mira is stored in a database accessible via a Python API called Ni.
 The API allows pulling out a list of jobs for a given time range and running on a specific resource.
 
-\subsection{Job Topology} \label{sec:methods/other}
+\subsection{Job topology} \label{sec:methods/other}
 
 To identify any effects of job placement on Edison's dragonfly network and Mira's 5D torus, we calculate the maximum radius for a job as a rough approximation of how delocalized the job is on the high-speed network.
 By using the topological coordinates of each job's compute node allocation to derive a center of mass of a job, we define this metric as the maximum distance between that center of mass and a compute node.
