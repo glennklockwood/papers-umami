@@ -1,16 +1,18 @@
 \begin{abstract}
 
 I/O efficiency is essential to productivity in scientific computing, especially as many scientific domains become more data-intensive.
-A variety of characterization tools have been used to elucidate and optimize specific aspects of parallel I/O.
-However, analyzing individual component of complex I/O subsystems in isolation fails to provide insight into the most important questions:
+Many characterization tools have been used to elucidate specific aspects of parallel I/O performance, but
+analyzing individual component of complex I/O subsystems in isolation fails to provide insight into critical questions:
 how do the I/O components interact,
 what are reasonable expectations for application performance, and what are the underlying causes and effects of I/O performance problems?
-These questions suggest the need for a unified, comprehensive, multi-level, system-wide I/O characterization tool, but such an effort would fail to capitalize on existing proven component-level characterization tools, and it would not be portable across facilities with diverse computing and storage vendors.
+% These questions suggest the need for a unified, comprehensive, multi-level, system-wide I/O characterization tool, but such an effort would fail to capitalize on existing proven component-level characterization tools, and it would not be portable across facilities with diverse computing and storage vendors.
+To address these questions while capitalizing on existing component-level characterization tools,
+we propose an approach using on-demand, modular synthesis of \emph{existing} I/O characterization data sources into a unified monitoring and metrics interface (UMAMI) that provides a normalized, coherent, holistic view of I/O behavior. 
 
-In this work, we instead evaluate the feasibility of a practical alternative approach: on-demand, modular synthesis of \emph{existing} I/O characterization data sources into a normalized, coherent, holistic view of I/O behavior.
-We explore this approach on two distinct large-scale computing platforms with three benchmark case studies.
-The case studies highlight the importance of analyzing application I/O performance in context with both contemporaneous and historical component metrics.
-The case studies also reveal the challenges of portable data integration and the potential impact of applying these techniques to production workloads.
+
+In this work, we evaluate the feasibility of this integrative approach by applying it to a month-long benchmarking study conducted on on two distinct large-scale computing platforms.
+We present three case studies which highlight the importance of analyzing application I/O performance in context with both contemporaneous and historical component metrics, and we provide new generalizable insights into the multiple factors that can affect I/O performance.
+%The case studies also reveal the challenges of portable data integration and the potential impact of applying these techniques to production workloads.
 
 % I/O efficiency is essential to productivity in scientific computing,
 % especially as many scientific domains become more data-intensive.
