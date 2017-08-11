@@ -1,29 +1,6 @@
 % \section{System-Level Analysis} \label{sec:results}
 \section{Baseline I/O Performance} \label{sec:results}
 
-% We begin our analysis with a broad study of the overall I/O climate of each system to
-% a) establish baseline expectations for performance and variability and b) formally quantify the relationships between I/O components.
-%
-%These two factors are critical to interpreting I/O performance, but they have been traditionally documented and communicated in informal anecdotes and institutional expert knowledge.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \subsection{Baseline I/O Performance} \label{sec:results/overview}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Figure \ref{fig:perf-summary-boxplots-fs} shows the distribution of performance measured by all benchmarks normalized to the highest performance observed on each file system.
-% Mira's distribution of variation is the most narrow, with all benchmarks' 25th percentiles well above 50\% of the peak performance.
-% By comparison, shared-file I/O performance (BD-CATS, IOR/shared, and VPIC) on Edison's file systems is appreciably lower than the maximum observed peak, which correspond to file-per-process read workloads (HACC and IOR/fpp).
-% Although the source of this disparity in variation between Mira and Edison is not clear from Figure \ref{fig:perf-summary-boxplots-fs} alone, we explore the underlying causes in subsequent sections.
-
-% \begin{figure}[t]
-%     \centering
-%     \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots-per-fs.pdf}
-%     \caption{I/O performance for Edison (scratch1, scratch2, scratch3) and Mira (mira-fs1), normalized to the maximum performance of all tests performed on each file system.
-%     Each box reflects the distribution of an application workload and its read or write performance.
-%     Whiskers extend to the 5th and 95th percentiles.}
-%     \label{fig:perf-summary-boxplots-fs}
-% \vspace{-.2in}
-% \end{figure}
 
 We first establish the baseline performance variation of each benchmark on each system tested.
 % Such variation in peak file system performance caused by different I/O access patterns is well documented~\cite{Lofstead2010,Uselton2010,Xie2012}.
