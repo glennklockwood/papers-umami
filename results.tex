@@ -64,30 +64,29 @@ When $\mathit{CF}_{\mathit{bw}} = 1.0$, all of the server-side I/O can be attrib
 \vspace{-.2in}
 \end{figure}
 
-These $\mathit{CF}$ metrics, along with the system health and job topology data, then us to contextualize performance anomalies and describe where a job's I/O performance falls on the spectrum of normalcy relative to jobs with similar motifs.
-
-To concisely visualize all of this information and identify metrics that are most likely responsible for abnormal performance, we display the data on a unified measurements and metrics interface (UMAMI) diagram.
+These $\mathit{CF}$ metrics, along with the system health and job topology data, let us contextualize performance anomalies and describe where a job's I/O performance falls on the spectrum of normalcy relative to jobs with similar motifs.
+To concisely visualize all of this information and identify the metrics most likely contributing to abnormal performance, we display these data on a unified measurements and metrics interface (UMAMI) diagram.
 UMAMI, demonstrated in Figure \ref{fig:umami-scratch2-hacc-write}, presents historic measurements (the I/O climate) and summarizes each metric's distribution in an accompanying box plot.
 These time series plots terminate with the metrics for the job of interest and define the I/O weather at the time that job ran.
-By overlaying this weather on the climate (dashed lines in the box plots), UMAMI provides a quick view of how each metric compared to the statistical distribution of past weather conditions.
-With this juxtaposition of a file system's weather and its overall climate, a user can differentiate between a long-term performance problem and a statistically rare event.% analogous to an extreme weather event.
+By overlaying this weather on the climate (dashed lines in the box plots), UMAMI provides a quick view of how each metric compared to the statistical distribution of past weather conditions and rapid differentiation of statistically rare events from long-term performance problems.% analogous to an extreme weather event.
+
+In the remainder of this section, we identify different factors that do and do not contribute to I/O performance loss based on the holistic data analysis enabled by UMAMI.
 
 % In the following sections, we illustrate how UMAMI can be applied to the problem of diagnosing poor performance of individual jobs in three case studies.
 
 \subsection{Case Study: I/O Contention}
 
-The specific UMAMI example shown in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test which took place on March 3.
-Per the "Job performance" measurement and its value relative to previous instances of this type of job, this job's performance is statistically abnormal.
-This poor performance was accompanied by an unusually low coverage factor and high metadata load, and these unfavorable conditions are highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
-The metrics corresponding to blue dashed lines fell into the most favorable quartile for this problematic job, but they were also not found to correlate with performance.
-Thus, we can attribute this HACC job's poor performance to I/O loads extrinsic to this job which competed for both bandwidth and metadata operation rates.
+The UMAMI example in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test whose "Job performance" measurement and its value relative to previous instances of this type of job indicate statistically abnormal performance.
+This poor performance was accompanied by an unusually low $\mathit{CF}_{\mathit{bw}}$ and high metadata load, highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
+The metrics corresponding to orange dashed lines ($\mathit{CF}_{\mathit{nodehrs}}$ and the number of overlapping jobs) fall in the second quartile, indicating that the number of concurrently running jobs and concurrently active compute nodes are too coarse-grained of metric to predict I/O performance.
+The metric corresponding to blue dashed line, the maximum job radius, falls into the most favorable quartile for this problematic job and HACC has shown good I/O performance on much more topologically distributed node allocations.
+Thus, we can attribute this HACC job's poor performance to I/O loads extrinsic to this job which competed for both bandwidth and metadata operation rates, and the number of concurrently running jobs and HACC's placement on Edison's dragonfly network had no discernible impact.
 
 \subsection{Case Study: Metadata Load}
 
-Figure \ref{fig:umami-mira-fs1-vpic-write} represents a VPIC write workload
-that showed poor performance on Mira.
-Its coverage factor is within normal parameters (orange lines in the box plots denote a value in the second quartile) indicating low bandwidth contention.
-Although the IOPS coverage factor is also low, previous conditions have been worse despite a lack of dramatic performance loss (e.g., on March 7).
+Figure \ref{fig:umami-mira-fs1-vpic-write} shows the UMAMI for a poorly performing VPIC workload.
+$\mathit{CF}_{\mathit{bw}}$ is within normal parameters indicating regular levels of bandwidth contention.
+Although $\mathit{CF}_{\mathit{IOPS}}$ is low, previous values have been equally low despite a lack of dramatic performance loss (e.g., on March 10).
 The only metric that shows a unique, undesirable value is the number of \texttt{readdir(3)} operations handled by the file system.
 This is indicative of an expansive file system traversal that was being performed at the same time as the job execution.
 % The \emph{readdir(3)} metric was demonstrated to correlate moderately negatively with performance in Figure \ref{fig:correlation-table}.
