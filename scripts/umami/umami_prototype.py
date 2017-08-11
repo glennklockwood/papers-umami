@@ -40,6 +40,7 @@ _DEFAULT_ROW_PLOTS = {
     'edison': [
         ('darshan_agg_perf_by_slowest_gibs', True),
         ('coverage_factor',                  True),
+        ('nodehr_coverage_factor',           True),
         ('lmt_mds_ave',                      False),
         ('lmt_ops_opencloses',               False),
         ('lmt_oss_max',                      False),
@@ -53,8 +54,8 @@ _DEFAULT_ROW_PLOTS = {
         ('coverage_factor',                  True),
         ('iops_coverage_factor',             True),
         ('ggio_ops_opencloses',              False),
-        ('ggio_ops_rw',                      False),
-#       ('ggio_read_dirs',                   False),
+#       ('ggio_ops_rw',                      False),
+        ('ggio_read_dirs',                   False),
     ],
 }
 
@@ -108,12 +109,13 @@ df_edison = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
                                                    'data',
                                                    'dat',
                                                    'tokio-lustre',
-                                                   'edison-abc-stats_2-14_3-23.csv')).dropna()
+                                                   'edison-abc-stats_2-14_3-28_v2.csv')).dropna()
 df_edison['darshan_rw'] = [ 'write' if x == 1 else 'read' for x in df_edison['darshan_write_mode?'] ]
 df_edison['darshan_file_mode'] = [ 'shared' if x in ['H5Part','MPIIO'] else 'fpp' for x in df_edison['darshan_api'] ]
 df_edison.rename(columns={'lmt_bytes_covered': 'coverage_factor'}, inplace=True)
 df_edison['system'] = "edison"
 df_edison['iops_coverage_factor'] = -1.0
+df_edison['nodehr_coverage_factor'] = df_edison['job_num_nodes'] *                                       (df_edison['darshan_end_time'] - df_edison['darshan_start_time']) / 3600.0 /                                       (df_edison['job_concurrent_nodehrs'])
 
 ### Mira
 df_mira = pandas.DataFrame.from_csv(os.path.join(_REPO_BASE_DIR,
@@ -131,6 +133,7 @@ df_mira.rename(columns=rename_dict, inplace=True)
 df_mira['darshan_file_mode'] = [ 'shared' if x in ['H5Part','MPIIO'] else 'fpp' for x in df_mira['darshan_api'] ]
 df_mira['coverage_factor'] = df_mira['darshan_total_bytes'] / (df_mira['ggio_bytes_read'] + df_mira['ggio_bytes_written'])
 df_mira['iops_coverage_factor'] = (df_mira['darshan_total_rws'] / (df_mira['ggio_read_reqs'] + df_mira['ggio_write_reqs']))
+df_mira['nodehr_coverage_factor'] = -1.0
 
 
 
@@ -209,6 +212,8 @@ _COUNTER_LABELS['lmt_ops_total'] = "Server Metadata Ops"
 _COUNTER_LABELS['lmt_ops_opencloses'] = "Server Open/Close Ops"
 _COUNTER_LABELS['ggio_ops_opencloses'] = "Server Open/Close/Creat Ops"
 _COUNTER_LABELS['ggio_ops_rw'] = "Server Read-Write Ops"
+_COUNTER_LABELS['nodehr_coverage_factor'] = "Coverage Factor (Node Hours)"
+_COUNTER_LABELS['coverage_factor'] = "Coverage Factor (Bandwidth)"
 
 ### Scale op counts to make them plottable:
 for i in df.keys():
@@ -217,12 +222,15 @@ for i in df.keys():
         if max_val > 2e9:
             df[i] = df[i] / 1e9
             _COUNTER_LABELS[i] += " (GOps)"
+            print "Scaling %s to GOps" % i
         elif max_val > 2e6:
             df[i] = df[i] / 1e6
             _COUNTER_LABELS[i] += " (MOps)"
+            print "Scaling %s to MOps" % i
         elif max_val > 2e3:
             df[i] = df[i] / 1e3
             _COUNTER_LABELS[i] += " (KOps)"
+            print "Scaling %s to KOps" % i
 
 
 # ## Define what we want UMAMI to show us
@@ -230,29 +238,25 @@ for i in df.keys():
 
 ### This list will contain the input parameters for each UMAMI we want to generate
 umami_list = [
-    ### For generating the "I/O contention" case study figure
+    ### For generating the "I/O contention" case study figure (v2)
     {
         'fs': 'scratch2',
         'app': 'HACC-IO',
         'rw': 'write',
         'suffix': None,
         'other_filters': [
-            (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 25,  0,  0,  0).timetuple())),
             (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  3, 12,  0,  0).timetuple())),
         ],
-        'rows': _DEFAULT_ROW_PLOTS['edison'],
-    },
-    ### For generating the "I/O contention" case study figure (v2)
-    {
-        'fs': 'scratch2',
-        'app': 'HACC-IO',
-        'rw': 'write',
-        'suffix': '-v2',
-        'other_filters': [
-#           (df['darshan_end_time'] >= time.mktime(datetime.datetime(2017,  2, 25,  0,  0,  0).timetuple())),
-            (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  3, 12,  0,  0).timetuple())),
+        'rows': [
+            ('darshan_agg_perf_by_slowest_gibs', True),
+            ('coverage_factor',                  True),
+            ('nodehr_coverage_factor',           True),
+            ('lmt_mds_ave',                      False),
+            ('lmt_ops_opencloses',               False),
+            ('job_max_radius',                   False),
+            ('job_concurrent_jobs',              False),
         ],
-        'rows': _DEFAULT_ROW_PLOTS['edison'],
+
     },
     ### For generating the "namespace contention" case study figure
     {
@@ -278,9 +282,10 @@ umami_list = [
         ],
         'rows': [
             ('darshan_agg_perf_by_slowest_gibs', True),
+            ('coverage_factor',                  True),
+#           ('nodehr_coverage_factor',           True),
             ('lmt_oss_max',                      False),
             ('ost_max_pct',                      False),
-            ('coverage_factor',                  True),
         ],
     },
 ]
