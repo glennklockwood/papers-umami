@@ -85,10 +85,9 @@ Thus, we can attribute this HACC job's poor performance to I/O loads extrinsic t
 \subsection{Case Study: Metadata Load}
 
 Figure \ref{fig:umami-mira-fs1-vpic-write} shows the UMAMI for a poorly performing VPIC workload.
-$\mathit{CF}_{\mathit{bw}}$ is within normal parameters indicating regular levels of bandwidth contention.
-Although $\mathit{CF}_{\mathit{IOPS}}$ is low, previous values have been equally low despite a lack of dramatic performance loss (e.g., on March 10).
-The only metric that shows a unique, undesirable value is the number of \texttt{readdir(3)} operations handled by the file system.
-This is indicative of an expansive file system traversal that was being performed at the same time as the job execution.
+$\mathit{CF}_{\mathit{bw}}$ is within normal parameters indicating normal (minimal) levels of bandwidth contention.
+$\mathit{CF}_{\mathit{IOPS}}$ is abnormally low though previous values have been equally low despite a lack of dramatic performance loss (e.g., on March 4 and 9).
+The only metric that shows a unique, undesirable value is the number of \texttt{readdir(3)} operations handled by the file system, indicative of an expansive file system traversal that was being performed at the same time as the job execution.   From this, we can infer that a namespace scan, not bandwidth contention, contributed to the abnormally poor HACC performance on the March 11 run.
 % The \emph{readdir(3)} metric was demonstrated to correlate moderately negatively with performance in Figure \ref{fig:correlation-table}.
 
 \begin{figure}[t]
@@ -106,10 +105,10 @@ This is indicative of an expansive file system traversal that was being performe
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This holistic approach is also able to identify longer-term performance degradation.
-Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view of such an event on Edison's scratch3 file system where coverage factors were not unusual despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec.
-The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period coincided also with the scratch3 file system reaching critical levels of fullness.
-Although such correlations cannot define causative relationships, these conditions indicated a relationship between critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance.
-Incidentally, this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.
+Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view of such an event on Edison's scratch3 file system where coverage factors were not unusual despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec between February 24 and March 9.
+The magnitude of performance loss followed the highest CPU load observed across all of the Lustre OSSes almost exactly, and this period also coincided with the scratch3 file system reaching critical levels of fullness.
+Although these correlations cannot define causative relationships, these conditions correlate critically full storage devices and CPU load (e.g., an increasing cost of scavenging empty blocks) that impacts application performance.
+Incidentally, this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.  
  
 \begin{figure}[t]
     \centering

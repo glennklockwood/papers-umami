@@ -1,67 +1,10 @@
-%\section{Conclusions and Future Work} \label{sec:conclusions}
 \section{Conclusions} \label{sec:conclusions}
 
-% Attempting to understand I/O behavior on modern-day HPC systems is a daunting task, due in large part to the increasingly complex and hierarchical nature of the underlying I/O subsystem.
-% Understanding I/O behavior on modern-day HPC systems is a daunting task, due in large part to the increasingly complex and hierarchical nature of the underlying I/O subsystem.
-% In this work we have presented TOKIO, a powerful framework providing holistic instrumentation and analysis of HPC I/O subsystem behavior by collecting and integrating data from numerous components throughout the system.
-% To address this growing complexity, we have presented TOKIO, a powerful framework for integrating data from numerous components throughout the HPC I/O subsystem to provide holistic analysis of I/O behavior.
-% We have leveraged the TOKIO framework to investigate I/O subsystem behavior on two leadership-class HPC systems, with each system subjected to daily I/O performance regression benchmarking over a 1-month period.
-%We have applied the TOKIO framework to investigate I/O performance variation on two large-scale HPC systems, with each system subjected to daily I/O performance regression benchmarking over a month-long period.
-We have demonstrated the power of holistic, multicomponent performance analysis for understanding I/O behavior by integrating existing instrumentation from applications, storage servers, system health, and job scheduling systems and into a unified analysis.
-We then applied this approach to study I/O performance variation on two large-scale HPC systems through daily I/O performance regression benchmarking over a month-long period.
-The data from this experiment allowed us to characterize the I/O \emph{climate} on each system, then detect and investigate particular instances of abnormal I/O \emph{weather}.
+By integrating data from existing tools to gather data from applications, storage systems, system health, and job scheduling into a single holistic analysis tool, we demonstrated that I/O performance variation can only be complete understood by examining all of the components within the I/O subsystem in a holistic manner.  We performed a month-long benchmarking study and presented several case studies to underscore these findings and characterize the I/O \emph{climate} on each system, then detect and investigate particular instances of abnormal I/O \emph{weather}.
 
-By integrating a range of normalized monitoring metrics into the UMAMI diagram, we have provided a coherent foundation for simplified characterization of HPC I/O behavior across different platforms, thereby enabling otherwise impractical comparative studies and sharing of analysis methods. 
-%We showed that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors.
-Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance;
-%we observed numerous instances of jobs that had uninhibited access to storage system resources that still exhibited poor I/O performance
-we highlight cases where metadata op contention and storage capacity both dramatically impacted performance.
-%and a moderate inverse correlation between performance and extrinsic read/write operations
-We also show that there is no single monitoring metric that predicts I/O performance universally across HPC platforms;
+By integrating a range of normalized monitoring metrics into the UMAMI diagram, we found that
+contention with other I/O workloads for storage system bandwidth, metadata op rates, and storage capacity can, but do not always, have an impact on application I/O performance.
+No single monitoring metric that predicts I/O performance universally across HPC platforms;
 the most highly correlated metrics depend on system architecture, configuration parameters, workload characteristics, and system health.
-
-%In future work we will incorporate additional sources of I/O subsystem
-%instrumentation, explore to what degree the TOKIO capability can be made
-%available to end users, apply more in-depth statistical analysis to data
-%as it is archived over time, and investigate alternative groupings of
-%metrics to identify combinations of applications that produce
-%adversarial I/O load.
-
-%We were also able to use TOKIO for providing in-depth analysis of jobs exhibiting particularly poor I/O performance to attempt to uncover potential root causes.
-%We developed the TOKIO-UMAMI analysis tool to help diagnose I/O performance problems by contextualizing the historical trends of pertinent I/O metrics with the values observed for a specific job of interest.
-
-%This study explored only one of the potential applications of TOKIO though.  Looking forward, it is possible to group historic data around server-side traffic patterns rather than application I/O motifs to identify collections of applications that, when run together, result in an uncommonly adversarial I/O load.  This could advise coscheduling to optimize performance.  In addition, the grouping process itself can be automated with clustering or other statistical techniques to explore emergent I/O behavior in an unbiased fashion.
-
-%%% GKL: I would really like to propose plugging Xiaosong Ma's clustering-based burst classification into this so that TOKIO-UMAMI can automatically figure out which jobs should define climate.  Not sure where it will fit though...
-% Capturing an historic record of a file system's climate for a particular workload is not always straightforward, and at present, users will have to self-identify jobs and Darshan logs that should be used to build this historic record.
-% Alternatively, UMAMI can be seeded with data from baseline performance tests, as was done in this study, provided that the user's I/O motif is sufficiently similar to one of the baseline tests' motifs.
-% This can be automated to a large degree though; the simplest approach is to scan Darshan logs for similar I/O transaction size distributions as seeds.
-% Recently, Liu et al have also demonstrated combining resource manager logs and server-side I/O logs to identify a series of I/O bursts with specific jobs using a density-based clustering method~\cite{Liu2016}.
-% We believe that adapting this clustering-based classification approach with TOKIO-UMAMI should be a straightforward approach to building an I/O climate record for any arbitrary job.
-
-% \todo{It would be great if there were some tangible artifacts from this work.
-% Possible examples:}
-% \begin{itemize}
-% \item open repo for benchmark configs and cron jobs so others can replicate
-% performance regression testing
-% \item anonymized data collected in study
-% \item new data collection tools (LMT monitoring, Lustre failover monitoring,
-% mmpmon monitoring, etc.)
-% \end{itemize}
-
-%%% GKL: I lament the removal of these high-level findings :(
-%%% they seem highly quotable, and I feel like we might be giving up future citations by not explicitly stating this stuff.
-% Overall, instances of abnormally poor I/O performance on Mira were most often attributable to equally abnormal coverage factors (indicating bandwidth contention) or high metadata rates (opens/closes and readdirs).
-% Of all \todo{UPDATE}92 tests run on this file system, only one case of performance falling in the first quartile was not accompanied by one of these server-side contention conditions.
-% The most common sources of performance loss on Edison were more difficult to neatly categorize because server-side IOPS were not measured explicitly.
-% In those cases where performance was poor despite a high coverage factor, many secondary indicators of high IOPS load (such as high data server CPU load and high metadata rates) were observed.
-
-% Qualitatively, the highly variable I/O workload and "I/O weather" conditions across the Edison file systems obfuscate a straightforward analysis of all of the sources of performance variation on its file systems.
-% Over the course of this study, we found that the TOKIO framework often exposed variation resulting from the confluence of several factors that only correlate weakly with performance when examined independently.
-% Thus, TOKIO requires some amount of expert knowledge to confidently determine the root cause of I/O problems on file systems that are subject to large amounts of incoherent or otherwise noisy I/O.
-% That said, presenting the historic correlations between performance and each variable through UMAMI does dramatically reduce the exploration space in this effort.
-
-%%% GKL: this might be appropriate if we want to include future outlook or other use cases
-% Finally, although we applied TOKIO and UMAMI to build I/O climate histories specific to applications based on Darshan logs, it is equally possible to group historic data around similar periods of server-side traffic.
-% For example, TOKIO can be used to identify collections of applications that, when run together, result in an uncommonly adversarial I/O load or, conversely, surprisingly good performance.
-% From this, it is easy to envision an opportunity to inform job scheduling to avoid I/O contention between two frequently conflicting applications.
+Factors such as job radius and $\textit{CF}_{\textit{nodehrs}}$ do not capture sufficient detail to reliably describe performance loss.
+From these findings, we have a basis for improving existing I/O monitoring tools to capture more detailed metrics that can strongly affect I/O performance.
