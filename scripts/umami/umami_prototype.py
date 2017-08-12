@@ -43,11 +43,11 @@ _DEFAULT_ROW_PLOTS = {
         ('nodehr_coverage_factor',           True),
         ('lmt_mds_ave',                      False),
         ('lmt_ops_opencloses',               False),
-        ('lmt_oss_max',                      False),
-        ('ost_avg_pct',                      False),
+#       ('lmt_oss_max',                      False),
+#       ('ost_avg_pct',                      False),
 #       ('ost_bad_pct',                      False),
         ('job_max_radius',                   False),
-        ('job_concurrent_jobs',              False),
+#       ('job_concurrent_jobs',              False),
     ],
     'mira': [
         ('darshan_agg_perf_by_slowest_gibs', True),
@@ -247,15 +247,7 @@ umami_list = [
         'other_filters': [
             (df['darshan_end_time'] <= time.mktime(datetime.datetime(2017,  3,  3, 12,  0,  0).timetuple())),
         ],
-        'rows': [
-            ('darshan_agg_perf_by_slowest_gibs', True),
-            ('coverage_factor',                  True),
-            ('nodehr_coverage_factor',           True),
-            ('lmt_mds_ave',                      False),
-            ('lmt_ops_opencloses',               False),
-            ('job_max_radius',                   False),
-            ('job_concurrent_jobs',              False),
-        ],
+        'rows': _DEFAULT_ROW_PLOTS['edison'],
 
     },
     ### For generating the "namespace contention" case study figure
@@ -478,10 +470,6 @@ for umami_config in umami_list:
 
     generate_umami( df_plot, umami_config['rows'], output_file=output_file )
     print
-
-
-
-
 
 
 
