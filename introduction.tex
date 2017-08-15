@@ -1,35 +1,36 @@
 \section{Introduction} \label{sec:introduction}
 
-The stratification of performance and capacity in storage technology is motivating the design of increasingly complex parallel storage systems architectures.
-Leadership-class systems are now being deployed with flash-based burst buffers~\cite{Henseler2016} that provide even higher performance than disk-based scratch file systems~\cite{Bhimji2016}.
-However, this performance comes at the cost of increasing complexity, making I/O performance analysis increasingly difficult.
+The stratification of performance and capacity in storage technology is motivating the design of increasingly complex parallel storage system architectures.
+Leadership-class systems are now being deployed with flash-based burst buffers~\cite{Henseler2016} that provide even higher performance than disk-based scratch file systems do~\cite{Bhimji2016}.
+This performance comes at the cost of increasing complexity, however, making I/O performance analysis increasingly difficult.
 %Although designed to provide optimal performance and capacity on an economic basis, this increasing number of interoperating components also complicates the task of understanding I/O performance.
 
-The current state of practice is to monitor each component in the I/O stack separately, often resulting in telemetric data that are not obviously compatible.
+The current practice is to monitor each component in the I/O stack separately, often resulting in telemetric data that are not obviously compatible.
 %However, these components approach I/O from different perspectives, often resulting in component-level monitoring data that are not obviously compatible.
-For example, server-side monitoring tools such as LMT~\cite{lmt} measure a limited number of metrics over time to achieve low overhead, while application-level profiling tools such as Darshan~\cite{carns200924} track many metrics that are summarized on a per-job basis.
+%GAIL - I know that later you spell out LMT. Should you instead do it here?
+For example, server-side monitoring tools such as LMT~\cite{lmt} measure a limited number of metrics over time to achieve low overhead, whereas application-level profiling tools such as Darshan~\cite{carns200924} track many metrics that are summarized on a per-job basis.
 % Data types representing the same logical quantity, such as data written, may also be expressed in different units such as bytes, pages, and blocks, and these units of data may also be transformed by aggregation, coalescing, and caching as they traverse the I/O stack.
 At present, the gaps of information resulting from these incompatibilities are filled by expert institutional knowledge and intuition.
 
-Absent this expert knowledge though, it is challenging to determine if a job's I/O performance is normal on any specific HPC system given the application's I/O pattern.
-Relying on intuition to tie together the different sources of I/O data and decide if a job performed as should be expected becomes unsustainable as storage subsystems become larger and more complex.  
-Thus, it is becoming critical to integrate component-level data and present a coherent, holistic view of the I/O subsystem and its inter-dependent behavior.
+Absent this expert knowledge, however, it is challenging to determine whether a job's I/O performance is normal on any specific HPC system given the application's I/O pattern.
+Relying on intuition to tie together the different sources of I/O data and decide whether a job performed as expected becomes unsustainable as storage subsystems become larger and more complex.  
+Thus, it is becoming critical to integrate component-level data and present a coherent, holistic view of the I/O subsystem and its interdependent behavior.
 
 To demonstrate the insights possible with a holistic approach, we have conducted a month-long benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems.
-Using component-level data already being collected on those systems, we then present the analysis of data integrated from application-level profiling, file system servers, and other system-level components.
-By presenting how these metrics vary over the one-month experiment in a unified monitoring and metrics interface (UMAMI), this holistic approach is able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
+Using component-level data already being collected on those systems, we then present an analysis of data integrated from application-level profiling, file system servers, and other system-level components.
+By showing how these metrics vary over the one-month experiment in a unified monitoring and metrics interface (UMAMI), this holistic approach is able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they respond to a specific workload.
-Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
+Complementary to the I/O climate, the \emph{I/O weather} is determined by the transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
-The primary contributions of this work are as follows:
+The primary contributions of this work are as follows.
 \begin{itemize}[leftmargin=*]
 % Nick: "We demonstrate an effective way" item is not a contribution
 % \item We demonstrate an effective way to integrate the data from existing component-level tools available on NERSC's Edison and ALCF's Mira systems, along with a month-long automated I/O benchmarking effort, to demonstrate novel insights into performance variation.
-\item We demonstrate that the degree of variability in I/O performance is function of both the storage system and the application's I/O motif.
+\item We demonstrate that the degree of variability in I/O performance is a function of both the storage system and the application's I/O motif.
 Different I/O patterns and read/write workloads expose different degrees of performance variation on different parallel file system architectures.
 \item We show that I/O performance itself is affected by both intrinsic application characteristics and extrinsic storage system factors.
 Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance, and
 we highlight cases where metadata contention and storage capacity both dramatically impact performance.
-\item We show that there is no single monitoring metric that predicts I/O performance universally across HPC platforms.
+\item We show that no single monitoring metric predicts I/O performance universally across HPC platforms.
 The system architecture, configuration parameters, workload characteristics, and system health all govern which metrics relate to performance.
 \end{itemize}
