@@ -4,26 +4,27 @@
 \section{Experimental Methods} \label{sec:platforms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To examine the utility and generality of integrating multiple component-level monitoring tools' data into a single view (UMAMI), we conducted a month-long experiment where a collection of I/O benchmarks ran daily on two distinct HPC platforms:
-Edison, a Cray XC-30 system at the National Energy Research Scientific Computing Center (NERSC), and Mira, a Blue Gene/Q system at the Argonne Leadership Computing Facility (ALCF).
-These benchmarks ran over 29 and 39 days on Mira and Edison, respectively, during which we collected measurements from the data sources described in Section \ref{sec:methods}.  These data represent a total of 118 and 1,014 benchmark runs on one and three file systems on Mira and Edison.
+To examine the utility and generality of integrating data from multiple component-level monitoring tools into a single view (UMAMI), we conducted an experiment using a collection of I/O benchmarks on two distinct HPC platforms:
+Edison, a Cray XC-30 system at the National Energy Research Scientific Computing Center (NERSC), and Mira, an IBM Blue Gene/Q system at the Argonne Leadership Computing Facility (ALCF) (see Table I).
+These benchmarks ran over 29 and 39 days on Mira and Edison, respectively, during which we collected measurements from the data sources described in Section \ref{sec:methods}.  These data represent a total of 118 and 1,014 benchmark runs on one and three file systems on Mira and Edison, respectively.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \noindent
-For this study, we ran the following benchmark applications:
+For this study, we ran the following benchmark applications.
 
 \begin{itemize}[leftmargin=*]
+%GAIL - I moved IOR up to top of list to match Table II
+\item
+\textbf{IOR}, a widely used tool to characterize parallel file system performance~\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}, used to determine each file system's performance under optimal I/O workloads.
 \item 
 \textbf{Hardware Accelerated Cosmology Code (HACC)}, an N-body cosmology application~\cite{habib2012}, configured to generate 96 MiB/process using POSIX file-per-process checkpoint I/O.
  \item
 \textbf{Vector Particle-In-Cell (VPIC)}, a plasma physics application~\cite{Bowers2008}, configured to write 1.0 GiB per process to a single HDF5 file using the H5Part API~\cite{H5Part}.
  \item
 \textbf{BD-CATS}, a clustering analysis system used to analyze VPIC output data~\cite{Patwary2015},  configured to read 75\% of our VPIC output to emulate a 3D clustering analysis.
- \item
-\textbf{IOR}, a widely used tool to characterize parallel file system performance~\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}, used it to determine each file system's performance under optimal I/O workloads.
  \end{itemize}
 
 All benchmarks were run using 1,024 and 128 nodes (16 processes per node) on Mira and Edison, respectively.
@@ -38,61 +39,63 @@ and the resulting data volumes are summarized in Table~\ref{tab:bench-config}.
 
 Edison is a Cray XC-30 system deployed at NERSC whose architecture is described in Table \ref{tab:system-config}.
 Its scratch1 and scratch2 file systems are identically configured, and users are evenly distributed across both such that the two file systems should have similar levels of baseline I/O traffic.
-However, access to Edison's scratch3 file system is only granted to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
+However, access to Edison's scratch3 file system is granted only to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
 
 Edison's architecture routes I/O traffic from the Aries high-speed network to the InfiniBand-based SAN fabric through LNET I/O nodes.
-Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems to ensure that each file system's traffic is isolated as it transits I/O nodes.
+Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems, in order to ensure that each file system's traffic is isolated as it transits I/O nodes.
 This also allows jobs of any size to use the maximum number of I/O nodes for each file system.
 
 In this work, all output data was striped over all OSTs in each file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen to saturate each file system's bandwidth.
-As such, our IOR benchmarks demonstrated peak performance at 90\% of the theoretical peaks listed in Table \ref{tab:system-config}.
+Our IOR benchmarks demonstrated peak performance at 90\% of the theoretical peaks listed in Table \ref{tab:system-config}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{ALCF Mira} \label{sec:platforms/mira}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Mira is an IBM Blue Gene/Q system deployed at ALCF whose configuration is described in Table \ref{tab:system-config}.
+Mira is an IBM Blue Gene/Q system deployed at the ALCF whose configuration is described in Table \ref{tab:system-config}.
 In addition to the servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
 Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
 To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
 In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the peak performance of this I/O node allocation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Instrumentation \& Data Sources} \label{sec:methods}
+\section{Instrumentation and Data Sources} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%GAIL - add a sentence or more about this section 
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
 To capture the I/O patterns and user-observable application performance in this study, we used the Darshan I/O characterization tool~\cite{carns200924} which transparently records statistics about an application's I/O behavior at runtime.
 It imposes minimal overhead because it defers the reduction of these statistics until the application exits,
-allowing it be deployed for all production applications on large-scale systems without perturbing performance.  Both Mira and Edison link Darshan into all compiled applications by default.
+allowing it to be deployed for all production applications on large-scale systems without perturbing performance.  Both Mira and Edison link Darshan into all compiled applications by default.
 
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
-Storage system traffic monitoring provides insight into the aggregate system-wide I/O workload imposed on a target storage system.
+Storage system traffic monitoring provides insight into the aggregate systemwide I/O workload imposed on a target storage system.
 This is reflected in the aggregate bytes read and written, I/O operations processed, and other similar metrics collected at the parallel file system level.
-This data can be collected in time-series format with minimal impact to application performance because it is gathered on the storage servers themselves without the involvement of the compute nodes.
-On both Mira and Edison, these data were collected at five-second intervals as a balance between low performance impact and sufficient granularity to correlate performance with server activity~\cite{madireddy2017}.  However the two systems employ two different, file system-specific tools.  
+The data can be collected in time-series format with minimal impact on application performance because the information is gathered on the storage servers themselves without the involvement of the compute nodes.
+On both Mira and Edison, these data were collected at five-second intervals as a balance between low performance impact and sufficient granularity to correlate performance with server activity~\cite{madireddy2017}.  However, the two systems employ different file-system-specific tools.  
 
 \label{sec:methods/lmt}
 \textbf{Lustre Monitoring Tool (LMT)} is a tool that aggregates Lustre-specific kernel counters on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates.
 
 \label{sec:methods/ggiostat}
-\textbf{ggiostat} is a tool developed at ALCF to collect similar data from IBM Spectrum Scale (GPFS) file systems.
-It includes a daemon that uses GPFS's \texttt{mmpmon} monitoring system to retrieve and store metrics from server and client clusters, and it provides data including bytes read and written, read and write request counts, and metadata operation counts.
+\textbf{ggiostat} is a tool developed at the ALCF to collect similar data from IBM Spectrum Scale (GPFS) file systems.
+It includes a daemon that uses GPFS's \texttt{mmpmon} monitoring system to retrieve and store metrics from server and client clusters; and it provides data including bytes read and written, read and write request counts, and metadata operation counts.
 
 \subsection{Health monitoring} \label{sec:methods/health}
 
-Health monitoring data describe what components are offline, failed-over, or another degraded state, and how much storage space remains on the available devices.
+Health-monitoring data describe what components are offline, failed-over, or in another degraded state and how much storage space remains on the available devices.
 On Edison, the fullness of each Lustre object storage target (OST) is recorded every fifteen minutes.  The server to which each OST is mapped is also logged at this time, allowing us to identify OSTs that have failed over to a partner OSS and are degraded as a result.
 On Mira, the fullness of each LUN and the failure status of each server is recorded when each job is submitted.
-As with Lustre, recording the mapping between NSD servers and NSDs allows us to identify if a server has failed and a secondary server is handling its NSDs.
+As with Lustre, recording the mapping between NSD servers and NSDs allows us to identify whether a server has failed and a secondary server is handling its NSDs.
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
 
-Job scheduling data can provide details on the mix of concurrent jobs that are running on the compute resources of a system to identify cases where I/O contention results from other competing workloads.
-Because job scheduling is most useful in the context of overlapping jobs, we counted (1) the number of other jobs that were running at the same time as ours, and (2) the number of core hours consumed system-wide during the time our benchmark jobs ran.
+Job-scheduling data can provide details on the mix of concurrent jobs that are running on the compute resources of a system and can help identify cases where I/O contention results from other competing workloads.
+Because job scheduling is most useful in the context of overlapping jobs, we counted the number of other jobs that were running at the same time as ours and the number of core-hours consumed systemwide during the time our benchmark jobs ran.
 
 % Retrieving these data on Edison is accomplished by querying the job accounting database for all jobs with a start time before the benchmark's end time and an end time after the benchmark's start time.
 % Similarly, the job accounting data on Mira is stored in a database accessible via a Python API called Ni.
