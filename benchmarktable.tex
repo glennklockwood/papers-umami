@@ -1,0 +1,23 @@
+% abandon all hope ye who try to edit this stupid table by hand.  I used
+% http://www.tablesgenerator.com to make it.
+\begin{table}[h]
+\footnotesize
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+ & \textbf{I/O Motif} & \textbf{Mira size} & \textbf{Edison size} \\
+\hline
+IOR & MPI-IO shared file & 1.0 TiB & 0.5 TiB\\
+\hline
+IOR & POSIX file per proc & 1.0 TiB & 2.0 TiB\\
+\hline
+HACC & POSIX file per proc & 1.5 TiB & 2.0 TiB \\
+\hline
+VPIC / BD-CATS & HDF5 shared file & 1.0 TiB & 2.0 TiB\\
+\hline
+\end{tabular}
+\caption{Benchmark configuration parameters}
+\label{tab:bench-config}
+\normalsize
+\vspace{-.4in}
+\end{table}

@@ -11,31 +11,25 @@ For example, server-side monitoring tools such as LMT~\cite{lmt} measure a limit
 % Data types representing the same logical quantity, such as data written, may also be expressed in different units such as bytes, pages, and blocks, and these units of data may also be transformed by aggregation, coalescing, and caching as they traverse the I/O stack.
 At present, the gaps of information resulting from these incompatibilities are filled by expert institutional knowledge and intuition.
 
-Absent this expert knowledge though, a principal challenge in understanding I/O performance is knowing how to gauge the performance of an application within a broader context to answer the question: 
-does the I/O performance of a given job meet expectations given the capabilities of the system and the nature of the access pattern?
-Relying on intuition to form a common context for different sources of I/O data to 
-answer this question is not sustainable as I/O subsystems continue to grow in size and complexity.
-Thus, it is becoming critical to systematically integrate data across all components to present a coherent, holistic view of the I/O subsystem to clarify the inter-dependent behavior.
+Absent this expert knowledge though, it is challenging to determine if a job's I/O performance is normal on any specific HPC system given the application's I/O pattern.
+Relying on intuition to tie together the different sources of I/O data and decide if a job performed as should be expected becomes unsustainable as storage subsystems become larger and more complex.  
+Thus, it is becoming critical to integrate component-level data and present a coherent, holistic view of the I/O subsystem and its inter-dependent behavior.
 
-To demonstrate the insights possible through such a holistic approach, we have conducted a benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems over the course of a month.  Drawing on data already being collected on those systems, we then 
+To demonstrate the insights possible through such a holistic approach, we have conducted a month-long benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems.  Drawing on component-level data already being collected on those systems, we then 
 present the analysis of data integrated from file system servers, application-level profiling, and other system-level components.
 By presenting how these metrics vary over the one-month experiment in a unified monitoring and metrics interface (UMAMI), this holistic approach is able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
-%We show how TOKIO can contextualize I/O performance variation by using it to
-%analyze a month-long interval of formalized I/O regression benchmarking on
-%two major supercomputing facilities.
-%We demonstrate a universal metrics and measurements interface (TOKIO-UMAMI) that quickly classifies a job's I/O performance as being within the expected variation of the file system climate, or if it reflects an extreme file system weather event. 
-%Finally, we show how the TOKIO framework can be applied to bridge the gap of expert knowledge by identifying common sources of I/O performance variation.
-
 The primary contributions of this work are as follows:
 \begin{itemize}[leftmargin=*]
-% \item We describe a framework for holistic instrumentation of I/O subsystems that is generalizable across platforms
-\item We demonstrate an effective way to integrate the data from existing component-level tools available on NERSC's Edison and ALCF's Mira systems, along with a month-long automated I/O benchmarking effort, to demonstrate novel insights into performance variation.
-\item We show that I/O performance is affected by both intrinsic application characteristics and extrinsic storage system factors.
+% Nick: "We demonstrate an effective way" item is not a contribution
+% \item We demonstrate an effective way to integrate the data from existing component-level tools available on NERSC's Edison and ALCF's Mira systems, along with a month-long automated I/O benchmarking effort, to demonstrate novel insights into performance variation.
+\item We demonstrate that the degree of variability in I/O performance is function of both the storage system and the application's I/O motif.
+Different I/O patterns and read/write workloads expose different degrees of performance variation on different parallel file system architectures.
+\item We show that I/O performance itself is affected by both intrinsic application characteristics and extrinsic storage system factors.
 Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance, and
 we highlight cases where metadata contention and storage capacity both dramatically impact performance.
-\item We show that there is no single monitoring metric that predicts I/O performance
-universally across HPC platforms; the most highly correlated metrics depend on system architecture, configuration parameters, workload characteristics, and system health.
+\item We show that there is no single monitoring metric that predicts I/O performance universally across HPC platforms.
+The system architecture, configuration parameters, workload characteristics, and system health all govern which metrics relate to performance.
 \end{itemize}
