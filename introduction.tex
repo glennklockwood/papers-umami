@@ -15,10 +15,10 @@ Absent this expert knowledge though, it is challenging to determine if a job's I
 Relying on intuition to tie together the different sources of I/O data and decide if a job performed as should be expected becomes unsustainable as storage subsystems become larger and more complex.  
 Thus, it is becoming critical to integrate component-level data and present a coherent, holistic view of the I/O subsystem and its inter-dependent behavior.
 
-To demonstrate the insights possible through such a holistic approach, we have conducted a month-long benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems.  Drawing on component-level data already being collected on those systems, we then 
-present the analysis of data integrated from file system servers, application-level profiling, and other system-level components.
+To demonstrate the insights possible with a holistic approach, we have conducted a month-long benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems.
+Using component-level data already being collected on those systems, we then present the analysis of data integrated from application-level profiling, file system servers, and other system-level components.
 By presenting how these metrics vary over the one-month experiment in a unified monitoring and metrics interface (UMAMI), this holistic approach is able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
-We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they generally respond to a specific workload.
+We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
 The primary contributions of this work are as follows:
