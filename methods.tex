@@ -22,7 +22,7 @@ For this study, we ran the following benchmark applications.
 \item 
 \textbf{Hardware Accelerated Cosmology Code (HACC)}, an N-body cosmology application~\cite{habib2012}, configured to generate 96 MiB/process using POSIX file-per-process checkpoint I/O.
  \item
-\textbf{Vector Particle-In-Cell (VPIC)}, a plasma physics application~\cite{Bowers2008}, configured to write 1.0 GiB per process to a single HDF5 file using the H5Part API~\cite{H5Part}.
+\textbf{Vector Particle-In-Cell (VPIC)}, a plasma physics application~\cite{Bowers2008}, configured to write 1.0 GiB per process to a single HDF5 file using the H5Part API~\cite{H5Part}. \todo{combine VPIC and BD-CATS since they are the same motif}
  \item
 \textbf{BD-CATS}, a clustering analysis system used to analyze VPIC output data~\cite{Patwary2015},  configured to read 75\% of our VPIC output to emulate a 3D clustering analysis.
  \end{itemize}
@@ -38,7 +38,7 @@ and the resulting data volumes are summarized in Table~\ref{tab:bench-config}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Edison is a Cray XC-30 system deployed at NERSC whose architecture is described in Table \ref{tab:system-config}.
-Its scratch1 and scratch2 file systems are identically configured, and users are evenly distributed across both such that the two file systems should have similar levels of baseline I/O traffic.
+Its scratch1 and scratch2 Lustre file systems are identically configured, and users are evenly distributed across both such that the two file systems should have similar levels of baseline I/O traffic.
 However, access to Edison's scratch3 file system is granted only to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
 
 Edison's architecture routes I/O traffic from the Aries high-speed network to the InfiniBand-based SAN fabric through LNET I/O nodes.
@@ -53,7 +53,7 @@ Our IOR benchmarks demonstrated peak performance at 90\% of the theoretical peak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Mira is an IBM Blue Gene/Q system deployed at the ALCF whose configuration is described in Table \ref{tab:system-config}.
-In addition to the servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
+In addition to the Spectrum Scale (GPFS) servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
 Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
 To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
 In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the peak performance of this I/O node allocation.
@@ -62,7 +62,8 @@ In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-confi
 \section{Instrumentation and Data Sources} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%GAIL - add a sentence or more about this section 
+%GAIL - add a sentence or more about this section
+\todo{Summarize the \# of metrics collected for each job.  Also mention the time integral of certain metrics?}
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 

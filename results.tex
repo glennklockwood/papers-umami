@@ -22,6 +22,7 @@ Edison's scratch3 also demonstrates broad performance variation for the VPIC wri
 We conclude that performance variability is the result of factors intrinsic to both the application and the file system;
 different I/O motifs result in different levels of performance \emph{and} variability.
 Furthermore, these behaviors are not a function of the parallel file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
+\todo{Need to strengthen the aforementioned statement--this shows that neither file system architecture nor application I/O motif causes bad performance; it is the I/O climate of this file system.}
 Thus, these differences in performance variation must be a function of their different hardware configurations, their specific I/O patterns, or a combination of both.
 This finding underscores the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert in order to develop a full understanding of I/O performance.
 
@@ -58,6 +59,7 @@ These $\mathit{CF}$ metrics, system health data, and job topology data let us co
 To concisely display this information and identify metrics that most likely contribute to abnormal performance, we propose a unified monitoring and metrics interface (UMAMI) diagram as demonstrated in Figure \ref{fig:umami-scratch2-hacc-write}.
 UMAMI presents historic measurements (the I/O climate) alongside a box plot that summarizes each metric.
 These time series plots terminate at a job of interest and define the I/O weather at the time that job ran.
+\todo{How did we decide which metrics to include?}
 
 Overlaying this weather on the climate (dashed lines in the box plots) shows how each metric compares with the distribution of past weather conditions, enabling rapid, holistic differentiation of rare events from long-term performance problems.
 In the remainder of this section
@@ -86,6 +88,7 @@ This poor performance was accompanied by an unusually low $\mathit{CF}_{\mathit{
 The metrics corresponding to orange dashed lines ($\mathit{CF}_{\mathit{nodehrs}}$ and the number of overlapping jobs) fall in the second quartile, indicating that the number of concurrently running jobs and concurrently active compute nodes are too coarse-grained a metric to predict I/O performance.
 The metric corresponding to blue dashed line, the maximum job radius, falls into the most favorable quartile for this problematic job, and HACC has shown good I/O performance on much more topologically distributed node allocations.
 Thus, HACC job's poor performance was a result of I/O loads extrinsic to this job that competed for both bandwidth and metadata operation rates; the number of concurrently running jobs and HACC's placement on the dragonfly network had no clear impact.
+\todo{Asserting that placement had no effect requires more discussion; call out metrics by name and point out that their values had been worse in the presence of better performance}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: metadata load}
