@@ -17,14 +17,13 @@ For this study, we ran the following benchmark applications.
 
 \begin{itemize}[leftmargin=*]
 %GAIL - I moved IOR up to top of list to match Table II
-\item
-\textbf{IOR}, a widely used tool to characterize parallel file system performance~\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}, used to determine each file system's performance under optimal I/O workloads.
 \item 
 \textbf{Hardware Accelerated Cosmology Code (HACC)}, an N-body cosmology application~\cite{habib2012}, configured to generate 96 MiB/process using POSIX file-per-process checkpoint I/O.
  \item
-\textbf{Vector Particle-In-Cell (VPIC)}, a plasma physics application~\cite{Bowers2008}, configured to write 1.0 GiB per process to a single HDF5 file using the H5Part API~\cite{H5Part}. \todo{combine VPIC and BD-CATS since they are the same motif}
- \item
-\textbf{BD-CATS}, a clustering analysis system used to analyze VPIC output data~\cite{Patwary2015},  configured to read 75\% of our VPIC output to emulate a 3D clustering analysis.
+\textbf{Vector Particle-In-Cell (VPIC)}, a plasma physics application~\cite{Bowers2008}, configured to write 1.0 GiB per process to a single HDF5 file using the H5Part API~\cite{H5Part}, and 
+\textbf{BD-CATS}, a clustering analysis system used to analyze VPIC output data~\cite{Patwary2015}, configured to read 75\% of our VPIC output to emulate a 3D clustering analysis.
+\item
+\textbf{IOR}, a widely used tool to characterize parallel file system performance~\cite{Yildiz2016,Xie2012,Lofstead2010,Uselton2010}, used to determine each file system's performance under optimal I/O workloads.
  \end{itemize}
 
 All benchmarks were run using 1,024 and 128 nodes (16 processes per node) on Mira and Edison, respectively.
@@ -63,7 +62,8 @@ In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-confi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %GAIL - add a sentence or more about this section
-\todo{Summarize the \# of metrics collected for each job.  Also mention the time integral of certain metrics?}
+%GKL - ok
+To capture as many sources of I/O performance loss, we drew a total of 58 different metrics from Mira and Edison from a variety of monitoring tools already in production use at ALCF and NERSC.
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
