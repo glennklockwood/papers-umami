@@ -15,16 +15,23 @@ Because variation in peak I/O performance is known to be caused by different I/O
 We define the \emph{fraction of peak performance} as the mean I/O bandwidth (performance) of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
 For example, the fraction peak performance for a HACC write test is normalized to the highest performance of any HACC write test on the same file system.
 
-The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, reveals that the degree of variation \emph{within} each application varies with each file system.
+The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, 
+reveals that the degree of variation \emph{within} each application varies with each file system.
 For example, the HACC write workload is susceptible to a long tail of performance loss on mira-fs1 despite mira-fs1's overall lower variation as evidenced by the distance between all I/O motifs' whiskers relative to the Edison file systems.
-Edison's scratch3 also demonstrates broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application on other systems.
-
-We conclude that performance variability is the result of factors intrinsic to both the application and the file system;
+Edison's scratch3 also demonstrates broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application on other systems.  We conclude that performance variability is the result of factors intrinsic to both the application and the file system;
 different I/O motifs result in different levels of performance \emph{and} variability.
-Furthermore, these behaviors are not a function of the parallel file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
-\todo{Need to strengthen the aforementioned statement--this shows that neither file system architecture nor application I/O motif causes bad performance; it is the I/O climate of this file system.}
-Thus, these differences in performance variation must be a function of their different hardware configurations, their specific I/O patterns, or a combination of both.
-This finding underscores the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert in order to develop a full understanding of I/O performance.
+
+Furthermore, Figure~\ref{fig:perf-summary-boxplots-motif} shows that variation is not only a function of the parallel file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
+
+Thus, these differences in performance variation must be a function of differences in three factors of the I/O subsystem:
+
+\begin{enumerate}[leftmargin=*]
+\item Hardware architecture, evident when comparing the distributions of mira-fs1 performance to any Edison file system
+\item Application I/O patterns, evident from the variation within any single file system
+\item Historical file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems
+\end{enumerate}
+
+This finding underscores the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert and with historical context in order to develop a full understanding of I/O performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Integrated Analysis} \label{sec:results/umami}
