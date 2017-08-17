@@ -12,7 +12,7 @@
 \end{figure}
 
 Because variation in peak I/O performance is known to be caused by different I/O access patterns~\cite{Lofstead2010,Uselton2010,Xie2012}, we first establish the baseline variation of each benchmark on each system.
-We define the \emph{fraction of peak performance} as the mean I/O bandwidth (performance) of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job did reads or writes.
+We define the \emph{fraction of peak performance} as the observed I/O bandwidth (performance) of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and according to whether the job did reads or writes.
 For example, the fraction peak performance for a HACC write test is normalized to the highest performance of any HACC write test on the same file system.
 
 The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, 
