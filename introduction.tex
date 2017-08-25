@@ -23,12 +23,17 @@ We use this notion of the \emph{I/O climate} to encompass the characteristics of
 Complementary to the I/O climate, the \emph{I/O weather} is determined by the transitory state of the job scheduler load, I/O contention, and short-term failure events.
 
 The primary contributions of this work are as follows.
+
 \begin{itemize}[leftmargin=*]
-\item We demonstrate that the degree of variability in I/O performance is a function of both the storage system and the application's I/O motif.
-Different I/O patterns and read/write workloads expose different degrees of performance variation on different parallel file system architectures. \todo{the high-impact finding is that variation is a function of I/O motif, file system architecture, AND file system climate (as evidenced by scratch3 being different from scratch2}
+
+\item \newtext{We demonstrate that the degree of variability in I/O performance is a function of the storage system architecture, the application's I/O motif, and the overall file system climate.
+Different I/O patterns expose different degrees of performance variation on different parallel file system architectures, and the nature of a file system's typical workload also shapes performance variability.}
+
 \item We show that I/O performance itself is affected by both intrinsic application characteristics and extrinsic storage system factors.
 Contention with other I/O workloads for storage system bandwidth is not the only factor that affects I/O performance, and
 we highlight cases where metadata contention and storage capacity both dramatically impact performance.
+
 \item We show that no single monitoring metric predicts I/O performance universally across HPC platforms.
 The system architecture, configuration parameters, workload characteristics, and system health all govern which metrics relate to performance.
+
 \end{itemize}

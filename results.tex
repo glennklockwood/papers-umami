@@ -28,7 +28,7 @@ Thus, these differences in performance variation must be a function of differenc
 \begin{enumerate}[leftmargin=*]
 \item Hardware architecture, evident when comparing the distributions of mira-fs1 performance to any Edison file system
 \item Application I/O patterns, evident from the variation within any single file system
-\item Historical file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems
+\item \newtext{Overall} file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems
 \end{enumerate}
 
 This finding underscores the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert and with historical context in order to develop a full understanding of I/O performance.
@@ -66,13 +66,13 @@ These $\mathit{CF}$ metrics, system health data, and job topology data let us co
 To concisely display this information and identify metrics that most likely contribute to abnormal performance, we propose a unified monitoring and metrics interface (UMAMI) diagram as demonstrated in Figure \ref{fig:umami-scratch2-hacc-write}.
 UMAMI presents historic measurements (the I/O climate) alongside a box plot that summarizes each metric.
 These time series plots terminate at a job of interest and define the I/O weather at the time that job ran.
-\todo{How did we decide which metrics to include?}
 
 Overlaying this weather on the climate (dashed lines in the box plots) shows how each metric compares with the distribution of past weather conditions, enabling rapid, holistic differentiation of rare events from long-term performance problems.
-In the remainder of this section
-we use UMAMI diagrams to identify different factors that do and do not contribute to I/O performance loss.
-Although these findings are presented as specific case studies on Mira and Edison, we stress that UMAMI draws data from any component-level monitoring that a system may run at an HPC center.
-Hence, these analyses can be easily performed and delivered to users of production HPC systems in a straightforward fashion.
+In the remainder of this section we use UMAMI diagrams to identify different factors that do and do not contribute to I/O performance loss.
+\newtext{Although we collected 58 metrics for each job, we chose only the most relevant metrics to include in each UMAMI diagram based on (1) which metrics most strongly correlated with performance, and (2) which metrics we expected to affect performance but did not.}
+
+\newtext{These case studies were dervied from jobs run on Mira and Edison, but UMAMI draws data from any component-level monitoring that a system may run at an HPC center.}
+As such, we stress that UMAMI is easily generalized and designed to be easily automated for production use as a performance analysis tool.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: I/O contention}
@@ -94,8 +94,10 @@ The UMAMI example in Figure \ref{fig:umami-scratch2-hacc-write} represents a HAC
 This poor performance was accompanied by an unusually low $\mathit{CF}_{\mathit{bw}}$ and high metadata load, highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
 The metrics corresponding to orange dashed lines ($\mathit{CF}_{\mathit{nodehrs}}$ and the number of overlapping jobs) fall in the second quartile, indicating that the number of concurrently running jobs and concurrently active compute nodes are too coarse-grained a metric to predict I/O performance.
 The metric corresponding to blue dashed line, the maximum job radius, falls into the most favorable quartile for this problematic job, and HACC has shown good I/O performance on much more topologically distributed node allocations.
-Thus, HACC job's poor performance was a result of I/O loads extrinsic to this job that competed for both bandwidth and metadata operation rates; the number of concurrently running jobs and HACC's placement on the dragonfly network had no clear impact.
-\todo{Asserting that placement had no effect requires more discussion; call out metrics by name and point out that their values had been worse in the presence of better performance}
+Thus, HACC job's poor performance was a result of I/O loads extrinsic to this job that competed for both bandwidth and metadata operation rates.
+\newtext{In contrast, the number of concurrently running jobs (indicated by $\mathit{CF}_{\mathit{nodehrs}}$) and HACC's placement on the dragonfly network (max job radius) had no clear impact; good performance was often observed even in cases when both of these metrics were abnormally poor.
+As such, these two metrics are too coarse-grained to indicate contention without more insight into what resources the competing jobs were actually consuming when each HACC job ran.}
+% \todo{Asserting that placement had no effect requires more discussion; call out metrics by name and point out that their values had been worse in the presence of better performance}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: metadata load}
