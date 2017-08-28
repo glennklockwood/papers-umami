@@ -4,9 +4,14 @@
 \section{Experimental Methods} \label{sec:platforms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To examine the utility and generality of integrating data from multiple component-level monitoring tools into a single view (UMAMI), we conducted an experiment using a collection of I/O benchmarks on two distinct HPC platforms:
-Edison, a Cray XC-30 system at the National Energy Research Scientific Computing Center (NERSC), and Mira, an IBM Blue Gene/Q system at the Argonne Leadership Computing Facility (ALCF) (see Table I).
-These benchmarks ran over 29 and 39 days on Mira and Edison, respectively, during which we collected measurements from the data sources described in Section \ref{sec:methods}.  These data represent a total of 118 and 1,014 benchmark runs on one and three file systems on Mira and Edison, respectively.
+To examine the utility and generality of integrating data from multiple
+component-level monitoring tools into a single view (UMAMI), we conducted an
+I/O benchmark study on two distinct HPC platforms:
+Edison, a Cray XC-30 system at the National Energy Research Scientific
+Computing Center (NERSC), and Mira, an IBM Blue Gene/Q system at the Argonne
+Leadership Computing Facility (ALCF) (see Table I).  On Edison we executed
+1,014 benchmarks using three file systems across 39 days, while on
+Mira we executed 118 benchmarks using one file system across 29 days.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
@@ -37,10 +42,12 @@ and the resulting data volumes are summarized in Table~\ref{tab:bench-config}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Edison is a Cray XC-30 system deployed at NERSC whose architecture is described in Table \ref{tab:system-config}.
-Its scratch1 and scratch2 Lustre file systems are identically configured, and users are evenly distributed across both such that the two file systems should have similar levels of baseline I/O traffic.
+Its scratch1 and scratch2 Lustre file systems are identically configured,
+and users are evenly distributed across them.
 However, access to Edison's scratch3 file system is granted only to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
 
-Edison's architecture routes I/O traffic from the Aries high-speed network to the InfiniBand-based SAN fabric through LNET I/O nodes.
+Edison's architecture routes I/O traffic from the Aries high-speed network
+to the InfiniBand SAN fabric via LNET I/O nodes.
 Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems, in order to ensure that each file system's traffic is isolated as it transits I/O nodes.
 This also allows jobs of any size to use the maximum number of I/O nodes for each file system.
 
@@ -55,7 +62,9 @@ Mira is an IBM Blue Gene/Q system deployed at the ALCF whose configuration is de
 In addition to the Spectrum Scale (GPFS) servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
 Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
 To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
-In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-config} was able to achieve 80\% of the peak performance of this I/O node allocation.
+In practice, the IOR configuration for Mira listed in Table
+\ref{tab:bench-config} was able to achieve 80\% of the peak performance for
+this job size.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Instrumentation and Data Sources} \label{sec:methods}
@@ -63,7 +72,9 @@ In practice, the IOR configuration for Mira listed in Table \ref{tab:bench-confi
 
 %GAIL - add a sentence or more about this section
 %GKL - ok
-To capture as many sources of I/O performance loss, we drew a total of 58 different metrics from Mira and Edison from a variety of monitoring tools already in production use at ALCF and NERSC.
+We drew a total of 58 different metrics from Mira and Edison from a variety
+of monitoring tools already in production use at ALCF and NERSC over the
+course of our study.
 
 \subsection{Application behavior} \label{sec:methods/darshan}
 
