@@ -1,17 +1,12 @@
 \section{Conclusions} \label{sec:conclusions}
 
-By integrating data captured with existing tools from applications, storage systems, system health, and job scheduling, we demonstrated that examining all the components within the I/O subsystem in a holistic manner is essential for understanding I/O performance variation.
-We performed a month-long benchmarking study and characterized the I/O \emph{climate} on each system, then presented several case studies to demonstrate several cases of abnormal I/O \emph{weather} and the related effects on I/O performance.
+By integrating data captured with existing tools from applications, storage systems, system health, and job scheduling, we demonstrated that holistically examining all components of the I/O subsystem is essential for understanding I/O performance variation.
+We performed a month-long benchmarking study and characterized the I/O \emph{climate} on each system, then presented several case studies to demonstrate several cases of abnormal I/O \emph{weather} and their effects on I/O performance.
 
-Integrating monitoring metrics into the UMAMI diagram revealed that contention with other I/O workloads for storage system bandwidth, metadata op rates, and storage capacity can, but do not always, impact performance.
-No single metric predicts I/O performance universally across HPC platforms;
-the most performance-critical metrics depend on system architecture, configuration parameters, workload characteristics, and system health.
+Integrating metrics into the UMAMI diagram revealed that contention with other I/O workloads for storage system bandwidth, metadata op rates, and storage capacity can, but do not always, impact performance.
+No single metric predicts I/O performance across HPC platforms;
+the most significant metrics depend on systems' architecture, configuration, workload characteristics, and health.
 Conversely, factors such as job radius and $\textit{CF}_{\textit{nodehrs}}$ were not found to capture enough detail to reliably describe performance loss.
 From these results, we have a basis for improving existing monitoring tools to capture more detailed metrics that can better predict I/O performance.
 
 Demonstrating the importance of historical performance data in performance analysis also motivates the need for automated classification jobs based on similar I/O motifs.  With  clustering or similar methods, generating UMAMI diagrams should be easily automated in production environments and made portable across diverse HPC platforms and centers.
-
-% From Phil on August 14, 2017:
-% This is not just a one-off study but a step towards much broader application.  I think we could point this out briefly in the abstract (however we want to word it, that this is exploratory/proof of concept/pilot work for a general idea) and then give more detail in the conclusions of what we learned or took away as motivation towards the broader goal.
-%
-% For example, we found that having historical records of job performance was essential to understanding performance, which motivates that we need to figure out how to do heuristic grouping or statistical clustering to apply it to general production jobs.  We also found that integrated data was useful in a variety of unexpected ways across platforms, which motivates making the data integration portable across systems and available to more analysis tools (i.e., your python library work).

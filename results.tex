@@ -11,8 +11,8 @@
 	\vspace{-.3in}
 \end{figure}
 
-Because variation in peak I/O performance is known to be caused by different I/O access patterns~\cite{Lofstead2010,Uselton2010,Xie2012}, we first establish the baseline variation of each benchmark on each system.
-We define the \emph{fraction of peak performance} as the observed I/O bandwidth (performance) of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and according to whether the job did reads or writes.
+Because variation in peak I/O performance is caused by different I/O access patterns~\cite{Lofstead2010,Uselton2010,Xie2012}, we first establish the baseline variation of each benchmark on each system.
+We define the \emph{fraction of peak performance} as the observed I/O bandwidth (performance) of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job read or wrote.
 For example, the fraction peak performance for a HACC write test is normalized to the highest performance of any HACC write test on the same file system.
 
 The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, 
@@ -37,8 +37,8 @@ This finding underscores the importance of examining multiple sources of I/O cha
 \section{Integrated Analysis} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-With an understanding of the baseline performance variation on each system and application tested, we then combined application performance data from the sources described in Section \ref{sec:methods} to better understand how performance is affected by extrinsic factors.
-Bandwidth contention from other jobs is an intuitive source of performance variation, so we define the \emph{bandwidth coverage factor} ($\mathit{CF}_{\mathit{bw}}$) of a job $j$ to quantify the effects of such competing I/O traffic:
+With an understanding of the baseline performance variation on each system and application, we then considered metrics from the sources described in Section \ref{sec:methods} to analyze how extrinsic factors affect performance.
+Bandwidth contention from other jobs is an intuitive source of performance variation, so we define the \emph{bandwidth coverage factor} ($\mathit{CF}_{\mathit{bw}}$) of a job $j$ to quantify the effects of competing I/O traffic:
 
 \begin{equation} \label{eq:cf}
     \mathit{CF}_{\mathit{bw}}(j) = \frac{N_{\textup{bytes}}^{\textup{Darshan}}(j)}
@@ -72,10 +72,11 @@ Overlaying this weather on the climate (dashed lines in the box plots) shows how
 In the remainder of this section we use UMAMI diagrams to identify different factors that do and do not contribute to I/O performance loss.
 {Although we collected 58 metrics for each job, we chose only the most relevant metrics to include in each UMAMI diagram based on (1) which metrics most strongly correlated with performance, and (2) which metrics we expected to affect performance but did not.
 
-These case studies were performed on Mira and Edison, but UMAMI
-follows a modular design to facilitate analysis of a variety of HPC
-monitoring data sources and enable portable deployment for production
-use.
+These case studies were performed on Mira and Edison, % but UMAMI
+% follows a modular design to facilitate analysis of a variety of HPC
+%monitoring data sources and enable portable deployment for production
+%use.
+\newtext{but UMAMI's modular design allow it to analyze a variety of data sources and enables portable deployment for production use.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: I/O contention}
@@ -110,7 +111,7 @@ As such, these two metrics are too coarse-grained to indicate contention without
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-mira-fs1-vpic-write.pdf}
     \vspace{-.25in}
-    \caption{UMAMI demonstrating the climate surrounding VPIC-IO write workloads on Mira compared with a most recent run, which showed highly unusual weather in the form of an excess of \texttt{readdir(3)} calls.
+    \caption{UMAMI demonstrating the climate surrounding VPIC write workloads on Mira compared with a most recent run, which showed highly unusual weather in the form of an excess of \texttt{readdir(3)} calls.
 %   Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.
     }
     \label{fig:umami-mira-fs1-vpic-write}
@@ -120,7 +121,7 @@ As such, these two metrics are too coarse-grained to indicate contention without
 Figure \ref{fig:umami-mira-fs1-vpic-write} shows the UMAMI for a poorly performing VPIC workload.
 $\mathit{CF}_{\mathit{bw}}$ is within normal parameters, indicating normal (minimal) levels of bandwidth contention.
 $\mathit{CF}_{\mathit{IOPS}}$ is abnormally low, although previous values have been equally low despite a lack of dramatic performance loss (e.g., on March 4 and March 9).
-The only metric that shows a unique, undesirable value is the number of \texttt{readdir(3)} operations handled by the file system, indicative of an expansive file system traversal that was being performed at the same time as the job execution.   From this, we can infer that a namespace scan, not bandwidth contention, contributed to the abnormally poor HACC performance on the March 11 run.
+The only metric that shows a unique, undesirable value is the number of readdir operations handled by the file system, indicative of a file system traversal that was concurrently with this VPIC job.   From this, we can infer that metadata load, not bandwidth contention, contributed to poor VPIC performance on March 11.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: storage capacity}
@@ -137,8 +138,8 @@ The only metric that shows a unique, undesirable value is the number of \texttt{
 	\vspace{-.15in}
 \end{figure}
 
-This holistic approach can also identify longer-term performance degradation.
-Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI view of Edison's scratch3 file system when coverage factors were not unusual despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec between February 24 and March 9.
-The magnitude of performance loss closely followed the maximum CPU load observed on the Lustre OSSes, and this period also coincided with the scratch3 file system reaching critical levels of fullness.
-A file system purge at NERSC, initiated on March 9, then resulted in restored I/O performance for the last three jobs shown.
-This relationship between CPU load and I/O performance points to an increasing cost of scavenging empty blocks on writes, and this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.  
+This holistic approach can also identify long-term performance degradation.
+Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI of HACC on Edison scratch3 when $CF$s were not unusual despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec between February 24 and March 9.
+The magnitude of performance loss closely followed the maximum CPU load on the Lustre OSSes, and this period also coincided with  scratch3 becoming critically full.
+A file system purge, initiated on March 9 by NERSC staff, then restored I/O performance for the final three HACC runs.
+The relationship between CPU load and I/O performance points to an increasing cost of scavenging empty blocks on writes, and this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.  

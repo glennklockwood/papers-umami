@@ -21,7 +21,6 @@ Mira we executed 118 benchmarks using one file system across 29 days.
 For this study, we ran the following benchmark applications.
 
 \begin{itemize}[leftmargin=*]
-%GAIL - I moved IOR up to top of list to match Table II
 \item 
 \textbf{Hardware Accelerated Cosmology Code (HACC)}, an N-body cosmology application~\cite{habib2012}, configured to generate 96 MiB/process using POSIX file-per-process checkpoint I/O.
  \item
@@ -90,19 +89,19 @@ The data can be collected in time-series format with minimal impact on applicati
 On both Mira and Edison, these data were collected at five-second intervals as a balance between low performance impact and sufficient granularity to correlate performance with server activity~\cite{madireddy2017}.  However, the two systems employ different file-system-specific tools.  
 
 \label{sec:methods/lmt}
-\textbf{Lustre Monitoring Tool (LMT)} is a tool that aggregates Lustre-specific kernel counters on each Lustre object storage server (OSS) and metadata server (MDS) and presents them to external consumers via a MySQL database.
+\textbf{Lustre Monitoring Tools (LMT)} aggregate Lustre-specific counters on each object storage server (OSS) and metadata server (MDS) and present them via a MySQL database.
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates.
 
 \label{sec:methods/ggiostat}
 \textbf{ggiostat} is a tool developed at the ALCF to collect similar data from IBM Spectrum Scale (GPFS) file systems.
-It includes a daemon that uses GPFS's \texttt{mmpmon} monitoring system to retrieve and store metrics from server and client clusters; and it provides data including bytes read and written, read and write request counts, and metadata operation counts.
+It uses GPFS's \texttt{mmpmon} monitoring system to retrieve and store metrics from server and client clusters, and it provides data including bytes read and written, read and write request counts, and metadata operation counts.
 
 \subsection{Health monitoring} \label{sec:methods/health}
 
-Health-monitoring data describe what components are offline, failed-over, or in another degraded state and how much storage space remains on the available devices.
-On Edison, the fullness of each Lustre object storage target (OST) is recorded every fifteen minutes.  The server to which each OST is mapped is also logged at this time, allowing us to identify OSTs that have failed over to a partner OSS and are degraded as a result.
+Health-monitoring data describe what components are offline, failed-over, or in another degraded state and how much free capacity remains on the available devices.
+On Edison, the fullness of each Lustre object storage target (OST) is recorded every fifteen minutes.  
 On Mira, the fullness of each LUN and the failure status of each server is recorded when each job is submitted.
-As with Lustre, recording the mapping between NSD servers and NSDs allows us to identify whether a server has failed and a secondary server is handling its NSDs.
+The mapping between OSTs/LUNs and OSS/NSD servers are also logged at this time, allowing us to identify OSTs/LUNs that have failed over and are degraded as a result.
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
 
