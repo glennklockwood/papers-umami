@@ -37,7 +37,7 @@ This finding underscores the importance of examining multiple sources of I/O cha
 \section{Integrated Analysis} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-With an understanding of the baseline performance variation on each system and application, we then considered metrics from the sources described in Section \ref{sec:methods} to analyze how extrinsic factors affect performance.
+With an understanding of the baseline performance variation on each system and application, we then consider metrics from the sources described in Section \ref{sec:methods} to analyze how extrinsic factors affect performance.
 Bandwidth contention from other jobs is an intuitive source of performance variation, so we define the \emph{bandwidth coverage factor} ($\mathit{CF}_{\mathit{bw}}$) of a job $j$ to quantify the effects of competing I/O traffic:
 
 \begin{equation} \label{eq:cf}
@@ -88,22 +88,20 @@ These case studies were performed on Mira and Edison, % but UMAMI
     \vspace{-.25in}
     \caption{UMAMI of HACC write workloads on the Edison scratch2 file system.
     Left panes show the measurements from previous runs of the same motif; right panes summarize the distribution of these metrics.
-    The star denotes the metrics for the most recent job and is colored according to the quartile in which it falls (red being the worst quartile and blue the best).
-    Whiskers indicate 5th and 95th percentiles; outliers are circles.}
+    The star denotes the metrics for the job of interest and is colored according to the quartile in which it falls (red being the worst quartile and blue the best).
+    Whiskers indicate 5th and 95th percentiles; circles are outliers.}
     \label{fig:umami-scratch2-hacc-write}
     \vspace{-.2in}
 \end{figure}
 
-The UMAMI example in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test whose "Job performance" measurement relative to previous HACC write jobs indicate statistically abnormal performance.
+The UMAMI example in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test whose job performance measurement relative to previous HACC write jobs indicate statistically abnormal performance.
 This poor performance was accompanied by an unusually low $\mathit{CF}_{\mathit{bw}}$ and high metadata load, highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
-% The metrics corresponding to orange dashed lines ($\mathit{CF}_{\mathit{nodehrs}}$ and the number of overlapping jobs) fall in the second quartile, indicating that the number of concurrently running jobs and concurrently active compute nodes are too coarse-grained a metric to predict I/O performance.
 
-\newtext{Conversely, the maximum job radius fell into the most favorable quartile (indicated by the blue dashed line),
+Conversely, the maximum job radius fell into the most favorable quartile (indicated by the blue dashed line),
 and the number of concurrently running jobs ($\mathit{CF}_{\mathit{nodehrs}}$) was not abnormally large.
 Because normal performance was often observed even in cases when both of these metrics were abnormally poor, we conclude that the maximum job radius and $\mathit{CF}_{\mathit{nodehrs}}$ metrics are too coarse-grained to indicate poor performance, and
-more insight into what resources competing jobs were actually consuming when each HACC job ran are required.
-Given this body of information, we can confidently attribute this HACC job's poor performance to I/O loads from other jobs that competed for both bandwidth and metadata rates.}
-% \todo{Asserting that placement had no effect requires more discussion; call out metrics by name and point out that their values had been worse in the presence of better performance}
+more insight into what resources the competing jobs were actually consuming when each HACC job ran are required.
+Given this body of information, we attribute this HACC job's poor performance to I/O loads from other jobs that competed for both bandwidth and metadata rates.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: metadata load}
@@ -123,7 +121,7 @@ Given this body of information, we can confidently attribute this HACC job's poo
 Figure \ref{fig:umami-mira-fs1-vpic-write} shows the UMAMI diagram for a poorly performing VPIC workload.
 $\mathit{CF}_{\mathit{bw}}$ is within normal parameters, indicating normal (minimal) levels of bandwidth contention.
 $\mathit{CF}_{\mathit{IOPS}}$ is abnormally low, although previous values have been equally low despite a lack of dramatic performance loss (e.g., on March 1 and March 9).
-The only metric that shows a unique, undesirable value is the number of readdir operations handled by the file system, indicative of a file system traversal that was concurrently with this VPIC job.   From this, we infer that metadata load, not bandwidth contention, contributed to poor VPIC performance on March 11.
+The only metric that shows a unique, undesirable value is the number of readdir operations handled by the file system, indicative of a file system traversal that was running concurrently with this VPIC job.   From this, we infer that metadata load, not bandwidth contention, contributed to poor VPIC performance on March 11.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: storage capacity}
@@ -133,7 +131,7 @@ The only metric that shows a unique, undesirable value is the number of readdir 
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-scratch3-hacc-write-long-term.pdf}
     \vspace{-.25in}
-    \caption{UMAMI of HACC write performance on Edison's scratch3 file system showing a longer-term period of performance degradation that was associated with unusually high OSS CPU load.
+    \caption{UMAMI of HACC write performance on Edison's scratch3 file system showing a longer-term period of performance degradation that was associated with poor file system health.
 %   Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.
     }
     \label{fig:umami-scratch3-hacc-write-long-term}
@@ -143,7 +141,6 @@ The only metric that shows a unique, undesirable value is the number of readdir 
 This holistic approach can also identify long-term performance degradation.
 Figure \ref{fig:umami-scratch3-hacc-write-long-term} shows the UMAMI of HACC on Edison scratch3 when $CF$s were not unusual despite an ongoing $2\times$ slowdown over the normal 50 GiB/sec between February 24 and March 9.
 The magnitude of performance loss closely followed the maximum CPU load on the Lustre OSSes, and this period also coincided with  scratch3 OSTs approaching 100\% fullness.
-%A file system purge initiated on March 9 by NERSC staff then restored I/O performance for the final three HACC runs.
-\newtext{I/O performance was restored on March 9, a date which coincided with NERSC staff initiating a file system purge.}
-The relationship between CPU load and I/O performance points to an increasing cost of scavenging empty blocks on writes, and this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.
-\newtext{Thus, we conclude that this long-term performance degradation was the result of poor file system health resulting from being critically full.}
+The relationship between CPU load, OST fullness, and I/O performance points to an increasing cost of scavenging empty blocks on writes, and this behavior is consistent with known performance losses that result from Lustre OSTs filling~\cite{oral2014best}.
+Furthermore, I/O performance was restored on March 9 which is when NERSC staff initiated a file system purge.
+Thus, we conclude that this long-term performance degradation was the result of poor file system health resulting from Edison scratch3 being critically full.

@@ -45,9 +45,9 @@ Its scratch1 and scratch2 Lustre file systems are identically configured,
 and users are evenly distributed across them.
 However, access to Edison's scratch3 file system is granted only to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
 
-Edison's architecture routes I/O traffic from the Aries high-speed network
+Edison's architecture routes I/O traffic from its Aries high-speed network
 to the InfiniBand SAN fabric via LNET I/O nodes.
-Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems, in order to ensure that each file system's traffic is isolated as it transits I/O nodes.
+Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems to ensure that each file system's traffic is isolated as it transits I/O nodes.
 This also allows jobs of any size to use the maximum number of I/O nodes for each file system.
 
 In this work, all output data was striped over all OSTs in each file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen to saturate each file system's bandwidth.
@@ -71,8 +71,8 @@ this job size.
 
 %GAIL - add a sentence or more about this section
 %GKL - ok
-We drew a total of 58 different metrics from Mira and Edison from a variety
-of monitoring tools already in production use at ALCF and NERSC over the
+We drew a total of 58 different metrics from a variety
+of monitoring tools already in production use on Mira and Edison over the
 course of our study.
 
 \subsection{Application behavior} \label{sec:methods/darshan}
@@ -86,10 +86,10 @@ allowing it to be deployed for all production applications on large-scale system
 Storage system traffic monitoring provides insight into the aggregate systemwide I/O workload imposed on a target storage system.
 This is reflected in the aggregate bytes read and written, I/O operations processed, and other similar metrics collected at the parallel file system level.
 The data can be collected in time-series format with minimal impact on application performance because the information is gathered on the storage servers themselves without the involvement of the compute nodes.
-On both Mira and Edison, these data were collected at five-second intervals as a balance between low performance impact and sufficient granularity to correlate performance with server activity~\cite{madireddy2017}.  However, the two systems employ different file-system-specific tools.  
+On both Mira and Edison, these data were collected at five-second intervals as a balance between low performance impact and sufficient granularity to correlate application performance with server activity~\cite{madireddy2017}.  However, the two systems employ different file-system-specific tools.  
 
 \label{sec:methods/lmt}
-\textbf{Lustre Monitoring Tools (LMT)} aggregate Lustre-specific counters on each object storage server (OSS) and metadata server (MDS) and present them via a MySQL database.
+\textbf{Lustre Monitoring Tools (LMT)} aggregates Lustre-specific counters on each object storage server (OSS) and metadata server (MDS) and presents them via a MySQL database.
 LMT provides time series data including bytes read and written, CPU load averages, and metadata operation rates.
 
 \label{sec:methods/ggiostat}
@@ -101,12 +101,12 @@ It uses GPFS's \texttt{mmpmon} monitoring system to retrieve and store metrics f
 Health-monitoring data describe what components are offline, failed-over, or in another degraded state and how much free capacity remains on the available devices.
 On Edison, the fullness of each Lustre object storage target (OST) is recorded every fifteen minutes.  
 On Mira, the fullness of each LUN and the failure status of each server is recorded when each job is submitted.
-The mapping between OSTs/LUNs and OSS/NSD servers are also logged at this time, allowing us to identify OSTs/LUNs that have failed over and are degraded as a result.
+The mapping between OSTs/LUNs and OSS/NSD servers are also logged at this time, allowing us to identify devices that have failed over and are degraded as a result.
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
 
 Job-scheduling data can provide details on the mix of concurrent jobs that are running on the compute resources of a system and can help identify cases where I/O contention results from other competing workloads.
-Because job scheduling is most useful in the context of overlapping jobs, we counted the number of other jobs that were running at the same time as ours and the number of core-hours consumed systemwide during the time our benchmark jobs ran.
+Because job scheduling is most useful in the context of overlapping jobs, we counted the number of other jobs that were running and the number of core-hours consumed system-wide during the time our benchmark jobs ran.
 
 % Retrieving these data on Edison is accomplished by querying the job accounting database for all jobs with a start time before the benchmark's end time and an end time after the benchmark's start time.
 % Similarly, the job accounting data on Mira is stored in a database accessible via a Python API called Ni.
