@@ -68,15 +68,11 @@ UMAMI presents historic measurements (the I/O climate) alongside a box plot that
 % \todo{ROB: It would be easy enough to generalize to any point in the time series, rather than terminating at the job of interest, allowing one to show how the weather at some prior point in time fits into the climate beyond the job, too (i.e., just put the star wherever it belongs in the timeline?).}
 These time series plots highlight a job of interest and define the I/O weather at the time that job ran.
 
-Overlaying this weather on the climate (dashed lines in the box plots) shows how each metric compares with \newtext{the distribution of weather conditions before, after, or surrounding the job of interest to enable} rapid differentiation of rare events from long-term performance problems.
+Overlaying this weather on the climate (dashed lines in the box plots) shows how each metric compares with the distribution of weather conditions before, after, or surrounding the job of interest to enable rapid differentiation of rare events from long-term performance problems.
 In the remainder of this section we use UMAMI diagrams to identify different factors that do and do not contribute to I/O performance loss.
 {Although we collected 58 metrics for each job, we chose only the most relevant metrics to include in each UMAMI diagram based on (1) which metrics most strongly correlated with performance, and (2) which metrics we expected to affect performance but did not.
 
-These case studies were performed on Mira and Edison, % but UMAMI
-% follows a modular design to facilitate analysis of a variety of HPC
-%monitoring data sources and enable portable deployment for production
-%use.
-\newtext{but UMAMI's modular design allow it to analyze a variety of data sources and enables portable deployment for production use.}
+These case studies were performed on Mira and Edison, but UMAMI's modular design allow it to analyze a variety of data sources and enables portable deployment for production use.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: I/O contention}
