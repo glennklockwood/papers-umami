@@ -1,5 +1,5 @@
-%\documentclass[sigconf,10pt]{acmart}
-\documentclass[conference,10pt,compsocconf]{IEEEtran}
+\documentclass[sigconf,10pt]{acmart}
+%\documentclass[conference,10pt,compsocconf]{IEEEtran}
 
 \let\labelindent\relax
 
@@ -24,7 +24,7 @@
 \usepackage{setspace}
 \usepackage{wrapfig}
 %\usepackage[usenames, dvipsnames]{color}
-\usepackage[dvipsnames,table,xcdraw]{xcolor}
+%\usepackage[dvipsnames,table,xcdraw]{xcolor}
 \usepackage{balance}
 \usepackage{mathtools}
 \usepackage{multirow}
@@ -91,28 +91,83 @@
 \newcommand{\newtext}[1]{\textcolor{ForestGreen}{#1}}
 
 %Conference
-%\acmConference[SC'17]{The International Conference for High Performance Computing, Networking, Storage and Analysis}{November 2017}{Denver, Colorado USA}
-%\acmYear{2017}
-%\copyrightyear{2017}
+\copyrightyear{2017}
+\acmYear{2017}
+\setcopyright{usgovmixed}
+\acmConference[PDSW-DISCS'17]{PDSW-DISCS'17: Second Joint International Workshop on Parallel Data Storage \& Data Intensive Scalable Computing Systems}{November 12--17, 2017}{Denver, CO, USA}
+\acmBooktitle{PDSW-DISCS'17: PDSW-DISCS'17: Second Joint International Workshop on Parallel Data Storage \& Data Intensive Scalable Computing Systems, November 12--17, 2017, Denver, CO, USA}
+\acmPrice{15.00}\acmDOI{10.1145/3149393.3149395}
+\acmISBN{978-1-4503-5134-8/17/11}
 
 \begin{document}
 %\title{Toward Total Knowledge of I/O through Integrated Multicomponent Instrumentation}
-\title{UMAMI: A Recipe for Generating Meaningful Metrics through Holistic
-I/O Performance Analysis}
+\title{UMAMI: A Recipe for Generating Meaningful Metrics through Holistic I/O Performance Analysis}
 %GAIL - why use an asterisk for several authors but give only Lockwood's email - shouldn't it be better to use a different footnote symbol for his being corrrepsonding author?
-\author{\IEEEauthorblockN{Glenn K. Lockwood,\IEEEauthorrefmark{1}
-Shane Snyder,\IEEEauthorrefmark{2}
-Wucherl Yoo,\IEEEauthorrefmark{1}
-Kevin Harms,\IEEEauthorrefmark{2} \\
-Zachary Nault,\IEEEauthorrefmark{2}
-Suren Byna,\IEEEauthorrefmark{1}
-Philip Carns,\IEEEauthorrefmark{2}
-Nicholas J. Wright\IEEEauthorrefmark{1}}
-\IEEEauthorblockA{\IEEEauthorrefmark{1}Lawrence Berkeley National Laboratory,
-Berkeley, CA 94720, Email: glock@lbl.gov}
-\IEEEauthorblockA{\IEEEauthorrefmark{2}Argonne National Laboratory, Lemont,
-IL 60439}
+%\author{\IEEEauthorblockN{Glenn K. Lockwood,\IEEEauthorrefmark{1}
+%Shane Snyder,\IEEEauthorrefmark{2}
+%Wucherl Yoo,\IEEEauthorrefmark{1}
+%Kevin Harms,\IEEEauthorrefmark{2} \\
+%Zachary Nault,\IEEEauthorrefmark{2}
+%Suren Byna,\IEEEauthorrefmark{1}
+%Philip Carns,\IEEEauthorrefmark{2}
+%Nicholas J. Wright\IEEEauthorrefmark{1}}
+%\IEEEauthorblockA{\IEEEauthorrefmark{1}Lawrence Berkeley National Laboratory,
+%Berkeley, CA 94720, Email: glock@lbl.gov}
+%\IEEEauthorblockA{\IEEEauthorrefmark{2}Argonne National Laboratory, Lemont,
+%IL 60439}
+%}
+
+\author{Glenn K. Lockwood}
+\affiliation{%
+    \institution{Lawrence Berkeley National Laboratory}
 }
+\email{glock@lbl.gov}
+
+\author{Shane Snyder}
+\affiliation{%
+    \institution{Argonne National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+\author{Wucherl Yoo}
+\affiliation{%
+    \institution{Lawrence Berkeley National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+\author{Kevin Harms}
+\affiliation{%
+    \institution{Argonne National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+\author{Zachary Nault}
+\affiliation{%
+    \institution{Argonne National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+\author{Suren Byna}
+\affiliation{%
+    \institution{Lawrence Berkeley National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+\author{Philip Carns}
+\affiliation{%
+    \institution{Argonne National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+\author{Nicholas J. Wright}
+\affiliation{%
+    \institution{Lawrence Berkeley National Laboratory}
+}
+%\email{glock@lbl.gov}
+
+% shorten author list for headers. 
+\renewcommand{\shortauthors}{G. Lockwood et al.}
+
 \maketitle
 
 \input{abstract}
@@ -133,8 +188,8 @@ This research used resources of the National Energy Research Scientific Computin
 User Facility supported by the Office of Science of the U.S. Department of Energy under Contract No. DE-AC02-05CH11231.
 This research also used resources and data generated from resources of the Argonne Leadership Computing Facility, which is a DOE Office of Science User Facility supported under Contract DE-AC02-06CH11357.
 
-%\bibliographystyle{ACM-Reference-Format}
-\bibliographystyle{IEEEtran}
+\bibliographystyle{ACM-Reference-Format}
+%\bibliographystyle{IEEEtran}
 \bibliography{REFERENCES}
 
 % \section*{Government License}
