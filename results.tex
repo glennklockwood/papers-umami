@@ -4,9 +4,7 @@
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots.pdf}
     \vspace{-.25in}
-    \caption{I/O performance for all file systems tested grouped by test
-    applications and read(R)/write(W) mode.  Whiskers represent the 5th and 95th
-    percentiles.}
+    \caption{I/O performance grouped by test applications and read(R)/write(W) mode.  Whiskers represent the 5th and 95th percentiles.}
     \label{fig:perf-summary-boxplots-motif}
 	\vspace{-.3in}
 \end{figure}
@@ -22,14 +20,15 @@ Edison's scratch3 also demonstrates broad performance variation for the VPIC wri
 different I/O motifs result in different levels of performance \emph{and} variability.
 
 Furthermore, Figure~\ref{fig:perf-summary-boxplots-motif} shows that variation is not only a function of the parallel file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
-
 Thus, these differences in performance variation must be a function of differences in three factors of the I/O subsystem:
-
-\begin{enumerate}[leftmargin=*]
-\item Hardware architecture, evident when comparing the distributions of mira-fs1 performance to any Edison file system
-\item Application I/O patterns, evident from the variation within any single file system
-\item Overall file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems
-\end{enumerate}
+(1) hardware architecture, evident when comparing the distributions of mira-fs1 performance to Edison;
+(2) application I/O patterns, evident from the variation within any single file system; and
+(3) overall file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems.
+% \begin{enumerate}[leftmargin=*]
+% \item Hardware architecture, evident when comparing the distributions of mira-fs1 performance to Edison
+% \item Application I/O patterns, evident from the variation within any single file system
+% \item Overall file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems
+% \end{enumerate}
 
 This finding underscores the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert and with historical context in order to develop a full understanding of I/O performance.
 
@@ -62,7 +61,7 @@ As such, we also define $\mathit{CF}_{\mathit{IOPS}}$ of IOPS (derived from Dars
 %In this study, such noise never resulted in $\mathit{CF} > 1.2$.
 %%%% GKL: The ratio of CF > 1.2 to all CF measurements is very high on Mira; 96 of the 214 measurements provided by Shane were dropped due to this filter criterion
 
-These $\mathit{CF}$ metrics, system health data, and job topology data let us contextualize performance anomalies and quantify where a job's I/O performance falls on the spectrum of normalcy relative to jobs with similar motifs.
+$\mathit{CF}$, system health data, and job topology data let us contextualize performance anomalies and quantify where a job's I/O performance falls on the spectrum of normalcy relative to jobs with similar motifs.
 To concisely display this information and identify metrics that most likely contribute to abnormal performance, we propose a unified monitoring and metrics interface (UMAMI) diagram as demonstrated in Figure \ref{fig:umami-scratch2-hacc-write}.
 UMAMI presents historic measurements (the I/O climate) alongside a box plot that summarizes each metric.
 % \todo{ROB: It would be easy enough to generalize to any point in the time series, rather than terminating at the job of interest, allowing one to show how the weather at some prior point in time fits into the climate beyond the job, too (i.e., just put the star wherever it belongs in the timeline?).}
@@ -72,23 +71,23 @@ Overlaying this weather on the climate (dashed lines in the box plots) shows how
 In the remainder of this section we use UMAMI diagrams to identify different factors that do and do not contribute to I/O performance loss.
 {Although we collected 58 metrics for each job, we chose only the most relevant metrics to include in each UMAMI diagram based on (1) which metrics most strongly correlated with performance, and (2) which metrics we expected to affect performance but did not.
 
-These case studies were performed on Mira and Edison, but UMAMI's modular design allow it to analyze a variety of data sources and enables portable deployment for production use.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Case study: I/O contention}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+These case studies were performed on Mira and Edison, but UMAMI's modularity allow it to analyze a variety of data sources and enables portable deployment for production use.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-scratch2-hacc-write.pdf}
     \vspace{-.25in}
-    \caption{UMAMI of HACC write workloads on the Edison scratch2 file system.
-    Left panes show the measurements from previous runs of the same motif; right panes summarize the distribution of these metrics.
-    The star denotes the metrics for the job of interest and is colored according to the quartile in which it falls (red being the worst quartile and blue the best).
+    \caption{UMAMI of HACC write workloads on Edison scratch2.
+    Left panes show measurements from previous runs of the same motif and are summarized to the right.
+    Stars highlight the job of interest and are colored according to the quartile in which they fall (red being the worst and blue the best).
     Whiskers indicate 5th and 95th percentiles; circles are outliers.}
     \label{fig:umami-scratch2-hacc-write}
     \vspace{-.2in}
 \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Case study: I/O contention}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The UMAMI example in Figure \ref{fig:umami-scratch2-hacc-write} represents a HACC write test whose job performance measurement relative to previous HACC write jobs indicate statistically abnormal performance.
 This poor performance was accompanied by an unusually low $\mathit{CF}_{\mathit{bw}}$ and high metadata load, highlighted as red dashed lines in the box plots that denote their place in the least-favorable quartile of past measurements.
@@ -108,10 +107,9 @@ Given this body of information, we attribute this HACC job's poor performance to
     \includegraphics[width=1.0\columnwidth]{figs/umami-mira-fs1-vpic-write.pdf}
     \vspace{-.25in}
     \caption{UMAMI demonstrating the climate surrounding VPIC write workloads on Mira compared with a most recent run, which showed highly unusual weather in the form of an excess of \texttt{readdir(3)} calls.
-%   Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.
     }
     \label{fig:umami-mira-fs1-vpic-write}
-	\vspace{-.15in}
+    \vspace{-.15in}
 \end{figure}
 
 Figure \ref{fig:umami-mira-fs1-vpic-write} shows the UMAMI diagram for a poorly performing VPIC workload.
