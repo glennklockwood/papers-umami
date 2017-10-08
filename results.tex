@@ -6,20 +6,20 @@
     \vspace{-.25in}
     \caption{I/O performance grouped by test applications and read(R)/write(W) mode.  Whiskers represent the 5th and 95th percentiles.}
     \label{fig:perf-summary-boxplots-motif}
-	\vspace{-.3in}
+    \vspace{-.3in}
 \end{figure}
 
 Because variation in peak I/O performance is caused by different I/O access patterns~\cite{Lofstead2010,Uselton2010,Xie2012}, we first establish the baseline variation of each benchmark on each system.
 We define the \emph{fraction of peak performance} as the observed I/O bandwidth (performance) of a job divided by the maximum performance observed for all jobs \emph{of the same I/O motif} as listed in Table \ref{tab:bench-config} and whether the job read or wrote.
-For example, the fraction peak performance for a HACC write test is normalized to the highest performance of any HACC write test on the same file system.
+% For example, the fraction peak performance for a HACC write test is normalized to the highest performance of any HACC write test on the same file system.
 
-The distribution of fraction peak performance, shown in Figure~\ref{fig:perf-summary-boxplots-motif}, 
+The distribution of fraction peak performance (Figure~\ref{fig:perf-summary-boxplots-motif})
 reveals that the degree of variation \emph{within} each application varies with each file system.
 For example, the HACC write workload is susceptible to a long tail of performance loss on mira-fs1 despite mira-fs1's overall lower variation as evidenced by the distance between all I/O motifs' whiskers relative to the Edison file systems.
-Edison's scratch3 also demonstrates broad performance variation for the VPIC write workload, contrasting with the relatively narrow performance variation of this application on other systems.  We conclude that performance variability is the result of factors intrinsic to both the application and the file system;
+Edison's scratch3 also demonstrates broad performance variation for the VPIC write workload, contrasting with the narrower variation of this application on other systems.  We conclude that such variability is the result of factors intrinsic to both the application and the file system;
 different I/O motifs result in different levels of performance \emph{and} variability.
 
-Furthermore, Figure~\ref{fig:perf-summary-boxplots-motif} shows that variation is not only a function of the parallel file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
+Furthermore, Figure~\ref{fig:perf-summary-boxplots-motif} shows that variation is not only a function of the file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
 Thus, these differences in performance variation must be a function of differences in three factors of the I/O subsystem:
 (1) hardware architecture, evident when comparing the distributions of mira-fs1 performance to Edison;
 (2) application I/O patterns, evident from the variation within any single file system; and
@@ -115,7 +115,8 @@ Given this body of information, we attribute this HACC job's poor performance to
 Figure \ref{fig:umami-mira-fs1-vpic-write} shows the UMAMI diagram for a poorly performing VPIC workload.
 $\mathit{CF}_{\mathit{bw}}$ is within normal parameters, indicating normal (minimal) levels of bandwidth contention.
 $\mathit{CF}_{\mathit{IOPS}}$ is abnormally low, although previous values have been equally low despite a lack of dramatic performance loss (e.g., on March 1 and March 9).
-The only metric that shows a unique, undesirable value is the number of readdir operations handled by the file system, indicative of a file system traversal that was running concurrently with this VPIC job.   From this, we infer that metadata load, not bandwidth contention, contributed to poor VPIC performance on March 11.
+The only metric that shows a unique, undesirable value is the number of readdir operations handled by the file system, indicating a file system traversal was running concurrently with this VPIC job.
+From this we infer that metadata load, not bandwidth contention, contributed to poor VPIC performance on March 11.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Case study: storage capacity}

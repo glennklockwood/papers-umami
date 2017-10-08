@@ -6,19 +6,43 @@
 
 To examine the utility and generality of integrating data from multiple
 component-level monitoring tools into a single view (UMAMI), we conducted an
-I/O benchmark study on two distinct HPC platforms:
-Edison, a Cray XC-30 system at the National Energy Research Scientific
-Computing Center (NERSC), and Mira, an IBM Blue Gene/Q system at the Argonne
-Leadership Computing Facility (ALCF) (see Table I).  On Edison we executed
-1,014 benchmark runs using three file systems across 39 days, while on
-Mira we executed 118 benchmark runs using one file system across 29 days.
+I/O benchmark study on two distinct HPC platforms described in Table \ref{tab:system-config}:
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{NERSC Edison} \label{sec:platforms/edison}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Edison is a Cray XC-30 system at the National Energy Research Scientific
+Computing Center (NERSC).
+Its scratch1 and scratch2 Lustre file systems are identically configured,
+and users are evenly distributed across them.
+However, access to Edison's scratch3 file system is granted only to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
+
+Edison's architecture routes I/O traffic from its Aries high-speed network
+to the InfiniBand SAN fabric via LNET I/O nodes.
+Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems to ensure that each file system's traffic is isolated as it transits I/O nodes.
+This also allows jobs of any size to use the maximum number of I/O nodes for each file system.
+In this work, all output data was striped over all OSTs in each file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen to saturate each file system's bandwidth.
+Our IOR benchmarks demonstrated 90\% of the theoretical maximum performance.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ALCF Mira} \label{sec:platforms/mira}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Mira is an IBM Blue Gene/Q system at the Argonne Leadership Computing Facility (ALCF).
+In addition to the Spectrum Scale (GPFS) servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
+Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
+To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
+Our IOR configuration achieved 80\% of peak performance for this job size.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{I/O performance regression tests} \label{sec:methods/tests}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\noindent
-For this study, we ran the following benchmark applications.
+For this study, we ran the following benchmark applications
+using three file systems across 39 days on Edison (1,014 benchmark runs) and on one file system across 29 days on Mira (118 benchmark runs).
 
 \begin{itemize}[leftmargin=*]
 \item 
@@ -34,35 +58,9 @@ All benchmarks were run using 1,024 and 128 nodes (16 processes per node) on Mir
 These scales were chosen to sufficiently utilize the capability of the storage system while limiting the core-hour consumption,
 and the resulting data volumes are summarized in Table~\ref{tab:bench-config}.
 
+%On Edison we executed 1,014 benchmark runs using three file systems across 39 days, while on Mira we executed 118 benchmark runs using one file system across 29 days.
+
 \input{benchmarktable}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{NERSC Edison} \label{sec:platforms/edison}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Edison is a Cray XC-30 system deployed at NERSC whose architecture is described in Table \ref{tab:system-config}.
-Its scratch1 and scratch2 Lustre file systems are identically configured,
-and users are evenly distributed across them.
-However, access to Edison's scratch3 file system is granted only to users who require high parallel bandwidth, and therefore the scratch3 file system should reflect larger, more coherent I/O traffic.
-
-Edison's architecture routes I/O traffic from its Aries high-speed network
-to the InfiniBand SAN fabric via LNET I/O nodes.
-Routing is configured such that each LNET I/O node handles traffic for only one of the three Edison file systems to ensure that each file system's traffic is isolated as it transits I/O nodes.
-This also allows jobs of any size to use the maximum number of I/O nodes for each file system.
-In this work, all output data was striped over all OSTs in each file system, and the input parameters listed in Table \ref{tab:bench-config} were chosen to saturate each file system's bandwidth.
-Our IOR benchmarks demonstrated peak performance at 90\% of the theoretical peaks listed in Table \ref{tab:system-config}.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{ALCF Mira} \label{sec:platforms/mira}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Mira is an IBM Blue Gene/Q system deployed at the ALCF whose configuration is described in Table \ref{tab:system-config}.
-In addition to the Spectrum Scale (GPFS) servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
-Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
-To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
-In practice, the IOR configuration for Mira listed in Table
-\ref{tab:bench-config} was able to achieve 80\% of the peak performance for
-this job size.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Instrumentation and Data Sources} \label{sec:methods}
@@ -80,9 +78,9 @@ allowing it to be deployed for all production applications on large-scale system
 
 \subsection{Storage system traffic} \label{sec:methods/storagesystraffic}
 
-Storage system traffic monitoring provides insight into the aggregate systemwide I/O workload through metrics such as bytes read/written and operation counts for reads, writes, and metadata.
-The data are collected in time-series format with minimal impact on application performance because the information is gathered on the storage servers, not compute nodes.
-On both Mira and Edison, these data were collected at five-second intervals to balance low performance impact and sufficient granularity using file-system-specific tools.  
+Storage system traffic monitoring provides aggregate systemwide I/O workload metrics such as bytes read/written and operation counts for reads, writes, and metadata.
+These time-series data are collected with minimal impact on application performance because they are gathered on the storage servers, not compute nodes.
+On both Mira and Edison, these metrics were collected at five-second intervals using file-system-specific tools.  
 
 \label{sec:methods/lmt}
 \textbf{Lustre Monitoring Tools (LMT)} aggregates Lustre-specific counters on each object storage server (OSS) and metadata server (MDS) and presents them via a MySQL database.
