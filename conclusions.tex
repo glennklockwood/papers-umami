@@ -5,8 +5,9 @@ We performed a month-long benchmarking study and characterized the I/O \emph{cli
 
 Integrating metrics into the UMAMI diagram revealed that contention with other I/O workloads for storage system bandwidth, metadata op rates, and storage capacity can, but do not always, impact performance.
 No single metric predicts I/O performance across HPC platforms;
-the most significant metrics depend on systems' architecture, configuration, workload characteristics, and health.
-Conversely, factors such as job radius and $\textit{CF}_{\textit{nodehrs}}$ were not found to capture enough detail to reliably describe performance loss.
-From these results, we have a basis for improving existing monitoring tools to capture more detailed metrics that can better predict I/O performance.
+the most significant metrics depend on systems' architecture, configuration, workload characteristics, and health, while 
+factors such as job radius and $\textit{CF}_{\textit{nodehrs}}$ do not capture enough detail to indicate performance loss.
+These findings provide a basis for improving monitoring tools to capture more detailed metrics that can better predict I/O performance.
 
-Demonstrating the importance of historical performance data in performance analysis also motivates the need for automated classification jobs based on similar I/O motifs.  With  clustering or similar methods, generating UMAMI diagrams should be easily automated in production environments and made portable across diverse HPC platforms and centers.
+% The importance of historical performance data in performance analysis also motivates the need for automated classification of jobs based on similar I/O motifs.
+% With clustering or similar methods, generating UMAMI diagrams should be easily automated in production environments and made portable across diverse HPC platforms and centers.

@@ -2,11 +2,8 @@
 
 Several studies have explored how to combine and analyze multiple sources of I/O monitoring information.
 Kunkel et al. developed SIOX~\cite{Kunkel:2014:SAC:2769884.2769901} to aggregate information from multiple components of the I/O stack, 
-% into a global database with plugins for automatic optimization.
 but its reliance on instrumented versions of application libraries to collect metrics makes production deployment challenging.
-% Agelastos et al. developed the Lightweight Distributed Metric Service (LDMS)~\cite{7013000} for scalable collection of compute node metrics which could be a data source for similar multicomponent analysis.
-%.  The LDMS metrics include client-side I/O counters that could be integrated into TOKIO.
-Liu et al. developed AID~\cite{Liu2016} to perform detailed analysis to server-side I/O logs in order to deduce application-level I/O patterns and make scheduling recommendations.  The clustering approach implemented by AID may be transferable to automatically identifying I/O motifs suitable for generating UMAMI diagrams.
+Liu et al. developed AID~\cite{Liu2016} to perform detailed analysis to server-side I/O logs in order to deduce application-level I/O patterns and make scheduling recommendations.  The clustering approach implemented by AID may be able to automatically identify I/O motifs suitable for generating UMAMI diagrams.
 
 Other studies have explored how to quantify and combat various types of I/O performance variation.
 Lofstead et al. observed that variability can be caused by both external interference and internal interference within an application~\cite{Lofstead2010}, and they proposed an adaptive strategy that coordinates I/O activity within an application.
