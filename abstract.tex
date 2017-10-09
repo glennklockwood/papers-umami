@@ -1,14 +1,16 @@
 \begin{abstract}
 
 I/O efficiency is essential to productivity in scientific computing, especially as many scientific domains become more data-intensive.
-Many characterization tools have been used to elucidate specific aspects of parallel I/O performance, but analyzing individual components of complex I/O subsystems in isolation fails to provide insight into critical questions:
-how do the I/O components interact, what are reasonable expectations for application performance, and what are the underlying causes and effects of I/O performance problems?
+Many characterization tools have been used to elucidate specific aspects of parallel I/O performance, but analyzing components of complex I/O subsystems in isolation fails to provide insight into critical questions:
+how do the I/O components interact, what are reasonable expectations for application performance, and what are the underlying causes of I/O performance problems?
 To address these questions while capitalizing on existing component-level characterization tools,
-we propose an approach using on-demand, modular synthesis of \emph{existing} I/O characterization data sources into a unified monitoring and metrics interface (UMAMI) that provides a normalized, coherent, holistic view of I/O behavior. 
+we propose an approach that combines on-demand, modular synthesis of I/O
+characterization data into a unified monitoring and metrics interface
+(UMAMI) to provide a normalized, holistic view of I/O behavior. 
 
-In this work, we evaluate the feasibility of this integrative approach by applying it to a month-long benchmarking study conducted on two distinct large-scale computing platforms.
-We present three case studies that highlight the importance of analyzing application I/O performance in context with both contemporaneous and historical component metrics, and we provide new insights into the factors affecting I/O performance and how to analyze them.
+We evaluate the feasibility of this approach by applying it to a month-long benchmarking study on two distinct large-scale computing platforms.
+We present three case studies that highlight the importance of analyzing application I/O performance in context with both contemporaneous and historical component metrics, and we provide new insights into the factors affecting I/O performance.
 %\todo{Something about turning this into a production tool.}
-By demonstrating the generality of our approach with these insights from two different HPC centers, we lay the groundwork for a production-grade framework for holistic I/O analysis.
+By demonstrating the generality of our approach, we lay the groundwork for a production-grade framework for holistic I/O analysis.
 
 \end{abstract}
