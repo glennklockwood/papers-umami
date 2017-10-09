@@ -6,7 +6,7 @@
 
 To examine the utility and generality of integrating data from multiple
 component-level monitoring tools into a single view (UMAMI), we conducted an
-I/O benchmark study on two distinct HPC platforms described in Table \ref{tab:system-config}:
+I/O benchmark study on two distinct HPC platforms described in Table \ref{tab:system-config}.
 
 
 
@@ -33,7 +33,7 @@ Our IOR benchmarks demonstrated 90\% of the theoretical maximum performance.
 
 Mira is an IBM Blue Gene/Q system at the Argonne Leadership Computing Facility (ALCF).
 In addition to the Spectrum Scale (GPFS) servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
-Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
+Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio (1 I/O node for every 128 compute node), causing storage bandwidth to scale linearly with the size of the job.
 To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
 Our IOR configuration achieved 80\% of peak performance for this job size.
 
@@ -63,7 +63,7 @@ and the resulting data volumes are summarized in Table~\ref{tab:bench-config}.
 \input{benchmarktable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Instrumentation and Data Sources} \label{sec:methods}
+\section{Data Sources} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We drew a total of 58 different metrics from a variety
