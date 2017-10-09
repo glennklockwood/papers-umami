@@ -3,7 +3,7 @@
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/perf-boxplots.pdf}
-    \vspace{-.25in}
+    \vspace{-.35in}
     \caption{I/O performance grouped by test applications and read(R)/write(W) mode.  Whiskers represent the 5th and 95th percentiles.}
     \label{fig:perf-summary-boxplots-motif}
     \vspace{-.3in}
@@ -39,6 +39,7 @@ This finding underscores the importance of examining multiple sources of I/O cha
 With an understanding of the baseline performance variation on each system and application, we then consider metrics from the sources described in Section \ref{sec:methods} to analyze how extrinsic factors affect performance.
 Bandwidth contention from other jobs is an intuitive source of performance variation, so we define the \emph{bandwidth coverage factor} ($\mathit{CF}_{\mathit{bw}}$) of a job $j$ to quantify the effects of competing I/O traffic:
 
+\vspace{-.1in}
 \begin{equation} \label{eq:cf}
     \mathit{CF}_{\mathit{bw}}(j) = \frac{N_{\textup{bytes}}^{\textup{Darshan}}(j)}
     {\sum_{t,s}^{\textup{time,servers}}
@@ -76,10 +77,10 @@ These case studies were performed on Mira and Edison, but UMAMI's modularity all
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-scratch2-hacc-write.pdf}
-    \vspace{-.25in}
+    \vspace{-.35in}
     \caption{UMAMI of HACC write workloads on Edison scratch2.
-    Left panes show measurements from previous runs of the same motif and are summarized to the right.
-    Stars highlight the job of interest and are colored according to the quartile in which they fall (red being the worst and blue the best).
+    Left panes show measurements from other runs of the same motif; right panes show summaries.
+    Stars highlight the job of interest and are colored red, orange, or blue if they are above, within, or below the overall quartiles.
     Whiskers indicate 5th and 95th percentiles; circles are outliers.}
     \label{fig:umami-scratch2-hacc-write}
     \vspace{-.2in}
@@ -105,7 +106,7 @@ Given this body of information, we attribute this HACC job's poor performance to
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-mira-fs1-vpic-write.pdf}
-    \vspace{-.25in}
+    \vspace{-.35in}
     \caption{UMAMI demonstrating the climate surrounding VPIC write workloads on Mira compared with a most recent run, which showed highly unusual weather in the form of an excess of \texttt{readdir(3)} calls.
     }
     \label{fig:umami-mira-fs1-vpic-write}
@@ -125,7 +126,7 @@ From this we infer that metadata load, not bandwidth contention, contributed to 
 \begin{figure}[t]
     \centering
     \includegraphics[width=1.0\columnwidth]{figs/umami-scratch3-hacc-write-long-term.pdf}
-    \vspace{-.25in}
+    \vspace{-.35in}
     \caption{UMAMI of HACC write performance on Edison's scratch3 file system showing a longer-term period of performance degradation that was associated with poor file system health.
 %   Significance of each pane and its contents are the same as explained in Figure \ref{fig:umami-scratch2-hacc-write}.
     }
