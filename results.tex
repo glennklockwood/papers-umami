@@ -16,7 +16,7 @@ We define the \emph{fraction of peak performance} as the observed I/O bandwidth 
 The distribution of fraction peak performance (Figure~\ref{fig:perf-summary-boxplots-motif})
 reveals that the degree of variation \emph{within} each application varies with each file system.
 For example, the HACC write workload is susceptible to a long tail of performance loss on mira-fs1 despite mira-fs1's overall lower variation as evidenced by the distance between all I/O motifs' whiskers relative to the Edison file systems.
-Edison's scratch3 also demonstrates broad performance variation for the VPIC write workload, contrasting with the narrower variation of this application on other systems.  We conclude that such variability is the result of factors intrinsic to both the application and the file system;
+Edison's scratch3 also shows broad performance variation for VPIC, contrasting with the narrower variation of VPIC on other systems.  We conclude that such variability results from factors intrinsic to both the application and the file system;
 different I/O motifs result in different levels of performance \emph{and} variability.
 
 Furthermore, Figure~\ref{fig:perf-summary-boxplots-motif} shows that variation is not only a function of the file system architecture; all Edison file systems are Lustre-based, yet Figure~\ref{fig:perf-summary-boxplots-motif} shows a marked difference in variability between scratch1/scratch2 and scratch3.
@@ -30,13 +30,13 @@ Thus, these differences in performance variation must be a function of differenc
 % \item Overall file system climate, evident by comparing the architecturally equivalent Edison scratch1/scratch2 with scratch3 file systems
 % \end{enumerate}
 
-This finding underscores the importance of examining multiple sources of I/O characterization data (e.g., application-level and server-side) in concert and with historical context in order to develop a full understanding of I/O performance.
+This finding underscores the importance of examining multiple sources of I/O characterization data in concert and with historical context to develop a full understanding of I/O performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Integrated Analysis} \label{sec:results/umami}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-With an understanding of the baseline performance variation on each system and application, we then consider metrics from the sources described in Section \ref{sec:methods} to analyze how extrinsic factors affect performance.
+With an understanding of the baseline performance variation on each system and application, we then use the metrics described in Section \ref{sec:methods} to analyze how extrinsic factors affect performance.
 Bandwidth contention from other jobs is an intuitive source of performance variation, so we define the \emph{bandwidth coverage factor} ($\mathit{CF}_{\mathit{bw}}$) of a job $j$ to quantify the effects of competing I/O traffic:
 
 \vspace{-.1in}
@@ -48,13 +48,10 @@ Bandwidth contention from other jobs is an intuitive source of performance varia
 %
 where 
 $N_{\textup{bytes}}^{\textup{Darshan}}$ are the bytes read and written by job $j$ according to its Darshan log and 
-$N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ are the bytes read and written to a parallel file system server $s$ during a 5-second time interval $t$.
+$N_{\textup{bytes}}^{\textup{LMT,ggiostat}}$ are the bytes read and written to a file system server $s$ during a 5-second time interval $t$.
 The time interval over which the job ran ($\mathit{time}$) and the servers to which the job wrote ($\mathit{servers}$) are also stored in the job's Darshan log~\cite{snyder2016modular}.
 $\mathit{CF}_{\mathit{bw}}$ is a direct reflection of how much I/O traffic a job competed against in the underlying file systems.
-When $\mathit{CF}_{\mathit{bw}} = 1.0$, all the server-side I/O can be attributed to job $j$, whereas $\mathit{CF}_{\mathit{bw}} = 0.5$ indicates that only half of the server-side I/O is attributable to job $j$ while the other half is from other sources.
-
-$\mathit{CF}_{\mathit{bw}}$ can be generalized to any metric for which the contribution of an individual job can be distinguished from the system-level aggregate.
-As such, we also define $\mathit{CF}_{\mathit{IOPS}}$ of IOPS (derived from Darshan and ggiostat) and $\mathit{CF}_{\mathit{nodehrs}}$ of node-hours (derived from job-scheduling data).
+Relatedly, we also define $\mathit{CF}_{\mathit{IOPS}}$ of IOPS (derived from Darshan and ggiostat) and $\mathit{CF}_{\mathit{nodehrs}}$ of node-hours (derived from job-scheduling data).
 
 %In practice, $\mathit{CF}$ can be slightly greater than $1.0$ as a result of two conditions:
 %a) when the storage system traffic monitoring (LMT/ggiostat) does not capture data from all servers during a polling interval, or

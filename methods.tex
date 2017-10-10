@@ -94,16 +94,10 @@ On Edison, the fullness of each Lustre object storage target (OST) is recorded e
 On Mira, the fullness of each LUN and the failure status of each server is recorded upon job submission.
 The mapping between OSTs/LUNs and OSS/NSD servers are also logged to identify degraded devices.
 
-\subsection{Job scheduling} \label{sec:methods/scheduling}
+\subsection{Job scheduling and topology} \label{sec:methods/scheduling}
 
 Job-scheduling data provides details on the jobs that are concurrently running on a system and can help identify cases where I/O contention results from competing jobs.
 In this study, we tracked the number of other jobs that were running and the number of core-hours consumed system-wide during the time our benchmark jobs ran.
-
-% Retrieving these data on Edison is accomplished by querying the job accounting database for all jobs with a start time before the benchmark's end time and an end time after the benchmark's start time.
-% Similarly, the job accounting data on Mira is stored in a database accessible via a Python API called Ni.
-% The API allows pulling out a list of jobs for a given time range and running on a specific resource.
-
-\subsection{Job topology} \label{sec:methods/other}
 
 To identify any effects of job placement on Edison and Mira's high-speed networks, we calculate a job's maximum radius as an approximation of that job's degree of delocalization.
 Using the topological coordinates of each job's compute node allocation to derive a center of mass of a job, we define this metric as the maximum distance between that center of mass and a compute node.

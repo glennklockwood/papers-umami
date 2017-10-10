@@ -1,7 +1,7 @@
 \section{Introduction} \label{sec:introduction}
 
-The stratification of performance and capacity in storage technology is motivating the design of increasingly complex parallel storage system architectures.
-Leadership-class systems are now being deployed with flash-based burst buffers~\cite{Henseler2016} that provide even higher performance than disk-based scratch file systems do~\cite{Bhimji2016}.
+The stratification of performance and capacity in storage technology is resulting in increasingly complex parallel storage system architectures.
+Leadership-class systems are now being deployed with flash-based burst buffers~\cite{Henseler2016} that provide even higher performance than disk-based file systems do~\cite{Bhimji2016}.
 This performance comes at the cost of increasing complexity, however, making I/O performance analysis increasingly difficult.
 %Although designed to provide optimal performance and capacity on an economic basis, this increasing number of interoperating components also complicates the task of understanding I/O performance.
 
@@ -16,12 +16,12 @@ for a single job.
 % Data types representing the same logical quantity, such as data written, may also be expressed in different units such as bytes, pages, and blocks, and these units of data may also be transformed by aggregation, coalescing, and caching as they traverse the I/O stack.
 At present, the gaps of information resulting from these incompatibilities are filled by expert institutional knowledge and intuition.
 
-Absent this expert knowledge, however, it is challenging to determine whether a job's I/O performance is normal on any specific HPC system given the application's I/O pattern.
-Relying on intuition to tie together the different sources of I/O data and decide whether a job performed as expected becomes unsustainable as storage subsystems become larger and more complex.  
+Absent this expert knowledge, it is challenging to determine whether a job's I/O performance is normal on any specific HPC system given the application's I/O pattern.
+Relying on intuition to tie together different I/O data sources and decide whether a job performed as expected becomes unsustainable as storage subsystems become more complex.  
 Thus, it is becoming critical to integrate component-level data and present a coherent, holistic view of the I/O subsystem and its interdependent behavior.
 
-To demonstrate the insights possible with a holistic approach, we have conducted a month-long benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems.
-Using component-level data already being collected on those systems, we then present an analysis of data integrated from application-level profiling, file system servers, and other system-level components.
+To demonstrate the benefits of a holistic approach, we have conducted a month-long benchmarking study of several I/O-intensive applications on two architecturally distinct production HPC systems.
+Using component-level data already being collected on those systems, we analyze data integrated from application-level profiling, file system servers, and other system-level components.
 By showing how these metrics vary over the one-month experiment in a unified monitoring and metrics interface (UMAMI), this holistic approach is able to differentiate general performance expectations for different I/O motifs (analogous to the climate of the I/O system) from transient effects (analogous to the weather of the I/O system).
 We use this notion of the \emph{I/O climate} to encompass the characteristics of storage components, their age and capacity, and the way they respond to a specific workload.
 Complementary to the I/O climate, the \emph{I/O weather} is determined by the transitory state of the job scheduler load, I/O contention, and short-term failure events.
