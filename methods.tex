@@ -6,7 +6,7 @@
 
 To examine the utility and generality of integrating data from multiple
 component-level monitoring tools into a single view (UMAMI), we conducted an
-I/O benchmark study on two distinct HPC platforms described in Table \ref{tab:system-config}:
+I/O benchmark study on two distinct HPC platforms described in Table \ref{tab:system-config}.
 
 
 
@@ -33,7 +33,7 @@ Our IOR benchmarks demonstrated 90\% of the theoretical maximum performance.
 
 Mira is an IBM Blue Gene/Q system at the Argonne Leadership Computing Facility (ALCF).
 In addition to the Spectrum Scale (GPFS) servers and LUNs listed, six of the network shared disk (NSD) servers also serve metadata from SSD-based LUNs.
-Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio, causing storage bandwidth to scale linearly with the size of the job.
+Jobs on Mira are allocated I/O nodes and compute nodes in a fixed ratio (1 I/O node for every 128 compute node), causing storage bandwidth to scale linearly with the size of the job.
 To keep compute resource consumption low, we opted to run every benchmark using 1,024 compute nodes, giving them eight I/O nodes and an aggregate peak bandwidth of $\sim$25 GB/sec.
 Our IOR configuration achieved 80\% of peak performance for this job size.
 
@@ -63,7 +63,7 @@ and the resulting data volumes are summarized in Table~\ref{tab:bench-config}.
 \input{benchmarktable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Instrumentation and Data Sources} \label{sec:methods}
+\section{Data Sources} \label{sec:methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We drew a total of 58 different metrics from a variety
@@ -82,12 +82,9 @@ Storage system traffic monitoring provides aggregate systemwide I/O workload met
 These time-series data are collected with minimal impact on application performance because they are gathered on the storage servers, not compute nodes.
 On both Mira and Edison, these metrics were collected at five-second intervals using file-system-specific tools.  
 
-\label{sec:methods/lmt}
-\textbf{Lustre Monitoring Tools (LMT)} aggregates Lustre-specific counters on each object storage server (OSS) and metadata server (MDS) and presents them via a MySQL database.
-LMT provides data including bytes read and written, CPU load averages, and metadata operation rates.
-
-\label{sec:methods/ggiostat}
-\textbf{ggiostat} is a tool developed at the ALCF to collect similar data from IBM Spectrum Scale file systems.
+\emph{Lustre Monitoring Tools} (LMT) aggregates Lustre-specific counters on each object storage server (OSS) and metadata server (MDS) and presents them via a MySQL database.
+LMT provides data including bytes read/written, CPU load averages, and metadata operation rates.
+\emph{ggiostat} is a tool developed at the ALCF to collect similar data from IBM Spectrum Scale file systems.
 It retrieves and stores metrics from server and client clusters and provides bytes read/written and operation counts for reads, writes, and metadata operations.
 
 \subsection{Health monitoring} \label{sec:methods/health}
@@ -95,7 +92,7 @@ It retrieves and stores metrics from server and client clusters and provides byt
 Health-monitoring data describe what components are offline, failed-over, or in another degraded state and how much free capacity remains on the available devices.
 On Edison, the fullness of each Lustre object storage target (OST) is recorded every fifteen minutes.  
 On Mira, the fullness of each LUN and the failure status of each server is recorded upon job submission.
-The mapping between OSTs/LUNs and OSS/NSD servers are also logged to identify devices that have failed over to a degraded state.
+The mapping between OSTs/LUNs and OSS/NSD servers are also logged to identify degraded devices.
 
 \subsection{Job scheduling} \label{sec:methods/scheduling}
 
